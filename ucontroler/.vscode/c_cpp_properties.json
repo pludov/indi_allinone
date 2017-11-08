@@ -3,12 +3,16 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/ludovic/Programs/arduino-1.8.4/hardware/teensy/avr/cores/teensy"
+                "/home/ludovic/Programs/arduino-1.8.4/hardware/teensy/avr/cores/teensy",
+                "/home/ludovic/Arduino/libraries/DallasTemperature",
+                "/home/ludovic/Programs/arduino-1.8.4/hardware/teensy/avr/libraries/OneWire"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
                 "path": [
                     "/home/ludovic/Programs/arduino-1.8.4/hardware/teensy/avr/cores/teensy",
+                    "/home/ludovic/Arduino/libraries/DallasTemperature",
+                    "/home/ludovic/Programs/arduino-1.8.4/hardware/teensy/avr/libraries/OneWire",
                     "${workspaceRoot}"
                 ]
             },
