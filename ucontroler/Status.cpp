@@ -16,12 +16,16 @@
 #include "debug.h"
 #include "SerialIO.h"
 
+#include "Variable.h"
+
 extern PWMResistor resistor;
 
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
 
-
+Group statusGroup(F("Status"));
+Vector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
+Member uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
 
 //
 //static int pendingWrite()
@@ -51,6 +55,7 @@ void Status::needUpdate()
 
 void Status::tick()
 {
+	uptimeValue.setValue(millis());
 	// Si on a de la place sur le buffer de sortie, alors on accepte
 	if (Serial.availableForWrite() < sizeof(struct Payload)) {
 		// Il faut attendre pendant au moins ce temps
@@ -63,7 +68,7 @@ void Status::tick()
 	} else {
 		this->nextTick += LongDuration::seconds(10);
 	}*/
-	this->nextTick += LongDuration::seconds(10);
+	this->nextTick += LongDuration::seconds(1);
 }
 
 

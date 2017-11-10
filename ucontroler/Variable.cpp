@@ -10,11 +10,24 @@
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
 
+#define NOTIF_PACKET_MAX_SIZE 2048
+
+static Device * mainDevice = 0;
+
+Device & Device::instance()
+{
+	if (!mainDevice) {
+		mainDevice = new Device(100);
+	}
+	return *mainDevice;
+}
+
 
 WriteBuffer::WriteBuffer(char * into, int size)
 {
 	this->ptr = into;
 	this->left = size;
+	this->totalSize = size;
 }
 
 void WriteBuffer::append(char c)
@@ -25,6 +38,62 @@ void WriteBuffer::append(char c)
 		this->left--;
 	} else {
 		this->left = -1;
+	}
+}
+
+int WriteBuffer::size()
+{
+	return totalSize - left;
+}
+
+void WriteBuffer::append(const __FlashStringHelper * str)
+{
+	PGM_P p = reinterpret_cast<PGM_P>(str);
+
+	while (1) {
+	  unsigned char c = pgm_read_byte(p++);
+	  if (c == 0) break;
+	  append(c);
+	}
+}
+
+void WriteBuffer::appendXmlEscaped(char c) {
+	switch(c) {
+		case '"':
+			append(F("&quot;"));
+			break;
+		case '\'':
+			append(F("&apos;"));
+			break;
+		case '<':
+			append(F("&lt;"));
+			break;
+		case '>':
+			append(F("&gt;"));
+			break;
+		case ';':
+			append(F("&amp;"));
+			break;
+		default:
+			append(c);
+	}
+}
+
+void WriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
+{
+	PGM_P p = reinterpret_cast<PGM_P>(str);
+	
+	while (1) {
+		unsigned char c = pgm_read_byte(p++);
+		if (c == 0) break;
+		appendXmlEscaped(c);
+	}
+}
+
+void WriteBuffer::appendXmlEscaped(const char * s)
+{
+	while(*s) {
+		appendXmlEscaped(*(s++));
 	}
 }
 
@@ -93,84 +162,209 @@ bool WriteBuffer::finish()
 	return false;
 }
 
+DeviceWriter::DeviceWriter(Stream * target, int8_t id)
+{
+	lastVector = -1;
+	this->serial = target;
+	this->notifPacket = (char*)malloc(NOTIF_PACKET_MAX_SIZE);
+	this->writeBuffer = 0;
+	this->writeBufferLeft = 0;
+	this->clientId = 1 << id;
+	this->priority = 100;
+	this->nextTick = UTime::now();
+}
+
+void DeviceWriter::fillBuffer()
+{
+	// Il y a de la place, on n'a rien à dire...
+	// PArcours la liste des variables (ouch, on peut mieux faire là...)
+	Device & device = Device::instance();
+	for(int i = 0; i < device.variableCount; ++i)
+	{
+		lastVector++;
+		if (lastVector == device.variableCount) {
+			lastVector = 0;
+		}
+
+		Vector * v = device.list[lastVector];
+		// FIXME: interrupt safe ?
+		if (!(v->announced & clientId)) {
+			WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+			v->announced |= clientId;
+			v->updated |= clientId;
+
+			v->dump(wf);
+			if (wf.finish()) {
+				writeBuffer = notifPacket;
+				writeBufferLeft = wf.size();
+				return;
+			} else {
+				// WTF ? on peut rien faire... on oublie
+			}
+		}
+
+		if (!(v->updated & clientId)) {
+			WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+			v->updated |= clientId;
+
+			v->dump(wf);
+			if (wf.finish()) {
+				writeBuffer = notifPacket;
+				writeBufferLeft = wf.size();
+				return;
+			} else {
+				// WTF ? on peut rien faire... on oublie
+			}
+		}
+	}
+}
+
+void DeviceWriter::tick()
+{
+	int spaceAvailable = serial->availableForWrite();
+	if (writeBufferLeft == 0 && spaceAvailable > 8) {
+		fillBuffer();
+	}
+
+	if (writeBufferLeft > 0) {
+		int nbCarToWait;
+		if (spaceAvailable > 0) {
+			// On attend que les caractères aient été écrits.
+			nbCarToWait = spaceAvailable;
+			if (nbCarToWait > writeBufferLeft) {
+				nbCarToWait = writeBufferLeft;
+			}
+			serial->write(writeBuffer, nbCarToWait);
+			writeBuffer += nbCarToWait;
+			writeBufferLeft -= nbCarToWait;
+		} else {
+			nbCarToWait = 1;
+		}
+		this->nextTick = UTime::now() + nbCarToWait * CHAR_XMIT_DELAY;
+		return;
+	} else {
+		// On ne s'excite pas tout de suite, il n'y a pas de place ou rien à dire
+		this->nextTick = UTime::now() + 8 * CHAR_XMIT_DELAY;
+		return;
+	}
+}
+
+Device::Device(int variableCount)
+{
+	list = (Vector**)malloc(sizeof(Vector*)*variableCount);
+	this->variableCount = 0;
+}
+
+void Device::add(Vector * v)
+{
+	list[variableCount++]=v;
+}
+
+void Device::dump(WriteBuffer & into)
+{
+	for(int i = 0; i < variableCount; ++i)
+	{
+		Vector * cur = list[i];
+		cur->dump(into);
+	}
+}
 
 
-NodeElement::NodeElement(const char * name)
+Group::Group(const __FlashStringHelper * name)
 {
 	this->name = name;
 }
 
-NodeContainer::NodeContainer()
-	: NodeElement(0)
+Vector::Vector(Group * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
 {
-	first = 0;
-	last = 0;
+	this->group = group;
+	this->name = name;
+	this->label = label;
+	this->first = 0;
+	this->last = 0;
+	this->nameSuffix = 0;
+	this->flag = 0;
+	Device::instance().add(this);
 }
 
-void NodeContainer::dump(WriteBuffer & into)
+void Vector::notifyUpdate()
 {
-	into.append('{');
-	bool empty = true;
-	for(NodeContained * cur = first; (cur); cur=cur->next)
+	this->updated = 0;
+}
+
+void Vector::set(uint8_t flag, bool status)
+{
+	uint8_t newFlag = (this->flag & ~flag);
+	if (status) newFlag |= flag;
+	if (this->flag != newFlag) {
+		notifyUpdate();
+	}
+}
+
+
+void Vector::dump(WriteBuffer & into)
+{
+	into.append(F("<defNumberVector name=\""));
+	into.appendXmlEscaped(name);
+	if (nameSuffix) {
+		into.append('_');
+		into.append(nameSuffix);
+	}
+	into.append(F("\" label=\""));
+	into.appendXmlEscaped(label);
+	into.append(F("\" group=\""));
+	into.appendXmlEscaped(group->name);
+	into.append(F("\" state=\"Idle\" perm=\"ro\">\n"));
+	for(Member * cur = first; cur; cur=cur->next)
 	{
-		into.append(cur->name);
-		into.append(':');
-		cur->dump(into);
-		if(empty) {
-			empty = false;
-		} else {
-			into.append(',');
-		}
+		into.append('\t');
+		cur->dump(into, nameSuffix);
+		into.append('\n');
 	}
-	into.append('}');
+	into.append(F("</defNumberVector>\n"));
 }
 
-NodeContained::NodeContained(NodeContainer * parent)
-	: NodeElement(0)
+Member::Member(Vector * vector, 
+	const __FlashStringHelper * name, 
+	const __FlashStringHelper * label,
+	int min,
+	int max)
 {
-	this->parent = parent;
+	this->vector = vector;
 	next = 0;
-	if (parent) {
-		prev = parent->last;
-
-		if (parent->last) {
-			parent->last->next = this;
-		} else {
-			parent->first = this;
-		}
-		parent->last = this;
+	if (vector->last) {
+		vector->last->next = this;
 	} else {
-		prev = 0;
+		vector->first = this;
 	}
+	vector->last = this;
+	this->name = name;
+	this->label = label;
+	this->min = min;
+	this->max = max;
+	this->value = 1;
 }
 
-Scope::Scope(Root * parent, const char * name)
-	: NodeElement(name), NodeContained(parent)
+void Member::setValue(int newValue)
 {
+	if (value == newValue) return;
+	value = newValue;
+	vector->notifyUpdate();
 }
 
-void Scope::dump(WriteBuffer & into)
+void Member::dump(WriteBuffer & into, int8_t nameSuffix)
 {
-	NodeContainer::dump(into);
-}
-
-Root::Root()
-	: NodeElement(0), NodeContainer()
-{
-}
-
-
-Variable::Variable(Scope * parent, const char * name)
-	: NodeElement(name), NodeContained(parent)
-{
-
-}
-
-
-void Variable::dump(WriteBuffer & into)
-{
-	into.append('n');
-	into.append('u');
-	into.append('l');
-	into.append('l');
+	into.append(F("<defNumber name=\""));
+	into.appendXmlEscaped(name);
+	if (nameSuffix) {
+		into.append('_');
+		into.append(nameSuffix);
+	}
+	into.append(F("\" label=\""));
+	into.appendXmlEscaped(label);
+	into.append(F("\" format=\"%.0f\">"));
+	char buffer[32];
+	snprintf(buffer, 32, "%d", value);
+	into.appendXmlEscaped(buffer);
+	into.append(F("</defNumber>"));
 }
