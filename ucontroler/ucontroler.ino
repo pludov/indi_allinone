@@ -69,15 +69,15 @@ OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with a
 
 int debug = 0;
 
-Motor motor(motorPins);
+/*Motor motor(motorPins);
 FilterWheelMotor filterWheelMotor(filterWheelPins);
 PWMResistor resistor(RESISTORPIN);
 ScopeTemp scopeTemp(&oneWire);
 MeteoTemp meteoTemp(DHTPIN, DHTTYPE);
 Voltmeter voltmeter(7);
-MainLogic mainLogic;
+MainLogic mainLogic;*/
 Status status;
-Scheduled * tasks [] = {&motor, &filterWheelMotor, &scopeTemp, &meteoTemp, &voltmeter, &mainLogic, &status, 0};
+Scheduled * tasks [] = {/*&motor, &filterWheelMotor, &scopeTemp, &meteoTemp, &voltmeter, &mainLogic,*/ &status, 0};
 Scheduler scheduler(tasks);
 
 
@@ -142,131 +142,131 @@ void serialCommand(String command) {
 	case 'X':  // Confirm Connection
 		serialIO.sendPacket(command);
 		break;
-	case 'T': // Set Target Position
-	{
-		String targetPosS = command.substring(1);
-		unsigned long targetPosI = targetPosS.toInt();
-		motor.setTargetPosition(targetPosI);
-		serialIO.sendPacket("T" + targetPosS + ":OK");
-		break;
-	}
-	case 'F': // Set Filterwheel Position
-	{
-		if (!filterWheelMotor.lastCalibrationFailed()) {
-			String targetPosS = command.substring(1);
-			unsigned long targetPosI = targetPosS.toInt();
-			filterWheelMotor.setTargetPosition(targetPosI);
-			serialIO.sendPacket("F" + targetPosS + ":OK");
-		} else {
-#ifdef DEBUG
-			Serial.println(F("Move without calibration"));
-#endif
-			serialIO.sendPacket("F:ERR");
-		}
+// 	case 'T': // Set Target Position
+// 	{
+// 		String targetPosS = command.substring(1);
+// 		unsigned long targetPosI = targetPosS.toInt();
+// 		motor.setTargetPosition(targetPosI);
+// 		serialIO.sendPacket("T" + targetPosS + ":OK");
+// 		break;
+// 	}
+// 	case 'F': // Set Filterwheel Position
+// 	{
+// 		if (!filterWheelMotor.lastCalibrationFailed()) {
+// 			String targetPosS = command.substring(1);
+// 			unsigned long targetPosI = targetPosS.toInt();
+// 			filterWheelMotor.setTargetPosition(targetPosI);
+// 			serialIO.sendPacket("F" + targetPosS + ":OK");
+// 		} else {
+// #ifdef DEBUG
+// 			Serial.println(F("Move without calibration"));
+// #endif
+// 			serialIO.sendPacket("F:ERR");
+// 		}
 
-		break;
-	}
-	case 'Q': // Calibration
-	{
+// 		break;
+// 	}
+// 	case 'Q': // Calibration
+// 	{
 
-		String targetPosS = command.substring(1);
-		unsigned long targetPosI = targetPosS.toInt();
+// 		String targetPosS = command.substring(1);
+// 		unsigned long targetPosI = targetPosS.toInt();
 
-		filterWheelMotor.startCalibration(targetPosI);
-		serialIO.sendPacket("Q" + targetPosS + ":OK");
+// 		filterWheelMotor.startCalibration(targetPosI);
+// 		serialIO.sendPacket("Q" + targetPosS + ":OK");
 
-		break;
+// 		break;
 
-	}
-	case 'C': // Get Temperature
-	{
-		double t;
+// 	}
+// 	case 'C': // Get Temperature
+// 	{
+// 		double t;
 
-		// if moving block temperature requests as they interfere with movement. Just return last reading.
-		t = scopeTemp.lastValue;
+// 		// if moving block temperature requests as they interfere with movement. Just return last reading.
+// 		t = scopeTemp.lastValue;
 
-		serialIO.sendPacket(String("C")  + (int)(t * 100) + ":OK#");
-		break;
-	}
-	case 'I': // Set Initial Position. Sets Position without any movement
-	{
-		int hashpos = command.indexOf('#');    // position of hash in string
-		String initPosS = command.substring(1, hashpos);
-		unsigned long initPosI = initPosS.toInt();
-		motor.loadPosition(initPosI);
-		config.storedPosition().position = initPosI;
-		config.commitStoredPosition();
+// 		serialIO.sendPacket(String("C")  + (int)(t * 100) + ":OK#");
+// 		break;
+// 	}
+// 	case 'I': // Set Initial Position. Sets Position without any movement
+// 	{
+// 		int hashpos = command.indexOf('#');    // position of hash in string
+// 		String initPosS = command.substring(1, hashpos);
+// 		unsigned long initPosI = initPosS.toInt();
+// 		motor.loadPosition(initPosI);
+// 		config.storedPosition().position = initPosI;
+// 		config.commitStoredPosition();
 
-		serialIO.sendPacket("I" + initPosS + ":OK");
-		break;
-	}
-	case 'P': // Get Current Position
-	{
-		String currentPositionS = String(motor.getCurrentPosition());
-		serialIO.sendPacket("P" + currentPositionS + ":OK");
-		break;
-	}
-	case 'f': // Get current filterwheel position and status
-	{
-		String currentPositionS = String(filterWheelMotor.getCurrentPosition()) + String(filterWheelMotor.getProtocolStatus());
-		serialIO.sendPacket("f" + currentPositionS + ":OK");
-		break;
-	}
-	case 'H': // Halt
-	{
-		unsigned long where = motor.getCurrentPosition();
-		motor.setTargetPosition(where);
-		String currentPositionS = String(where);
-		serialIO.sendPacket("H" + currentPositionS + ":OK");
-		break;
-	}
-	case 'M': // Is motor moving
-	{
-		if (motor.isActive()) {
-			serialIO.sendPacket("M1:OK");
-		} else {
-			serialIO.sendPacket("M0:OK");
-		}
-		break;
-	}
-	case 'V': // Get Version and abilities
-	{
-		String tempInstalled = (scopeTemp.isAvailable() ? "(Temp. Sensor)" : "");
+// 		serialIO.sendPacket("I" + initPosS + ":OK");
+// 		break;
+// 	}
+// 	case 'P': // Get Current Position
+// 	{
+// 		String currentPositionS = String(motor.getCurrentPosition());
+// 		serialIO.sendPacket("P" + currentPositionS + ":OK");
+// 		break;
+// 	}
+// 	case 'f': // Get current filterwheel position and status
+// 	{
+// 		String currentPositionS = String(filterWheelMotor.getCurrentPosition()) + String(filterWheelMotor.getProtocolStatus());
+// 		serialIO.sendPacket("f" + currentPositionS + ":OK");
+// 		break;
+// 	}
+// 	case 'H': // Halt
+// 	{
+// 		unsigned long where = motor.getCurrentPosition();
+// 		motor.setTargetPosition(where);
+// 		String currentPositionS = String(where);
+// 		serialIO.sendPacket("H" + currentPositionS + ":OK");
+// 		break;
+// 	}
+// 	case 'M': // Is motor moving
+// 	{
+// 		if (motor.isActive()) {
+// 			serialIO.sendPacket("M1:OK");
+// 		} else {
+// 			serialIO.sendPacket("M0:OK");
+// 		}
+// 		break;
+// 	}
+// 	case 'V': // Get Version and abilities
+// 	{
+// 		String tempInstalled = (scopeTemp.isAvailable() ? "(Temp. Sensor)" : "");
 
-		serialIO.sendPacket("V" + programName + "-" +  programVersion + tempInstalled);
-		break;
-	}
-	case 'S':
-	{
-		Payload statusPayload = status.getStatusPayload();
-		serialIO.sendPacket('S', (uint8_t*)&statusPayload, sizeof(statusPayload));
-		break;
-	}
-	case 'Z':
-	{
-		// Acces à la conf
-		int eq;
-		if ((eq = command.indexOf('=')) == -1) {
-			String initPosS = command.substring(1);
-			unsigned long initPosI = initPosS.toInt();
-			char reply[9];
+// 		serialIO.sendPacket("V" + programName + "-" +  programVersion + tempInstalled);
+// 		break;
+// 	}
+// 	case 'S':
+// 	{
+// 		Payload statusPayload = status.getStatusPayload();
+// 		serialIO.sendPacket('S', (uint8_t*)&statusPayload, sizeof(statusPayload));
+// 		break;
+// 	}
+// 	case 'Z':
+// 	{
+// 		// Acces à la conf
+// 		int eq;
+// 		if ((eq = command.indexOf('=')) == -1) {
+// 			String initPosS = command.substring(1);
+// 			unsigned long initPosI = initPosS.toInt();
+// 			char reply[9];
 
-			writeHex(reply, 8, *(uint32_t*)config.getRawStorageData(initPosI));
-			reply[8] = 0;
+// 			writeHex(reply, 8, *(uint32_t*)config.getRawStorageData(initPosI));
+// 			reply[8] = 0;
 
-			serialIO.sendPacket('Z', (uint8_t*)&reply, 8);
-		} else {
-			String initPosS = command.substring(1, eq);
-			String val = command.substring(eq + 1);
-			unsigned long initPosI = initPosS.toInt();
+// 			serialIO.sendPacket('Z', (uint8_t*)&reply, 8);
+// 		} else {
+// 			String initPosS = command.substring(1, eq);
+// 			String val = command.substring(eq + 1);
+// 			unsigned long initPosI = initPosS.toInt();
 
-			uint32_t v = readHex(val);
-			*((uint32_t*)config.getRawStorageData(initPosI)) = v;
-			config.commitStorage(initPosI);
-			serialIO.sendPacket("Z:OK");
-		}
-		break;
-	}
+// 			uint32_t v = readHex(val);
+// 			*((uint32_t*)config.getRawStorageData(initPosI)) = v;
+// 			config.commitStorage(initPosI);
+// 			serialIO.sendPacket("Z:OK");
+// 		}
+// 		break;
+// 	}
 	default: {
 		serialIO.sendPacket("ERR");
 		break;
@@ -310,34 +310,19 @@ void setup() {
 	//EEPROM.write(EE_LOC_PSTAT, 0); // FOR TESTING - invalidate stored position
 
 	// Use position from EEPROM if it is valid, otherwise use default
-	config.init();
+	//config.init();
 #ifdef DEBUG
 	Serial.println(F("done with init conf"));
 #endif
 
-	motor.loadConfigPosition();
-	filterWheelMotor.loadConfigPosition();
+	//motor.loadConfigPosition();
+	//filterWheelMotor.loadConfigPosition();
 #ifdef DEBUG
 	Serial.println(F("now reset search"));
 #endif
 	// OneWire Libary setup
 	oneWire.reset_search();                    // Reset search
 
-//	oneWire.search(tempSensor); // Search for temp sensor and assign address to tempSensor
-//
-//	// DallasTemperature Library setup
-//	sensors.begin();                           // Initialise 1-wire bus
-//
-//	// Check if the temperature sensor is installed
-//	if (sensors.getDeviceCount() == 0) {
-//		tempSensorPresent = false;
-//	} else {
-//		// temperature sensor installed - set it up and get initial value
-//		tempSensorPresent = true;
-//		sensors.setResolution(tempSensor, 10); // Set the resolution to 12 bit (9bit=0.50C; 10bit=0.25C; 11bit=0.125C; 12bit=0.0625C)
-//		sensors.requestTemperatures();             // Get the Temperatures
-//		currentTemperature = getTemperature();
-//	}
 #ifdef DEBUG
 	Serial.println(F("Init done"));
 #endif
@@ -357,23 +342,5 @@ void loop() {
 	}
 
 	scheduler.loop();
-//
-//	UTime previousTime = UTime::now();
-//	while(1)
-//	{
-//		UTime t = UTime::now();
-//		if (t <= previousTime) {
-//			Serial.print("back ");
-//			Serial.print(previousTime.ms());
-//			Serial.print(" vs ");
-//			Serial.print(t.ms());
-//		}
-//		if (previousTime.minutes() != t.minutes()) {
-//			Serial.print(".");
-//		}
-//		previousTime = t;
-//	}
-
-
 }
 

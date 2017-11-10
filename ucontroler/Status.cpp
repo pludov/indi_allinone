@@ -58,11 +58,12 @@ void Status::tick()
 		return;
 	}
 	sendStatus();
-	if (motor.isMoving() || filterWheelMotor.isMoving()) {
+/*	if (motor.isMoving() || filterWheelMotor.isMoving()) {
 		this->nextTick += MS(250);
 	} else {
 		this->nextTick += LongDuration::seconds(10);
-	}
+	}*/
+	this->nextTick += LongDuration::seconds(10);
 }
 
 
@@ -142,7 +143,7 @@ static void writeVolt(char * buffer, float hum)
 Payload Status::getStatusPayload()
 {
 	Payload s;
-	writeHex(s.motor, 5, motor.getCurrentPosition());
+/*	writeHex(s.motor, 5, motor.getCurrentPosition());
 	writeHex(s.motorState, 1, motor.isMoving() ? 1 : 0);
 
 	writeTemp(s.scopeTemp, scopeTemp.lastValue);
@@ -152,7 +153,7 @@ Payload Status::getStatusPayload()
 	writeVolt(s.battery, voltmeter.lastValue());
 	writeHex(s.heater, 2, resistor.pct);
 	writeHex(s.filterwheel, 5, filterWheelMotor.getCurrentPosition());
-	s.filterwheelState = filterWheelMotor.getProtocolStatus();
+	s.filterwheelState = filterWheelMotor.getProtocolStatus();*/
 	return s;
 }
 
