@@ -24,10 +24,14 @@
 //------------------------------------------------------------------
 
 #include <Arduino.h>
+
+
 // Include necessary libraries
 #include <OneWire.h>                          // DS18B20 temp sensor
 #include <DallasTemperature.h>                // DS18B20 temp sensor
 #include <EEPROM.h>                           // EEPROM Library
+
+#include "Variable.h"
 
 #include "utime.h"
 #include "MainLogic.h"
@@ -326,6 +330,23 @@ void setup() {
 #ifdef DEBUG
 	Serial.println(F("Init done"));
 #endif
+
+	Root root;
+
+	Scope general(&root, "general");
+
+	Variable child(&general,"bi\r\n\b\020dule");
+
+	char buffer[4096];
+	WriteBuffer into(buffer, 4096);
+	root.dump(into);
+	if (into.finish()) {
+		Serial.print("root:");
+		Serial.println(buffer);
+	} else {
+		Serial.println("Not enough space");
+	}
+
 
 }
 //------------------------------------------------------------------
