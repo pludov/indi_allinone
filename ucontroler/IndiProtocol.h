@@ -11,19 +11,19 @@
 #include "Scheduled.h"
 #include "WriteBuffer.h"
 
-class Vector;
+class IndiVector;
 struct DirtyVector;
 
-class DeviceWriter : public Scheduled
+class IndiProtocol : public Scheduled
 {
-	friend class Vector;
+	friend class IndiVector;
 	char * notifPacket;
 	Stream * serial;
 	char * writeBuffer;
 	int writeBufferLeft;
 	
 	uint8_t clientId;
-	DeviceWriter * next;
+	IndiProtocol * next;
 
 	// Linked list of dirty Vectors
 	uint8_t * nextDirtyVector;
@@ -31,11 +31,11 @@ class DeviceWriter : public Scheduled
 	uint8_t lastDirtyVector;
 
 	void fillBuffer();
-	void dirtied(Vector * which);
+	void dirtied(IndiVector * which);
 	void popDirty(DirtyVector & result);
 	
 public:
-	DeviceWriter(Stream * target);
+	IndiProtocol(Stream * target);
 	void tick();
 };
 

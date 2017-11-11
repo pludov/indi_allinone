@@ -23,21 +23,21 @@
 #define VECTOR_VALUE 2
 #define VECTOR_COMM_COUNT 3
 
-class DeviceWriter;
-class Device;
-class Member;
-class Group;
+class IndiProtocol;
+class IndiDevice;
+class IndiVectorMember;
+class IndiVectorGroup;
 
-class Vector {
-	friend class DeviceWriter;
-	friend class Device;
-	friend class Member;
+class IndiVector {
+	friend class IndiProtocol;
+	friend class IndiDevice;
+	friend class IndiVectorMember;
 	const __FlashStringHelper * name;
 	int8_t nameSuffix;
 	const __FlashStringHelper * label;
 
-	Group * group;
-	Member * first, * last;
+	IndiVectorGroup * group;
+	IndiVectorMember * first, * last;
 	
 	uint8_t flag;
 
@@ -47,7 +47,7 @@ class Vector {
 	int8_t uid;
 
 	/** 
-	 * clientId : DeviceWriter id
+	 * clientId : IndiProtocol id
 	 * commId : VECTOR_ANNOUNCED, VECTOR_UPDATED, ...
 	 */
 	bool isDirty(uint8_t clientId, uint8_t commId);
@@ -56,7 +56,7 @@ class Vector {
 	void notifyUpdate(uint8_t commId);
 	
 public:
-	Vector(Group * parent, const __FlashStringHelper * name, const __FlashStringHelper * label);
+	IndiVector(IndiVectorGroup * parent, const __FlashStringHelper * name, const __FlashStringHelper * label);
 
 	void set(uint8_t flag, bool status);
 	

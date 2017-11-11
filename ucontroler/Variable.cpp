@@ -16,12 +16,12 @@
 
 #define NOTIF_PACKET_MAX_SIZE 2048
 
-static Device * mainDevice = 0;
+static IndiDevice * mainDevice = 0;
 
-Device & Device::instance()
+IndiDevice & IndiDevice::instance()
 {
 	if (!mainDevice) {
-		mainDevice = new Device(100);
+		mainDevice = new IndiDevice(100);
 	}
 	return *mainDevice;
 }
@@ -166,9 +166,9 @@ bool WriteBuffer::finish()
 	return false;
 }
 
-DeviceWriter::DeviceWriter(Stream * target)
+IndiProtocol::IndiProtocol(Stream * target)
 {
-	Device & device = Device::instance();
+	IndiDevice & device = IndiDevice::instance();
 	
 	this->serial = target;
 	this->notifPacket = (char*)malloc(NOTIF_PACKET_MAX_SIZE);
@@ -196,7 +196,7 @@ DeviceWriter::DeviceWriter(Stream * target)
 	}
 }
 
-void DeviceWriter::dirtied(Vector* vector)
+void IndiProtocol::dirtied(IndiVector* vector)
 {
 	uint8_t which = vector->uid;
 	if (which == VECNONE) return;
@@ -220,17 +220,17 @@ void DeviceWriter::dirtied(Vector* vector)
 
 
 struct DirtyVector {
-	Vector * vector;
+	IndiVector * vector;
 	uint8_t dirtyFlags;
 };
 
 
-void DeviceWriter::popDirty(DirtyVector & result)
+void IndiProtocol::popDirty(DirtyVector & result)
 {
 	uint8_t vectorId = this->firstDirtyVector;
 	result.dirtyFlags = 0;
 	if (vectorId != VECNONE) {
-		Vector * v = Device::instance().list[vectorId];
+		IndiVector * v = IndiDevice::instance().list[vectorId];
 		result.vector = v;
 		for(int i = 0; i < VECTOR_COMM_COUNT; ++i) {
 			if (v->cleanDirty(clientId, i)) {
@@ -248,7 +248,7 @@ void DeviceWriter::popDirty(DirtyVector & result)
 	}
 }
 
-void DeviceWriter::fillBuffer()
+void IndiProtocol::fillBuffer()
 {
 	// Il y a de la place, on n'a rien à dire...
 	// PArcours la liste des variables (ouch, on peut mieux faire là...)
@@ -272,7 +272,7 @@ void DeviceWriter::fillBuffer()
 	}
 }
 
-void DeviceWriter::tick()
+void IndiProtocol::tick()
 {
 	int spaceAvailable = serial->availableForWrite();
 	if (writeBufferLeft == 0 && spaceAvailable > 8) {
@@ -302,14 +302,14 @@ void DeviceWriter::tick()
 	}
 }
 
-Device::Device(int variableCount)
+IndiDevice::IndiDevice(int variableCount)
 {
-	list = (Vector**)malloc(sizeof(Vector*)*variableCount);
+	list = (IndiVector**)malloc(sizeof(IndiVector*)*variableCount);
 	this->variableCount = 0;
 	this->firstWriter = 0;
 }
 
-void Device::add(Vector * v)
+void IndiDevice::add(IndiVector * v)
 {
 	v->uid = 255;
 	if (firstWriter) {
@@ -324,22 +324,22 @@ void Device::add(Vector * v)
 	list[variableCount++]=v;
 }
 
-void Device::dump(WriteBuffer & into)
+void IndiDevice::dump(WriteBuffer & into)
 {
 	for(int i = 0; i < variableCount; ++i)
 	{
-		Vector * cur = list[i];
+		IndiVector * cur = list[i];
 		cur->dump(into);
 	}
 }
 
 
-Group::Group(const __FlashStringHelper * name)
+IndiVectorGroup::IndiVectorGroup(const __FlashStringHelper * name)
 {
 	this->name = name;
 }
 
-Vector::Vector(Group * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
+IndiVector::IndiVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
 {
 	this->group = group;
 	this->name = name;
@@ -348,28 +348,28 @@ Vector::Vector(Group * group, const __FlashStringHelper * name, const __FlashStr
 	this->last = 0;
 	this->nameSuffix = 0;
 	this->flag = 0;
-	Device::instance().add(this);
+	IndiDevice::instance().add(this);
 }
 
-void Vector::notifyUpdate(uint8_t which)
+void IndiVector::notifyUpdate(uint8_t which)
 {
-	Device & device = Device::instance();
+	IndiDevice & device = IndiDevice::instance();
 	notifStatus[which] = 0;
 
-	for(DeviceWriter * dw = device.firstWriter; dw; dw = dw->next)
+	for(IndiProtocol * dw = device.firstWriter; dw; dw = dw->next)
 	{
 		Serial.println("dirtied");
 		dw->dirtied(this);
 	}
 }
 
-bool Vector::isDirty(uint8_t clientId, uint8_t commId)
+bool IndiVector::isDirty(uint8_t clientId, uint8_t commId)
 {
 	// Dirty means bit is set to 0
 	return (notifStatus[commId] & (1 << clientId)) == 0;
 }
 
-bool Vector::cleanDirty(uint8_t clientId, uint8_t commId)
+bool IndiVector::cleanDirty(uint8_t clientId, uint8_t commId)
 {
 	// Set bit to 1
 	uint8_t mask = 1 << clientId;
@@ -382,7 +382,7 @@ bool Vector::cleanDirty(uint8_t clientId, uint8_t commId)
 }
 
 
-void Vector::set(uint8_t flag, bool status)
+void IndiVector::set(uint8_t flag, bool status)
 {
 	uint8_t newFlag = (this->flag & ~flag);
 	if (status) newFlag |= flag;
@@ -392,7 +392,7 @@ void Vector::set(uint8_t flag, bool status)
 }
 
 
-void Vector::dump(WriteBuffer & into)
+void IndiVector::dump(WriteBuffer & into)
 {
 	into.append(F("<defNumberVector name=\""));
 	into.appendXmlEscaped(name);
@@ -405,7 +405,7 @@ void Vector::dump(WriteBuffer & into)
 	into.append(F("\" group=\""));
 	into.appendXmlEscaped(group->name);
 	into.append(F("\" state=\"Idle\" perm=\"ro\">\n"));
-	for(Member * cur = first; cur; cur=cur->next)
+	for(IndiVectorMember * cur = first; cur; cur=cur->next)
 	{
 		into.append('\t');
 		cur->dump(into, nameSuffix);
@@ -414,7 +414,7 @@ void Vector::dump(WriteBuffer & into)
 	into.append(F("</defNumberVector>\n"));
 }
 
-Member::Member(Vector * vector, 
+IndiVectorMember::IndiVectorMember(IndiVector * vector, 
 	const __FlashStringHelper * name, 
 	const __FlashStringHelper * label,
 	int min,
@@ -435,14 +435,14 @@ Member::Member(Vector * vector,
 	this->value = 1;
 }
 
-void Member::setValue(int newValue)
+void IndiVectorMember::setValue(int newValue)
 {
 	if (value == newValue) return;
 	value = newValue;
 	vector->notifyUpdate(VECTOR_VALUE);
 }
 
-void Member::dump(WriteBuffer & into, int8_t nameSuffix)
+void IndiVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
 	into.append(F("<defNumber name=\""));
 	into.appendXmlEscaped(name);

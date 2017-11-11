@@ -9,11 +9,11 @@
 #define INDIVECTORGROUP_H_
 
 
-class Group {
-	friend class Vector;
+class IndiVectorGroup {
+	friend class IndiVector;
 	const __FlashStringHelper * name;
 public:
-	Group(const __FlashStringHelper * name);
+	IndiVectorGroup(const __FlashStringHelper * name);
 };
 
 

@@ -31,7 +31,10 @@
 #include <DallasTemperature.h>                // DS18B20 temp sensor
 #include <EEPROM.h>                           // EEPROM Library
 
-#include "Variable.h"
+#include "IndiProtocol.h"
+#include "IndiVectorGroup.h"
+#include "IndiVector.h"
+#include "IndiVectorMember.h"
 
 #include "utime.h"
 #include "MainLogic.h"
@@ -331,18 +334,18 @@ void setup() {
 
 
 
-	Group general(F("general"));
+	IndiVectorGroup general(F("general"));
 
-	Vector child(&general,F("BIDULE"),F("Bidules tres bien"));
-	Member i1(&child, F("BIDULE_1"), F("Premier bidule tres biens"), 0, 100);
-	Member i2(&child, F("BIDULE_2"), F("Autre bidule tres bien"), 0, 100);
+	IndiVector child(&general,F("BIDULE"),F("Bidules tres bien"));
+	IndiVectorMember i1(&child, F("BIDULE_1"), F("Premier bidule tres biens"), 0, 100);
+	IndiVectorMember i2(&child, F("BIDULE_2"), F("Autre bidule tres bien"), 0, 100);
 
-	DeviceWriter * serialWriter = new DeviceWriter(&Serial);
+	IndiProtocol * serialWriter = new IndiProtocol(&Serial);
 
 
 	char buffer[4096];
 	WriteBuffer into(buffer, 4096);
-	Device::instance().dump(into);
+	IndiDevice::instance().dump(into);
 
 
 	if (into.finish()) {

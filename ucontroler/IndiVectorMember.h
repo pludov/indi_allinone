@@ -5,19 +5,19 @@
  *      Author: utilisateur
  */
 
-#ifndef INDIVECTORMEMBER
-#define INDIVECTORMEMBER
+#ifndef INDIVECTORMEMBER_H_
+#define INDIVECTORMEMBER_H_
 
-class Member {
-	friend class Vector;
+class IndiVectorMember {
+	friend class IndiVector;
 	const __FlashStringHelper * name;
 	const __FlashStringHelper * label;
 	int value;
 	int min, max;
-	Vector * vector;
-	Member * next;
+	IndiVector * vector;
+	IndiVectorMember * next;
 public:
-	Member(Vector * vector, 
+	IndiVectorMember(IndiVector * vector, 
 			const __FlashStringHelper * name, 
 			const __FlashStringHelper * label,
 			int min, int max);

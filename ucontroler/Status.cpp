@@ -25,9 +25,9 @@ extern PWMResistor resistor;
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
 
-Group statusGroup(F("Status"));
-Vector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
-Member uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
+IndiVectorGroup statusGroup(F("Status"));
+IndiVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
+IndiVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
 
 //
 //static int pendingWrite()

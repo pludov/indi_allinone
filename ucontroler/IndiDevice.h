@@ -11,22 +11,22 @@
 #include "Scheduled.h"
 #include "WriteBuffer.h"
 
-class Vector;
-class DeviceWriter;
+class IndiVector;
+class IndiProtocol;
 
-class Device {
-	friend class DeviceWriter;
-	Vector ** list;
+class IndiDevice {
+	friend class IndiProtocol;
+	IndiVector ** list;
 	int variableCount;
-	DeviceWriter * firstWriter;
+	IndiProtocol * firstWriter;
 protected:
-	friend class Vector;
-	void add(Vector * v);
+	friend class IndiVector;
+	void add(IndiVector * v);
 public:
-	Device(int variableCount);
+	IndiDevice(int variableCount);
 	void dump(WriteBuffer & into);
 
-	static Device & instance();
+	static IndiDevice & instance();
 };
 
 
