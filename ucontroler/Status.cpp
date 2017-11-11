@@ -16,7 +16,9 @@
 #include "debug.h"
 #include "SerialIO.h"
 
-#include "Variable.h"
+#include "IndiVector.h"
+#include "IndiVectorGroup.h"
+#include "IndiVectorMember.h"
 
 extern PWMResistor resistor;
 

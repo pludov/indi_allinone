@@ -5,7 +5,11 @@
  *      Author: utilisateur
  */
 #include <Arduino.h>
-#include "Variable.h"
+#include "IndiDevice.h"
+#include "IndiProtocol.h"
+#include "IndiVectorGroup.h"
+#include "IndiVector.h"
+#include "IndiVectorMember.h"
 
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
