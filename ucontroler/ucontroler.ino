@@ -49,6 +49,8 @@
 #include "Config.h"
 #include "debug.h"
 #include "SerialIO.h"
+#include "DewHeater.h"
+
 
 #define ONE_WIRE_BUS 3                        // DS18B20 DATA wire connected to Digital Pin 6
 // EEPROM storage locations
@@ -332,7 +334,7 @@ void setup() {
 #endif
 
 
-
+	DewHeater * dw = new DewHeater(11, 1);
 
 	IndiProtocol * serialWriter = new IndiProtocol(&Serial);
 

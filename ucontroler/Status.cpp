@@ -70,7 +70,7 @@ void Status::tick()
 	} else {
 		this->nextTick += LongDuration::seconds(10);
 	}*/
-	this->nextTick += LongDuration::seconds(1);
+	this->nextTick += LongDuration::seconds(10);
 }
 
 
