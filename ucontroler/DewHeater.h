@@ -6,12 +6,15 @@
 #include "IndiVectorGroup.h"
 #include "IndiNumberVector.h"
 #include "IndiFloatVectorMember.h"
+#include "IndiTextVector.h"
+#include "IndiTextVectorMember.h"
 
 class DewHeater : public Scheduled {
     IndiVectorGroup group;
     IndiNumberVector temperatureVec;
     IndiFloatVectorMember temperature;
-
+    IndiTextVector uidVec;
+    IndiTextVectorMember uid;
 
     OneWire oneWire;
     uint8_t status;

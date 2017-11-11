@@ -10,18 +10,18 @@
 #include "IndiProtocol.h"
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
-#include "IndiNumberVector.h"
+#include "IndiTextVector.h"
 
 
-IndiNumberVector::IndiNumberVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
+IndiTextVector::IndiTextVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
     :IndiVector(group, name, label)
 {
 }
 
 
-void IndiNumberVector::dump(WriteBuffer & into)
+void IndiTextVector::dump(WriteBuffer & into)
 {
-	into.append(F("<defNumberVector name=\""));
+	into.append(F("<defTextVector name=\""));
 	into.appendXmlEscaped(name);
 	if (nameSuffix) {
 		into.append('_');
@@ -30,9 +30,9 @@ void IndiNumberVector::dump(WriteBuffer & into)
 	into.append(F("\" label=\""));
 	into.appendXmlEscaped(label);
 	into.append(F("\" group=\""));
-	group->dumpXmlEncoded(into);
+    group->dumpXmlEncoded(into);
     into.append(F("\" state=\"Idle\" perm=\"ro\">\n"));
     dumpMembers(into);
-	into.append(F("</defNumberVector>\n"));
+    into.append(F("</defTextVector>\n"));
 }
 

@@ -6,7 +6,7 @@
  */
 #include <Arduino.h>
 #include "WriteBuffer.h"
-
+#include "Utils.h"
 
 WriteBuffer::WriteBuffer(char * into, int size)
 {
@@ -82,14 +82,6 @@ void WriteBuffer::appendXmlEscaped(const char * s)
 	}
 }
 
-static char hex(uint8_t v)
-{
-	if (v < 10) {
-		return '0' + v;
-	}
-	return 'a' - 10 + v;
-}
-
 void WriteBuffer::append(const char * s)
 {
 	append('"');
@@ -128,8 +120,8 @@ void WriteBuffer::append(const char * s)
 					append('u');
 					append('0');
 					append('0');
-					append(hex(c >> 4));
-					append(hex(c & 15));
+					append(Utils::hex(c >> 4));
+					append(Utils::hex(c & 15));
 				} else {
 					append(c);
 				}
