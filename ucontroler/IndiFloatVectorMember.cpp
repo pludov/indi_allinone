@@ -12,14 +12,14 @@
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 #include "IndiNumberVector.h"
-#include "IndiIntVectorMember.h"
+#include "IndiFloatVectorMember.h"
 
 
-IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector, 
+IndiFloatVectorMember::IndiFloatVectorMember(IndiNumberVector * vector, 
 	const __FlashStringHelper * name, 
 	const __FlashStringHelper * label,
-	int min,
-    int max)
+	double min,
+    double max)
     :IndiVectorMember(vector, name, label)
 {
 	this->min = min;
@@ -27,14 +27,14 @@ IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector,
 	this->value = 0;
 }
 
-void IndiIntVectorMember::setValue(int newValue)
+void IndiFloatVectorMember::setValue(double newValue)
 {
 	if (value == newValue) return;
 	value = newValue;
 	notifyVectorUpdate(VECTOR_VALUE);
 }
 
-void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
+void IndiFloatVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
 	into.append(F("<defNumber name=\""));
 	into.appendXmlEscaped(name);
@@ -46,7 +46,7 @@ void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 	into.appendXmlEscaped(label);
 	into.append(F("\" format=\"%.0f\">"));
 	char buffer[32];
-	snprintf(buffer, 32, "%d", value);
+	snprintf(buffer, 32, "%.2f", value);
 	into.appendXmlEscaped(buffer);
 	into.append(F("</defNumber>"));
 }

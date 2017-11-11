@@ -18,7 +18,7 @@
 
 #include "IndiNumberVector.h"
 #include "IndiVectorGroup.h"
-#include "IndiIntVectorMember.h"
+#include "IndiFloatVectorMember.h"
 
 extern PWMResistor resistor;
 
@@ -27,7 +27,7 @@ extern PWMResistor resistor;
 
 IndiVectorGroup statusGroup(F("Status"));
 IndiNumberVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
-IndiIntVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
+IndiFloatVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset (s)"), 0, 1e36);
 
 //
 //static int pendingWrite()
@@ -57,7 +57,7 @@ void Status::needUpdate()
 
 void Status::tick()
 {
-	uptimeValue.setValue(millis());
+	uptimeValue.setValue(millis() / 1000.0);
 	// Si on a de la place sur le buffer de sortie, alors on accepte
 	if (Serial.availableForWrite() < sizeof(struct Payload)) {
 		// Il faut attendre pendant au moins ce temps

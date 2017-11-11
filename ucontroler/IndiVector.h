@@ -33,7 +33,6 @@ class IndiVector {
 	friend class IndiProtocol;
 	friend class IndiDevice;
 	friend class IndiVectorMember;
-	friend class IndiIntVectorMember;
 protected:
 	const __FlashStringHelper * name;
 	int8_t nameSuffix;

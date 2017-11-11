@@ -15,6 +15,8 @@ protected:
 	const __FlashStringHelper * name;
 	const __FlashStringHelper * label;
 	IndiVector * vector;
+
+	void notifyVectorUpdate(uint8_t commId);
 public:
 	IndiVectorMember(IndiVector * vector, 
 			const __FlashStringHelper * name, 
