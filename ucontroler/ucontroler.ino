@@ -334,12 +334,6 @@ void setup() {
 
 
 
-	IndiVectorGroup general(F("general"));
-
-	IndiVector child(&general,F("BIDULE"),F("Bidules tres bien"));
-	IndiVectorMember i1(&child, F("BIDULE_1"), F("Premier bidule tres biens"), 0, 100);
-	IndiVectorMember i2(&child, F("BIDULE_2"), F("Autre bidule tres bien"), 0, 100);
-
 	IndiProtocol * serialWriter = new IndiProtocol(&Serial);
 
 

@@ -16,9 +16,9 @@
 #include "debug.h"
 #include "SerialIO.h"
 
-#include "IndiVector.h"
+#include "IndiNumberVector.h"
 #include "IndiVectorGroup.h"
-#include "IndiVectorMember.h"
+#include "IndiIntVectorMember.h"
 
 extern PWMResistor resistor;
 
@@ -26,8 +26,8 @@ extern PWMResistor resistor;
 #define CHAR_XMIT_DELAY 79
 
 IndiVectorGroup statusGroup(F("Status"));
-IndiVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
-IndiVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
+IndiNumberVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
+IndiIntVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset"), 0, 0x7fffffff);
 
 //
 //static int pendingWrite()

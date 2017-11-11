@@ -11,6 +11,7 @@
 
 class IndiVectorGroup {
 	friend class IndiVector;
+	friend class IndiNumberVector;
 	const __FlashStringHelper * name;
 public:
 	IndiVectorGroup(const __FlashStringHelper * name);

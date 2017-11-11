@@ -15,9 +15,7 @@
 
 IndiVectorMember::IndiVectorMember(IndiVector * vector, 
 	const __FlashStringHelper * name, 
-	const __FlashStringHelper * label,
-	int min,
-	int max)
+	const __FlashStringHelper * label)
 {
 	this->vector = vector;
 	next = 0;
@@ -29,31 +27,4 @@ IndiVectorMember::IndiVectorMember(IndiVector * vector,
 	vector->last = this;
 	this->name = name;
 	this->label = label;
-	this->min = min;
-	this->max = max;
-	this->value = 1;
-}
-
-void IndiVectorMember::setValue(int newValue)
-{
-	if (value == newValue) return;
-	value = newValue;
-	vector->notifyUpdate(VECTOR_VALUE);
-}
-
-void IndiVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
-{
-	into.append(F("<defNumber name=\""));
-	into.appendXmlEscaped(name);
-	if (nameSuffix) {
-		into.append('_');
-		into.append(nameSuffix);
-	}
-	into.append(F("\" label=\""));
-	into.appendXmlEscaped(label);
-	into.append(F("\" format=\"%.0f\">"));
-	char buffer[32];
-	snprintf(buffer, 32, "%d", value);
-	into.appendXmlEscaped(buffer);
-	into.append(F("</defNumber>"));
 }

@@ -10,21 +10,17 @@
 
 class IndiVectorMember {
 	friend class IndiVector;
+	IndiVectorMember * next;
+protected:
 	const __FlashStringHelper * name;
 	const __FlashStringHelper * label;
-	int value;
-	int min, max;
 	IndiVector * vector;
-	IndiVectorMember * next;
 public:
 	IndiVectorMember(IndiVector * vector, 
 			const __FlashStringHelper * name, 
-			const __FlashStringHelper * label,
-			int min, int max);
+			const __FlashStringHelper * label);
 
-	void setValue(int v);
-
-	virtual void dump(WriteBuffer & into, int8_t nameSuffix);
+	virtual void dump(WriteBuffer & into, int8_t nameSuffix) = 0;
 };
 
 #endif /* INDIVECTORMEMBER_H_ */

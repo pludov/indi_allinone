@@ -27,11 +27,14 @@ class IndiProtocol;
 class IndiDevice;
 class IndiVectorMember;
 class IndiVectorGroup;
+class IndiIntVectorMember;
 
 class IndiVector {
 	friend class IndiProtocol;
 	friend class IndiDevice;
 	friend class IndiVectorMember;
+	friend class IndiIntVectorMember;
+protected:
 	const __FlashStringHelper * name;
 	int8_t nameSuffix;
 	const __FlashStringHelper * label;
@@ -55,12 +58,13 @@ class IndiVector {
 
 	void notifyUpdate(uint8_t commId);
 	
+	void dumpMembers(WriteBuffer & into);
 public:
 	IndiVector(IndiVectorGroup * parent, const __FlashStringHelper * name, const __FlashStringHelper * label);
 
 	void set(uint8_t flag, bool status);
 	
-	virtual void dump(WriteBuffer & into);
+	virtual void dump(WriteBuffer & into) = 0;
 };
 
 

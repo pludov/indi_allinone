@@ -65,26 +65,12 @@ void IndiVector::set(uint8_t flag, bool status)
 	}
 }
 
-
-void IndiVector::dump(WriteBuffer & into)
+void IndiVector::dumpMembers(WriteBuffer & into)
 {
-	into.append(F("<defNumberVector name=\""));
-	into.appendXmlEscaped(name);
-	if (nameSuffix) {
-		into.append('_');
-		into.append(nameSuffix);
-	}
-	into.append(F("\" label=\""));
-	into.appendXmlEscaped(label);
-	into.append(F("\" group=\""));
-	into.appendXmlEscaped(group->name);
-	into.append(F("\" state=\"Idle\" perm=\"ro\">\n"));
 	for(IndiVectorMember * cur = first; cur; cur=cur->next)
 	{
 		into.append('\t');
 		cur->dump(into, nameSuffix);
 		into.append('\n');
 	}
-	into.append(F("</defNumberVector>\n"));
 }
-
