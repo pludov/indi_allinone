@@ -81,10 +81,6 @@ MeteoTemp meteoTemp(DHTPIN, DHTTYPE);
 Voltmeter voltmeter(7);
 MainLogic mainLogic;*/
 Status status;
-DeviceWriter serialWriter(&Serial, 0);
-Scheduled * tasks [] = {/*&motor, &filterWheelMotor, &scopeTemp, &meteoTemp, &voltmeter, &mainLogic,*/ &status, &serialWriter, 0};
-Scheduler scheduler(tasks);
-
 
 //
 ////------------------------------------------------------------------
@@ -333,17 +329,22 @@ void setup() {
 #endif
 
 
+
+
 	Group general(F("general"));
 
 	Vector child(&general,F("BIDULE"),F("Bidules tres bien"));
 	Member i1(&child, F("BIDULE_1"), F("Premier bidule tres biens"), 0, 100);
 	Member i2(&child, F("BIDULE_2"), F("Autre bidule tres bien"), 0, 100);
-	
+
+	DeviceWriter * serialWriter = new DeviceWriter(&Serial);
 
 
 	char buffer[4096];
 	WriteBuffer into(buffer, 4096);
 	Device::instance().dump(into);
+
+
 	if (into.finish()) {
 		Serial.print("root:");
 		Serial.println(buffer);
@@ -366,6 +367,6 @@ void loop() {
 		serialCommand(serialIO.getReadyInput());
 	}
 
-	scheduler.loop();
+	Scheduler::instance().loop();
 }
 

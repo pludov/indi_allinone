@@ -14,13 +14,17 @@
 
 class Scheduler
 {
+	friend class Scheduled;
 private:
-	Scheduled ** scheduleds;
+	
+	Scheduled * first;
 
 public:
 	// expect a null terminated list of scheduled
-	Scheduler(Scheduled ** scheduleds);
+	Scheduler();
 	void loop();
+
+	static Scheduler & instance() __attribute__ ((const));
 };
 
 #endif /* SCHEDULER_H_ */

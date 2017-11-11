@@ -162,60 +162,109 @@ bool WriteBuffer::finish()
 	return false;
 }
 
-DeviceWriter::DeviceWriter(Stream * target, int8_t id)
+DeviceWriter::DeviceWriter(Stream * target)
 {
-	lastVector = -1;
+	Device & device = Device::instance();
+	
 	this->serial = target;
 	this->notifPacket = (char*)malloc(NOTIF_PACKET_MAX_SIZE);
 	this->writeBuffer = 0;
 	this->writeBufferLeft = 0;
-	this->clientId = 1 << id;
 	this->priority = 100;
 	this->nextTick = UTime::now();
+
+	this->next = device.firstWriter;
+	this->clientId = this->next ? this->next->clientId + 1 : 0;
+	device.firstWriter = this;
+
+	if (device.variableCount) {
+		this->nextDirtyVector = (uint8_t*)malloc(device.variableCount);
+		for(int i = 0; i < device.variableCount -1; ++i) {
+			this->nextDirtyVector[i] = i + 1;
+		}
+		this->nextDirtyVector[device.variableCount - 1] = VECNONE;
+		this->firstDirtyVector = 0;
+		this->lastDirtyVector = device.variableCount - 1;
+	} else {
+		this->firstDirtyVector = 0;
+		this->lastDirtyVector = 0;
+		this->nextDirtyVector = 0;
+	}
+}
+
+void DeviceWriter::dirtied(Vector* vector)
+{
+	uint8_t which = vector->uid;
+	if (which == VECNONE) return;
+
+	// Si il est dans la liste:
+	//  - soit c'est le dernier
+	//  - soit il a un suivant
+	if (this->lastDirtyVector == which || this->nextDirtyVector[which] != VECNONE) {
+		return;
+	}
+
+	// C'est notre nouveau dernier
+	if (this->lastDirtyVector != VECNONE) {
+		this->nextDirtyVector[this->lastDirtyVector] = which;
+		this->lastDirtyVector = which;
+	} else {
+		this->firstDirtyVector = which;
+		this->lastDirtyVector = which;
+	}
+}
+
+
+struct DirtyVector {
+	Vector * vector;
+	uint8_t dirtyFlags;
+};
+
+
+void DeviceWriter::popDirty(DirtyVector & result)
+{
+	uint8_t vectorId = this->firstDirtyVector;
+	result.dirtyFlags = 0;
+	if (vectorId != VECNONE) {
+		Vector * v = Device::instance().list[vectorId];
+		result.vector = v;
+		for(int i = 0; i < VECTOR_COMM_COUNT; ++i) {
+			if (v->cleanDirty(clientId, i)) {
+				result.dirtyFlags |= (1 << i);
+			}
+		}
+		
+		this->firstDirtyVector = this->nextDirtyVector[vectorId];
+		this->nextDirtyVector[vectorId] = VECNONE;
+		if (this->firstDirtyVector == VECNONE) {
+			this->lastDirtyVector = VECNONE;
+		}
+	} else {
+		result.vector = 0;
+	}
 }
 
 void DeviceWriter::fillBuffer()
 {
 	// Il y a de la place, on n'a rien à dire...
 	// PArcours la liste des variables (ouch, on peut mieux faire là...)
-	Device & device = Device::instance();
-	for(int i = 0; i < device.variableCount; ++i)
-	{
-		lastVector++;
-		if (lastVector == device.variableCount) {
-			lastVector = 0;
-		}
+	DirtyVector toSend;
+	popDirty(toSend);
+	if (!toSend.vector) {
+		return;
+	}
 
-		Vector * v = device.list[lastVector];
-		// FIXME: interrupt safe ?
-		if (!(v->announced & clientId)) {
-			WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
-			v->announced |= clientId;
-			v->updated |= clientId;
+	// FIXME: depending on dirtyFlags, ...
 
-			v->dump(wf);
-			if (wf.finish()) {
-				writeBuffer = notifPacket;
-				writeBufferLeft = wf.size();
-				return;
-			} else {
-				// WTF ? on peut rien faire... on oublie
-			}
-		}
+	WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
 
-		if (!(v->updated & clientId)) {
-			WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
-			v->updated |= clientId;
-
-			v->dump(wf);
-			if (wf.finish()) {
-				writeBuffer = notifPacket;
-				writeBufferLeft = wf.size();
-				return;
-			} else {
-				// WTF ? on peut rien faire... on oublie
-			}
-		}
+	toSend.vector->dump(wf);
+	if (wf.finish()) {
+		writeBuffer = notifPacket;
+		writeBufferLeft = wf.size();
+		return;
+	} else {
+		// WTF ? on peut rien faire... on oublie
 	}
 }
 
@@ -253,10 +302,21 @@ Device::Device(int variableCount)
 {
 	list = (Vector**)malloc(sizeof(Vector*)*variableCount);
 	this->variableCount = 0;
+	this->firstWriter = 0;
 }
 
 void Device::add(Vector * v)
 {
+	v->uid = 255;
+	if (firstWriter) {
+		Serial.println(F("vector added after writer : not supported"));
+		return;
+	}
+	if (variableCount >= 254) {
+		Serial.println(F("Limit of 254 vector reached"));
+		return;
+	}
+	v->uid = variableCount;
 	list[variableCount++]=v;
 }
 
@@ -287,17 +347,43 @@ Vector::Vector(Group * group, const __FlashStringHelper * name, const __FlashStr
 	Device::instance().add(this);
 }
 
-void Vector::notifyUpdate()
+void Vector::notifyUpdate(uint8_t which)
 {
-	this->updated = 0;
+	Device & device = Device::instance();
+	notifStatus[which] = 0;
+
+	for(DeviceWriter * dw = device.firstWriter; dw; dw = dw->next)
+	{
+		Serial.println("dirtied");
+		dw->dirtied(this);
+	}
 }
+
+bool Vector::isDirty(uint8_t clientId, uint8_t commId)
+{
+	// Dirty means bit is set to 0
+	return (notifStatus[commId] & (1 << clientId)) == 0;
+}
+
+bool Vector::cleanDirty(uint8_t clientId, uint8_t commId)
+{
+	// Set bit to 1
+	uint8_t mask = 1 << clientId;
+	uint8_t val = notifStatus[commId];
+	if (!(val & mask)) {
+		val |= mask;
+		return true;
+	}
+	return false;
+}
+
 
 void Vector::set(uint8_t flag, bool status)
 {
 	uint8_t newFlag = (this->flag & ~flag);
 	if (status) newFlag |= flag;
 	if (this->flag != newFlag) {
-		notifyUpdate();
+		notifyUpdate(VECTOR_MUTATION);
 	}
 }
 
@@ -349,7 +435,7 @@ void Member::setValue(int newValue)
 {
 	if (value == newValue) return;
 	value = newValue;
-	vector->notifyUpdate();
+	vector->notifyUpdate(VECTOR_VALUE);
 }
 
 void Member::dump(WriteBuffer & into, int8_t nameSuffix)

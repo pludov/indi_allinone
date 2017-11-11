@@ -10,6 +10,9 @@
 
 #include "Scheduled.h"
 
+
+#define VECNONE ((uint8_t)-1)
+
 class WriteBuffer {
 	char * ptr;
 	int left;
@@ -30,18 +33,30 @@ public:
 
 class Vector;
 
+struct DirtyVector;
+
 class DeviceWriter : public Scheduled 
 {
+	friend class Vector;
 	char * notifPacket;
 	Stream * serial;
 	char * writeBuffer;
 	int writeBufferLeft;
-	int lastVector;
+	
 	uint8_t clientId;
+	DeviceWriter * next;
+
+	// Linked list of dirty Vectors
+	uint8_t * nextDirtyVector;
+	uint8_t firstDirtyVector;
+	uint8_t lastDirtyVector;
 
 	void fillBuffer();
+	void dirtied(Vector * which);
+	void popDirty(DirtyVector & result);
+	
 public:
-	DeviceWriter(Stream * target, int8_t id);
+	DeviceWriter(Stream * target);
 	void tick();
 };
 
@@ -49,6 +64,7 @@ class Device {
 	friend class DeviceWriter;
 	Vector ** list;
 	int variableCount;
+	DeviceWriter * firstWriter;
 protected:
 	friend class Vector;
 	void add(Vector * v);
@@ -58,8 +74,6 @@ public:
 
 	static Device & instance();
 };
-
-extern Device & getDevice();
 
 class Group {
 	friend class Vector;
@@ -74,8 +88,15 @@ class Member;
 #define VECTOR_READABLE 2
 #define VECTOR_BUSY 4
 
+#define VECTOR_ANNOUNCED 0
+#define VECTOR_MUTATION 1
+#define VECTOR_VALUE 2
+#define VECTOR_COMM_COUNT 3
+
+
 class Vector {
 	friend class DeviceWriter;
+	friend class Device;
 	friend class Member;
 	const __FlashStringHelper * name;
 	int8_t nameSuffix;
@@ -86,11 +107,19 @@ class Vector {
 	
 	uint8_t flag;
 
-	int8_t announced;
-	int8_t updated;
+	// 2 bits for each writer : announced, updated
+	uint8_t notifStatus[VECTOR_COMM_COUNT];
+	
 	int8_t uid;
 
-	void notifyUpdate();
+	/** 
+	 * clientId : DeviceWriter id
+	 * commId : VECTOR_ANNOUNCED, VECTOR_UPDATED, ...
+	 */
+	bool isDirty(uint8_t clientId, uint8_t commId);
+	bool cleanDirty(uint8_t clientId, uint8_t commId);
+
+	void notifyUpdate(uint8_t commId);
 	
 public:
 	Vector(Group * parent, const __FlashStringHelper * name, const __FlashStringHelper * label);

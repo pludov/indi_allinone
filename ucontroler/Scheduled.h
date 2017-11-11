@@ -14,8 +14,10 @@
 
 class Scheduled
 {
-friend class Scheduler;
-
+	friend class Scheduler;
+	Scheduled * nextScheduled;
+	
+		
 protected:
 	// When is the next tick scheduled
 	UTime nextTick;
@@ -24,8 +26,8 @@ protected:
 	// priority 0 = don't be late. Other = can be late
 	int priority;
 
-
 	Scheduled();
+	
 	virtual void tick() = 0;
 	virtual ~Scheduled() = 0;
 };

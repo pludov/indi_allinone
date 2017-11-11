@@ -8,9 +8,9 @@
 #include "debug.h"
 #include "Scheduler.h"
 
-Scheduler::Scheduler(Scheduled ** scheduleds)
+Scheduler::Scheduler()
 {
-	this->scheduleds = scheduleds;
+	this->first = 0;
 }
 
 
@@ -43,6 +43,7 @@ boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 		return false;
 	}
 }
+
 void Scheduler::loop()
 {
 	UTime now = UTime::now();
@@ -51,9 +52,8 @@ void Scheduler::loop()
 	// On vé rifie qu'un process pris ne va pas empecher un p0 de s'executer.
 
 	// 1- trouver un item P0 pret. Choisir le plus en retard
-	for(int i = 0; this->scheduleds[i]; ++i)
+	for(Scheduled * sch = first; sch; sch = sch->nextScheduled)
 	{
-		Scheduled * sch = this->scheduleds[i];
 		if (sch->priority == 0 && !sch->nextTick.isNever()) {
 			if (targetForLoop == 0 || targetForLoop->nextTick > sch->nextTick) {
 				targetForLoop = sch;
@@ -63,9 +63,8 @@ void Scheduler::loop()
 
 	// Regarder parmis les autres process avec priorités qui sont en retard et qui ne generont pas targetForLoop...
 	Scheduled * targetP1 = 0;
-	for(int i = 0; this->scheduleds[i]; ++i)
+	for(Scheduled * sch = first; sch; sch = sch->nextScheduled)
 	{
-		Scheduled * sch = this->scheduleds[i];
 		if (!sch->nextTick.isNever() && sch->priority > 0 && sch->nextTick <= now) {
 			if (targetForLoop == 0 || targetForLoop->nextTick > (now + sch->tickExpectedDuration)) {
 				if (targetP1 == 0
@@ -104,5 +103,14 @@ void Scheduler::loop()
 	}
 }
 
+
+static Scheduler * instancePtr = 0;
+
+Scheduler & Scheduler::instance() {
+	if (!instancePtr) {
+		instancePtr = new Scheduler();
+	}
+	return *instancePtr;
+}
 
 
