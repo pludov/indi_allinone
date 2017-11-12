@@ -23,6 +23,8 @@
 
 #include "defaultdevice.h"
 
+#include <pthread.h>
+
 
 namespace Connection
 {
@@ -37,8 +39,15 @@ class SimpleDevice : public INDI::DefaultDevice
     virtual bool initProperties();
 
   protected:
+    // Thread for data readings
+    pthread_t backgroundProcessorThread;
+    pthread_mutex_t lock;
+
     bool Handshake();
     const char *getDefaultName();
+
+    void backgroundProcessor(int fd);
+    static void * backgroundProcessorStarter(void * rawContext);
 
     Connection::Serial *serialConnection { nullptr };
 };

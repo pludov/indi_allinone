@@ -1,12 +1,14 @@
-cmake_minimum_required(VERSION 2.4.7)
+cmake_minimum_required(VERSION 3.1.0)
 PROJECT(allinone CXX C)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 # set(RULES_INSTALL_DIR "/etc/udev/rules.d")
 
 
 find_package(INDI REQUIRED)
+find_package(Threads REQUIRED)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR})
@@ -20,6 +22,7 @@ set(indiallinone_SRCS
 add_executable(indi_allinone ${indiallinone_SRCS})
 
 target_link_libraries(indi_allinone ${INDI_DRIVER_LIBRARIES})
+target_link_libraries(indi_allinone Threads::Threads)
 
 install(TARGETS indi_allinone RUNTIME DESTINATION bin )
 

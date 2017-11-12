@@ -24,6 +24,12 @@
 #include "indicom.h"
 #include "connectionplugins/connectionserial.h"
 
+#include <unistd.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+
+#include <cerrno>
+#include <cstring>
 #include <memory>
 
 std::unique_ptr<SimpleDevice> simpleDevice(new SimpleDevice());
@@ -89,10 +95,57 @@ bool SimpleDevice::initProperties()
     return true;
 }
 
+struct BackgroundProcessorContext {
+    SimpleDevice * device;
+    int port;
+};
+
 bool SimpleDevice::Handshake()
 {
-    DEBUGF(INDI::Logger::DBG_INFO, "Connected successfuly to simulated %s. Retrieving startup data...", getDeviceName());
+    int PortFD = serialConnection->getPortFD();
+    
+    /* Drop RTS */
+    int i = 0;
+    i |= TIOCM_RTS;
+    if (ioctl(PortFD, TIOCMBIC, &i) != 0)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
+        return false;
+    }
+
+    BackgroundProcessorContext * context = new BackgroundProcessorContext();
+    context->device = this;
+    context->port = PortFD;
+
+    pthread_create(&backgroundProcessorThread, nullptr, &SimpleDevice::backgroundProcessorStarter, context);
+
+    DEBUGF(INDI::Logger::DBG_DEBUG, "Connected successfuly to simulated %s. Retrieving startup data...", getDeviceName());
     return true;
+}
+
+void SimpleDevice::backgroundProcessor(int fd)
+{
+    char buffer [128];
+    int rd;
+    while((rd = read(fd, buffer, 127)) != -1) {
+        if (rd == 0) {
+            break;
+        }
+        buffer[rd] = 0;
+        DEBUGF(INDI::Logger::DBG_DEBUG, "Read: %s", buffer);
+        // write(2, buffer, rd);
+    }
+            
+    DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
+   
+}
+
+void * SimpleDevice::backgroundProcessorStarter(void*rawContext)
+{
+    BackgroundProcessorContext * context = (static_cast<BackgroundProcessorContext *>(rawContext));
+    context->device->backgroundProcessor(context->port);
+    delete context;
+    return nullptr;
 }
 
 /**************************************************************************************
