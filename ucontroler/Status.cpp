@@ -58,18 +58,6 @@ void Status::needUpdate()
 void Status::tick()
 {
 	uptimeValue.setValue(millis() / 1000.0);
-	// Si on a de la place sur le buffer de sortie, alors on accepte
-	if (Serial.availableForWrite() < sizeof(struct Payload)) {
-		// Il faut attendre pendant au moins ce temps
-		this->nextTick = UTime::now() + (sizeof(struct Payload) + 2) * CHAR_XMIT_DELAY;
-		return;
-	}
-	sendStatus();
-/*	if (motor.isMoving() || filterWheelMotor.isMoving()) {
-		this->nextTick += MS(250);
-	} else {
-		this->nextTick += LongDuration::seconds(10);
-	}*/
 	this->nextTick += LongDuration::seconds(10);
 }
 
