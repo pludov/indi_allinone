@@ -21,6 +21,9 @@
 
 #include "simpledevice.h"
 
+#include "indicom.h"
+#include "connectionplugins/connectionserial.h"
+
 #include <memory>
 
 std::unique_ptr<SimpleDevice> simpleDevice(new SimpleDevice());
@@ -74,21 +77,21 @@ void ISSnoopDevice(XMLEle *root)
     INDI_UNUSED(root);
 }
 
-/**************************************************************************************
-** Client is asking us to establish connection to the device
-***************************************************************************************/
-bool SimpleDevice::Connect()
+bool SimpleDevice::initProperties()
 {
-    IDMessage(getDeviceName(), "Simple device connected successfully!");
+    INDI::DefaultDevice::initProperties();
+
+    addAuxControls();
+
+    serialConnection = new Connection::Serial(this);
+    serialConnection->registerHandshake([&]() { return Handshake(); });
+    registerConnection(serialConnection);
     return true;
 }
 
-/**************************************************************************************
-** Client is asking us to terminate connection to the device
-***************************************************************************************/
-bool SimpleDevice::Disconnect()
+bool SimpleDevice::Handshake()
 {
-    IDMessage(getDeviceName(), "Simple device disconnected successfully!");
+    DEBUGF(INDI::Logger::DBG_INFO, "Connected successfuly to simulated %s. Retrieving startup data...", getDeviceName());
     return true;
 }
 

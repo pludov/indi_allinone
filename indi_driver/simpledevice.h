@@ -23,13 +23,22 @@
 
 #include "defaultdevice.h"
 
+
+namespace Connection
+{
+class Serial;
+}
+
+
 class SimpleDevice : public INDI::DefaultDevice
 {
   public:
     SimpleDevice() = default;
+    virtual bool initProperties();
 
   protected:
-    bool Connect();
-    bool Disconnect();
+    bool Handshake();
     const char *getDefaultName();
+
+    Connection::Serial *serialConnection { nullptr };
 };
