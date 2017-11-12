@@ -7,11 +7,18 @@
 #define STATUS_MEASURE 1
 #define STATUS_IDLE 2
 
+#define CONTROL_OFF 0
+#define CONTROL_PWM_LEVEL 1
+#define CONTROL_TARGET_TEMP 2
+#define CONTROL_DEW_POINT_DELTA 2
+
+
 DewHeater::DewHeater(int pin, int suffix)
     :Scheduled(),
     group(F("DEW_HEATER")),
-    temperatureVec(&group, F("DEW_HEATER_TEMP"), F("HW Temperature")),
-    temperature(&temperatureVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100),
+    statusVec(&group, F("DEW_HEATER_TEMP"), F("HW Temperature")),
+    temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100),
+    pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100),
     uidVec(&group, F("DEW_HEATER_UID"), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 
@@ -24,9 +31,27 @@ DewHeater::DewHeater(int pin, int suffix)
     this->nextTick = UTime::now();
 }
 
+// void setControlMode(uint8_t value)
+// {
+//     switch(value) {
+//         case CONTROL_OFF:
+//             setPwmLevel(0);
+//             break;
+//         case CONTROL_PWM_LEVEL:
+
+//     }
+// }
+
+void DewHeater::setPwmLevel(float level)
+{
+    pwm.setValue(level);
+}
+
 void DewHeater::failed()
 {
     uid.setValue("");
+    // Shutdown
+    setPwmLevel(0);
     this->status = STATUS_NEED_SCAN;
     this->nextTick = UTime::now() + MS(1000);
 }
@@ -114,7 +139,6 @@ void DewHeater::endMeasure()
 
     temperature.setValue(((data[1] << 8) | data[0]) * 0.0625);
 
-    
     this->status = STATUS_IDLE;
     this->nextTick = UTime::now() + MS(5000);
 }

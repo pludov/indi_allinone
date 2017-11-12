@@ -11,10 +11,16 @@
 
 class DewHeater : public Scheduled {
     IndiVectorGroup group;
-    IndiNumberVector temperatureVec;
+    IndiNumberVector statusVec;
     IndiFloatVectorMember temperature;
+    IndiFloatVectorMember pwm;
+
     IndiTextVector uidVec;
     IndiTextVectorMember uid;
+
+
+    // IndiNumberVector targetPwmVec;
+    // IndiFloatVectorMember targetPwm;
 
     OneWire oneWire;
     uint8_t status;
@@ -25,6 +31,10 @@ class DewHeater : public Scheduled {
     void endMeasure();
 
     void failed();
+
+    void setControlMode(uint8_t value);
+
+    void setPwmLevel(float level);
 public:
     DewHeater(int port, int suffix);
 
