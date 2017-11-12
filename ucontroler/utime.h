@@ -199,16 +199,7 @@ public:
 		return UTime(true);
 	}
 
-	static UTime now()
-	{
-		unsigned long us = micros();
-		// FIXME: beaucoup plus petit ?
-		if (us < lastUs) {
-			lastOverflowCount++;
-		}
-		lastUs = us;
-		return UTime();
-	}
+	static UTime now();
 
 	bool isNever()
 	{
