@@ -287,6 +287,8 @@ void serialCommand(String command) {
 void setup() {
 	// initialize serial for ASCOM
 	Serial.begin(115200);
+	Serial1.begin(115200);
+
 	delay(500);
 #ifdef DEBUG
 	Serial.println(F("Welcome on board"));
@@ -337,6 +339,7 @@ void setup() {
 	DewHeater * dw = new DewHeater(11, 1);
 
 	IndiProtocol * serialWriter = new IndiProtocol(&Serial);
+	IndiProtocol * serialWriter2 = new IndiProtocol(&Serial1);
 
 
 	char buffer[4096];
