@@ -24,6 +24,8 @@
 #include "indicom.h"
 #include "connectionplugins/connectionserial.h"
 
+#include "WriteBuffer.h"
+
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>

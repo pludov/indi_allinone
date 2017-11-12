@@ -4,7 +4,12 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#define F(a) (a)
+#endif
+
 #include "WriteBuffer.h"
 #include "Utils.h"
 
@@ -31,6 +36,8 @@ int WriteBuffer::size()
 	return totalSize - left;
 }
 
+#ifdef ARDUINO
+
 void WriteBuffer::append(const __FlashStringHelper * str)
 {
 	PGM_P p = reinterpret_cast<PGM_P>(str);
@@ -41,6 +48,8 @@ void WriteBuffer::append(const __FlashStringHelper * str)
 	  append(c);
 	}
 }
+
+#endif
 
 void WriteBuffer::appendXmlEscaped(char c) {
 	switch(c) {
@@ -64,6 +73,8 @@ void WriteBuffer::appendXmlEscaped(char c) {
 	}
 }
 
+#ifdef ARDUINO
+
 void WriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
 {
 	PGM_P p = reinterpret_cast<PGM_P>(str);
@@ -74,6 +85,8 @@ void WriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
 		appendXmlEscaped(c);
 	}
 }
+
+#endif
 
 void WriteBuffer::appendXmlEscaped(const char * s)
 {
