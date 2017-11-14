@@ -34,6 +34,12 @@ void IndiFloatVectorMember::setValue(double newValue)
 	notifyVectorUpdate(VECTOR_VALUE);
 }
 
+void IndiFloatVectorMember::writeValue(WriteBuffer & into) const
+{
+	into.writeFloat(value);
+}
+
+/*
 void IndiFloatVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
 	into.append(F("<defNumber name=\""));
@@ -49,4 +55,4 @@ void IndiFloatVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 	snprintf(buffer, 32, "%.2f", value);
 	into.appendXmlEscaped(buffer);
 	into.append(F("</defNumber>"));
-}
+}*/

@@ -103,24 +103,37 @@ void IndiProtocol::fillBuffer()
 {
 	// Il y a de la place, on n'a rien à dire...
 	// PArcours la liste des variables (ouch, on peut mieux faire là...)
-	DirtyVector toSend;
-	popDirty(toSend);
-	if (!toSend.vector) {
-		return;
-	}
+	do {
+		DirtyVector toSend;
 
-	// FIXME: depending on dirtyFlags, ...
+		popDirty(toSend);
+		if (!toSend.vector) {
+			return;
+		}
 
-	WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+		// FIXME: depending on dirtyFlags, ...
 
-	toSend.vector->dump(wf);
-	if (wf.finish()) {
-		writeBuffer = notifPacket;
-		writeBufferLeft = wf.size();
-		return;
-	} else {
-		// WTF ? on peut rien faire... on oublie
-	}
+		WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+		if (toSend.dirtyFlags & (1 << VECTOR_ANNOUNCED)) {
+			toSend.vector->sendAnnounce(wf);
+		} else if (toSend.dirtyFlags & (1 << VECTOR_MUTATION)) {
+			toSend.vector->sendMutation(wf);
+		} else {
+			toSend.vector->sendValue(wf);
+		}
+		if (wf.isEmpty()) {
+			// Next.
+			continue;
+		}
+
+		if (wf.finish()) {
+			writeBuffer = notifPacket;
+			writeBufferLeft = wf.size();
+			return;
+		} else {
+			// WTF ? on peut rien faire... on oublie
+		}
+	}while(true);
 }
 
 void IndiProtocol::tick()

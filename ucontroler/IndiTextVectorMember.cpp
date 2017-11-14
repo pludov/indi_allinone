@@ -25,6 +25,11 @@ IndiTextVectorMember::IndiTextVectorMember(IndiTextVector * vector,
     this->value[0] = 0;
 }
 
+IndiTextVectorMember::~IndiTextVectorMember()
+{
+	free(this->value);
+}
+
 void IndiTextVectorMember::setValue(const char * value)
 {
     if (!strcmp(this->value, value)) {
@@ -34,6 +39,12 @@ void IndiTextVectorMember::setValue(const char * value)
 	notifyVectorUpdate(VECTOR_VALUE);
 }
 
+
+void IndiTextVectorMember::writeValue(WriteBuffer & into) const
+{
+	into.writeString(this->value);
+}
+/*
 void IndiTextVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
 	into.append(F("<defText name=\""));
@@ -47,4 +58,4 @@ void IndiTextVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
     into.append(F("\">"));
 	into.appendXmlEscaped(value);
 	into.append(F("</defText>"));
-}
+}*/

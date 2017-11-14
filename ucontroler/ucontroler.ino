@@ -344,7 +344,7 @@ void setup() {
 
 	char buffer[4096];
 	WriteBuffer into(buffer, 4096);
-	IndiDevice::instance().dump(into);
+// 	IndiDevice::instance().dump(into);
 
 
 	if (into.finish()) {

@@ -24,7 +24,10 @@ public:
 
 	void setValue(double v);
 
-	virtual void dump(WriteBuffer & into, int8_t nameSuffix);
+	virtual uint8_t getSubtype() const { return subType; };
+	virtual void writeValue(WriteBuffer & into) const;
+
+	static constexpr int subType = 1;
 };
 
 #endif /* INDIFLOATVECTORMEMBER_H_ */

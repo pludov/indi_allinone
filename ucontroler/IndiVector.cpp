@@ -13,7 +13,7 @@
 #include "IndiVectorMember.h"
 
 
-IndiVector::IndiVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
+IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag)
 {
 	this->group = group;
 	this->name = name;
@@ -21,7 +21,7 @@ IndiVector::IndiVector(IndiVectorGroup * group, const __FlashStringHelper * name
 	this->first = 0;
 	this->last = 0;
 	this->nameSuffix = 0;
-	this->flag = 0;
+	this->flag = initialFlag;
 	IndiDevice::instance().add(this);
 }
 
@@ -56,16 +56,24 @@ bool IndiVector::cleanDirty(uint8_t clientId, uint8_t commId)
 }
 
 
-void IndiVector::set(uint8_t flag, bool status)
+void IndiVector::set(uint8_t flagToChange, bool status)
 {
-	uint8_t newFlag = (this->flag & ~flag);
-	if (status) newFlag |= flag;
-	if (this->flag != newFlag) {
-		notifyUpdate(VECTOR_MUTATION);
+	auto oldFlag = flag;
+	if (status) {
+		flag |= flagToChange;
+	} else {
+		flag &= ~flagToChange;
+	}
+	if (flag != oldFlag) {
+		if (flagToChange == VECTOR_HIDDEN) {
+			notifyUpdate(VECTOR_ANNOUNCED);
+		} else {
+			notifyUpdate(VECTOR_MUTATION);
+		}
 	}
 }
 
-void IndiVector::dumpMembers(WriteBuffer & into)
+/*void IndiVector::dumpMembers(WriteBuffer & into)
 {
 	for(IndiVectorMember * cur = first; cur; cur=cur->next)
 	{
@@ -73,4 +81,104 @@ void IndiVector::dumpMembers(WriteBuffer & into)
 		cur->dump(into, nameSuffix);
 		into.append('\n');
 	}
+}*/
+
+
+void IndiVector::sendDefinition(WriteBuffer & into)
+{
+	into.writeVectorName(name, nameSuffix);
+	into.writeVectorLabel(label, nameSuffix);
+	into.writeVectorFlag(flag);
+	into.writeVectorUid(uid);
+	for(IndiVectorMember * cur = first; cur; cur=cur->next)
+	{
+		into.startMember(*this);
+		if (hasMemberSubtype()) {
+			into.writeVectorMemberSubtype(cur->getSubtype());
+		}
+		into.writeVectorMemberName(cur->name, nameSuffix);
+		into.writeVectorMemberLabel(cur->label, nameSuffix);
+		
+		cur->writeValue(into);
+		into.endMember(*this);
+	}
 }
+
+void IndiVector::sendAnnounce(WriteBuffer & into)
+{
+	if (hidden()) {
+		into.writeDeleteVectorPacket(*this);
+	} else {
+		into.startAnnounceVectorPacket(*this);
+		sendDefinition(into);
+		into.endAnnounceVectorPacket(*this);
+	}
+}
+
+void IndiVector::sendMutation(WriteBuffer & into)
+{
+	if (hidden()) {
+		// Mutation when hidden should not be sent.
+		return;
+	}
+	into.startMutateVectorPacket(*this);
+	sendDefinition(into);
+	into.endMutateVectorPacket(*this);
+}
+
+void IndiVector::sendValue(WriteBuffer & into)
+{
+	if (!into.supportUpdateValue()) {
+		sendMutation(into);
+		return;
+	}
+	if (hidden()) {
+		// Mutation when hidden should not be sent.
+		return;
+	}
+	into.startUpdateValuesPacket(*this);
+	into.writeVectorUid(uid);
+	for(IndiVectorMember * cur = first; cur; cur = cur->next)
+	{
+		cur->writeValue(into);
+	}
+	into.endUpdateValuesPacket(*this);
+}
+
+// not for Arduino
+/*void IndiVector::readMembers(ReadBuffer & from)
+{
+	// Drop existing members
+	for(IndiVectorMember * cur = first; cur; )
+	{
+		IndiVectorMember * was = cur;
+		delete(cur);
+		cur = was->next;
+	}
+	first = nullptr;
+	last = nullptr;
+
+	while(!from.atEnd())
+	{
+		uint8_t childType = 0;
+		if (hasMemberSubtype()) {
+			childType = from.readU7();
+		}
+		Symbol name, label;
+		name = from.readSymbol();
+		label = from.readSymbol();
+		VectorMember * vm = newMember(this, name, label, childType);
+		
+		vm.readAttributes(from);
+		vm.readValue(from);
+	}
+}
+
+void IndiVector::readValue(WriteBuffer & from)
+{
+	// Will be handled separately for switch, ...
+	for(IndiVectorMember * cur = first; cur; cur = cur->next)
+	{
+		cur->readValue(from);
+	}
+}*/

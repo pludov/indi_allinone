@@ -21,8 +21,11 @@ public:
 	IndiVectorMember(IndiVector * vector, 
 			const __FlashStringHelper * name, 
 			const __FlashStringHelper * label);
+	virtual ~IndiVectorMember();
+	
+	virtual uint8_t getSubtype() const = 0;
 
-	virtual void dump(WriteBuffer & into, int8_t nameSuffix) = 0;
+	virtual void writeValue(WriteBuffer & into) const = 0;
 };
 
 #endif /* INDIVECTORMEMBER_H_ */

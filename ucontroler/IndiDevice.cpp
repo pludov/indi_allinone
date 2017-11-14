@@ -45,13 +45,3 @@ void IndiDevice::add(IndiVector * v)
 	v->uid = variableCount;
 	list[variableCount++]=v;
 }
-
-void IndiDevice::dump(WriteBuffer & into)
-{
-	for(int i = 0; i < variableCount; ++i)
-	{
-		IndiVector * cur = list[i];
-		cur->dump(into);
-	}
-}
-

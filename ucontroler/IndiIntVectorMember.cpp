@@ -18,8 +18,8 @@
 IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector, 
 	const __FlashStringHelper * name, 
 	const __FlashStringHelper * label,
-	int min,
-    int max)
+	int32_t min,
+    int32_t max)
     :IndiVectorMember(vector, name, label)
 {
 	this->min = min;
@@ -27,13 +27,19 @@ IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector,
 	this->value = 0;
 }
 
-void IndiIntVectorMember::setValue(int newValue)
+void IndiIntVectorMember::setValue(int32_t newValue)
 {
 	if (value == newValue) return;
 	value = newValue;
 	notifyVectorUpdate(VECTOR_VALUE);
 }
 
+void IndiIntVectorMember::writeValue(WriteBuffer & into) const
+{
+	into.writeInt(value);
+}
+
+/*
 void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
 	into.append(F("<defNumber name=\""));
@@ -49,4 +55,4 @@ void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 	snprintf(buffer, 32, "%d", value);
 	into.appendXmlEscaped(buffer);
 	into.append(F("</defNumber>"));
-}
+}*/

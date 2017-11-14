@@ -4,11 +4,14 @@
 
 #include "IndiVector.h"
 
+extern const VectorKind IndiTextVectorKind;
+
 class IndiTextVector : public IndiVector {
 public:
     IndiTextVector(IndiVectorGroup * parent, const __FlashStringHelper * name, const __FlashStringHelper * label);
-
-    virtual void dump(WriteBuffer & into);
+    
+    virtual bool hasMemberSubtype() const;
+	virtual const VectorKind & kind() const;
 };
 
 #endif

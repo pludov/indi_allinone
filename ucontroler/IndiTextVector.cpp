@@ -13,13 +13,27 @@
 #include "IndiTextVector.h"
 
 
+const VectorKind IndiTextVectorKind {
+	.defVectorText = F("defTextVector"),
+	.newVectorText = F("newTextVector"),
+	.oneMemberText = F("oneText")
+};
+
 IndiTextVector::IndiTextVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
     :IndiVector(group, name, label)
 {
 }
 
+const VectorKind & IndiTextVector::kind() const {
+	return IndiTextVectorKind;
+}
 
-void IndiTextVector::dump(WriteBuffer & into)
+
+bool IndiTextVector::hasMemberSubtype() const {
+	return false;
+}
+
+/*void IndiTextVector::dump(WriteBuffer & into)
 {
 	into.append(F("<defTextVector name=\""));
 	into.appendXmlEscaped(name);
@@ -35,4 +49,4 @@ void IndiTextVector::dump(WriteBuffer & into)
     dumpMembers(into);
     into.append(F("</defTextVector>\n"));
 }
-
+*/

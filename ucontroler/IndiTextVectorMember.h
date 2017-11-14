@@ -20,10 +20,13 @@ public:
 			const __FlashStringHelper * name,
 			const __FlashStringHelper * label,
 			uint8_t maxSze);
+	virtual ~IndiTextVectorMember();
 
 	void setValue(const char * value);
 
-	virtual void dump(WriteBuffer & into, int8_t nameSuffix);
+	virtual uint8_t getSubtype() const { return 0; };
+
+	virtual void writeValue(WriteBuffer & into) const;
 };
 
 #endif /* INDITEXTVECTORMEMBER_H_ */

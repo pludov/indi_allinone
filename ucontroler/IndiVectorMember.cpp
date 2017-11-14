@@ -29,6 +29,9 @@ IndiVectorMember::IndiVectorMember(IndiVector * vector,
 	this->label = label;
 }
 
+IndiVectorMember::~IndiVectorMember()
+{}
+
 void IndiVectorMember::notifyVectorUpdate(uint8_t commId) {
 	vector->notifyUpdate(commId);
 }

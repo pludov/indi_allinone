@@ -12,19 +12,23 @@
 
 class IndiNumberVector;
 
+
 class IndiIntVectorMember : public IndiVectorMember {
 	friend class IndiVector;
-	int value;
-	int min, max;
+	int32_t value;
+	int32_t min, max;
 public:
 	IndiIntVectorMember(IndiNumberVector * vector, 
 			const __FlashStringHelper * name, 
 			const __FlashStringHelper * label,
-			int min, int max);
+			int32_t min, int32_t max);
 
-	void setValue(int v);
+	void setValue(int32_t v);
 
-	virtual void dump(WriteBuffer & into, int8_t nameSuffix);
+	virtual uint8_t getSubtype() const { return subType; }
+	virtual void writeValue(WriteBuffer & into) const;
+
+	static constexpr int subType = 0;
 };
 
 #endif /* INDIINTVECTORMEMBER_H_ */
