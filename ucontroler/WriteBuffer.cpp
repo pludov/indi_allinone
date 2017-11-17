@@ -10,6 +10,8 @@
 #define F(a) (a)
 #endif
 
+#include <inttypes.h>
+
 #include "WriteBuffer.h"
 #include "Utils.h"
 #include "IndiVector.h"
@@ -55,6 +57,17 @@ void WriteBuffer::append(const __FlashStringHelper * str)
 	}
 }
 
+#else
+
+void WriteBuffer::append(std::string str)
+{
+	for(int u = 0; u < str.length(); ++u)
+	{
+		unsigned char c = str[u];
+		append(c);
+	}
+}
+
 #endif
 
 void WriteBuffer::appendXmlEscaped(char c) {
@@ -91,6 +104,18 @@ void WriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
 		appendXmlEscaped(c);
 	}
 }
+
+#else
+
+void WriteBuffer::appendXmlEscaped(std::string str)
+{
+	for(int u = 0; u < str.length(); ++u)
+	{
+		unsigned char c = str[u];
+		appendXmlEscaped(c);
+	}
+}
+
 
 #endif
 
@@ -156,143 +181,4 @@ bool WriteBuffer::finish()
 		return true;
 	}
 	return false;
-}
-
-void WriteBuffer::appendSymbol(Symbol s, uint8_t suffix)
-{
-	appendXmlEscaped(s);
-	if (suffix) {
-		append('_');
-		append('0' + suffix);
-	}
-}
-
-void WriteBuffer::writeDeleteVectorPacket(const IndiVector & vec)
-{
-	append(F("<delProperty name=\""));
-	appendSymbol(vec.name, vec.nameSuffix);
-	append(F("\"/>\n"));
-}
-
-void WriteBuffer::startAnnounceVectorPacket(const IndiVector & vec)
-{
-	append(F("<"));
-	append(vec.kind().defVectorText);
-}
-
-void WriteBuffer::endAnnounceVectorPacket(const IndiVector & vec)
-{
-	append(F("</"));
-	append(vec.kind().defVectorText);
-	append(F(">\n"));
-}
-
-
-void WriteBuffer::startMutateVectorPacket(const IndiVector & vec)
-{
-	append(F("<"));
-	append(vec.kind().newVectorText);
-}
-
-void WriteBuffer::endMutateVectorPacket(const IndiVector & vec)
-{
-	append(F("</"));
-	append(vec.kind().newVectorText);
-	append(F(">\n"));
-}
-
-void WriteBuffer::startUpdateValuesPacket(const IndiVector & vec)
-{
-}
-
-void WriteBuffer::endUpdateValuesPacket(const IndiVector & vec)
-{
-}
-
-void WriteBuffer::writeVectorName(Symbol name, uint8_t suffix)
-{
-	append(F(" name=\""));
-	appendSymbol(name, suffix);
-	append(F("\""));
-}
-
-void WriteBuffer::writeVectorFlag(uint8_t fl)
-{
-	append(F(" propertyState=\""));
-	if (fl & VECTOR_BUSY) {
-		append(F("Busy"));
-	} else {
-		append(F("Idle"));
-	}
-	append(F("\" propertyPerm=\""));
-	if ((fl & VECTOR_WRITABLE) && (fl & VECTOR_READABLE)) {
-		append(F("rw"));
-	} else if ((fl & VECTOR_READABLE)) {
-		append(F("ro"));
-	} else {
-		append(F("wo"));
-	}
-	append('"');
-}
-
-void WriteBuffer::writeVectorLabel(Symbol name, uint8_t suffix)
-{
-	append(F(" label=\""));
-	appendSymbol(name, suffix);
-	append(F("\""));
-}
-
-void WriteBuffer::writeVectorUid(uint8_t uid)
-{
-	append(F(">\n"));
-}
-
-void WriteBuffer::startMember(const IndiVector & vec)
-{
-	append(F("\t<"));
-	append(vec.kind().oneMemberText);
-}
-
-void WriteBuffer::endMember(const IndiVector & vec)
-{
-	append(F("</"));
-	append(vec.kind().oneMemberText);
-	append(F(">\n"));
-}
-
-void WriteBuffer::writeVectorMemberSubtype(uint8_t subtype)
-{
-
-}
-
-void WriteBuffer::writeVectorMemberName(Symbol name, uint8_t suffix)
-{
-	writeVectorName(name, suffix);
-}
-
-void WriteBuffer::writeVectorMemberLabel(Symbol name, uint8_t suffix)
-{
-	writeVectorLabel(name, suffix);
-	append('>');
-}
-
-void WriteBuffer::writeString(const char * str)
-{
-	appendXmlEscaped(str);
-}
-
-
-void WriteBuffer::writeFloat(float value)
-{
-	char buffer[32];
-	snprintf(buffer, 32, "%.2f", value);
-	appendXmlEscaped(buffer);
-}
-
-
-void WriteBuffer::writeInt(int32_t value)
-{
-	char buffer[32];
-	snprintf(buffer, 32, "%ld", value);
-	appendXmlEscaped(buffer);
 }

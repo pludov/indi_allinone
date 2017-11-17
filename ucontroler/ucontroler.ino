@@ -35,6 +35,7 @@
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
+#include "XmlWriteBuffer.h"
 
 #include "utime.h"
 #include "MainLogic.h"
@@ -343,7 +344,7 @@ void setup() {
 
 
 	char buffer[4096];
-	WriteBuffer into(buffer, 4096);
+	XmlWriteBuffer into(buffer, 4096);
 // 	IndiDevice::instance().dump(into);
 
 

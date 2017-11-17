@@ -6,6 +6,7 @@
  */
 #include <Arduino.h>
 #include "WriteBuffer.h"
+#include "XmlWriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
 #include "IndiVectorGroup.h"
@@ -113,7 +114,7 @@ void IndiProtocol::fillBuffer()
 
 		// FIXME: depending on dirtyFlags, ...
 
-		WriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+		XmlWriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
 		if (toSend.dirtyFlags & (1 << VECTOR_ANNOUNCED)) {
 			toSend.vector->sendAnnounce(wf);
 		} else if (toSend.dirtyFlags & (1 << VECTOR_MUTATION)) {

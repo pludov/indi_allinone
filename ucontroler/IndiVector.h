@@ -10,7 +10,7 @@
 
 
 #include "Symbol.h"
-#include "IndiDevice.h"
+#include "WriteBuffer.h"
 
 #define VECNONE ((uint8_t)-1)
 
@@ -46,6 +46,7 @@ class IndiVector {
 	friend class IndiDevice;
 	friend class IndiVectorMember;
 	friend class WriteBuffer;
+	friend class XmlWriteBuffer;
 protected:
 	Symbol name;
 	int8_t nameSuffix;

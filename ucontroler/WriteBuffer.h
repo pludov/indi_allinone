@@ -19,6 +19,7 @@
 class IndiVector;
 
 class WriteBuffer {
+protected:
 	char * ptr;
 	int left;
 	int totalSize;
@@ -39,36 +40,36 @@ public:
 	bool isEmpty();
 
 
-	virtual bool supportUpdateValue() const { return false; }
+	virtual bool supportUpdateValue() const = 0;
 
-	virtual void writeDeleteVectorPacket(const IndiVector & vec);
+	virtual void writeDeleteVectorPacket(const IndiVector & vec) = 0;
 	
-	virtual void startAnnounceVectorPacket(const IndiVector & vec);
-	virtual void endAnnounceVectorPacket(const IndiVector & vec);
+	virtual void startAnnounceVectorPacket(const IndiVector & vec) = 0;
+	virtual void endAnnounceVectorPacket(const IndiVector & vec) = 0;
 	
-	virtual void startMutateVectorPacket(const IndiVector & vec);
-	virtual void endMutateVectorPacket(const IndiVector & vec);
+	virtual void startMutateVectorPacket(const IndiVector & vec) = 0;
+	virtual void endMutateVectorPacket(const IndiVector & vec) = 0;
 
-	virtual void writeVectorFlag(uint8_t flag);
+	virtual void writeVectorFlag(uint8_t flag) = 0;
 
 	// during announce/mutate
-	virtual void startMember(const IndiVector & vec);
-	virtual void endMember(const IndiVector & vec);
+	virtual void startMember(const IndiVector & vec) = 0;
+	virtual void endMember(const IndiVector & vec) = 0;
 
-	virtual void startUpdateValuesPacket(const IndiVector & vec);
-	virtual void endUpdateValuesPacket(const IndiVector & vec);
+	virtual void startUpdateValuesPacket(const IndiVector & vec) = 0;
+	virtual void endUpdateValuesPacket(const IndiVector & vec) = 0;
 	
 	
 
-	virtual void writeVectorName(Symbol name, uint8_t suffix);
-	virtual void writeVectorLabel(Symbol name, uint8_t suffix);
-	virtual void writeVectorUid(uint8_t uid);
-	virtual void writeVectorMemberSubtype(uint8_t subtype);
-	virtual void writeVectorMemberName(Symbol name, uint8_t suffix);
-	virtual void writeVectorMemberLabel(Symbol name, uint8_t suffix);
-	virtual void writeFloat(float value);
-	virtual void writeInt(int32_t value);
-	virtual void writeString(const char * c);
+	virtual void writeVectorName(Symbol name, uint8_t suffix) = 0;
+	virtual void writeVectorLabel(Symbol name, uint8_t suffix) = 0;
+	virtual void writeVectorUid(uint8_t uid) = 0;
+	virtual void writeVectorMemberSubtype(uint8_t subtype) = 0;
+	virtual void writeVectorMemberName(Symbol name, uint8_t suffix) = 0;
+	virtual void writeVectorMemberLabel(Symbol name, uint8_t suffix) = 0;
+	virtual void writeFloat(float value) = 0;
+	virtual void writeInt(int32_t value) = 0;
+	virtual void writeString(const char * c) = 0;
 
 };
 
