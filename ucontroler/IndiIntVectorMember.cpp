@@ -4,7 +4,9 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
@@ -13,11 +15,12 @@
 #include "IndiVectorMember.h"
 #include "IndiNumberVector.h"
 #include "IndiIntVectorMember.h"
-
+#include "CommonUtils.h"
+#include "Symbol.h"
 
 IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector, 
-	const __FlashStringHelper * name, 
-	const __FlashStringHelper * label,
+	Symbol name, 
+	Symbol label,
 	int32_t min,
     int32_t max)
     :IndiVectorMember(vector, name, label)

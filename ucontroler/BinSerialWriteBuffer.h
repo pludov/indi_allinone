@@ -3,8 +3,10 @@
 
 #include "WriteBuffer.h"
 
+class BinSerialReadBuffer;
 
 class BinSerialWriteBuffer : public WriteBuffer {
+	friend class BinSerialReadBuffer;
     void appendSymbol(Symbol s, uint8_t suffix);
     void appendPacketControl(uint8_t v);
     void appendUid(uint8_t uid);
@@ -13,11 +15,13 @@ class BinSerialWriteBuffer : public WriteBuffer {
     void writeStringChar(uint8_t ch);
 
 public:
-	BinSerialWriteBuffer(char * into, int size);
+	BinSerialWriteBuffer(uint8_t * into, int size);
 
     virtual bool finish();
     
 	virtual bool supportUpdateValue() const;
+
+	virtual void startWelcomePacket();
 
 	virtual void writeDeleteVectorPacket(const IndiVector & vec);
 	
@@ -45,7 +49,6 @@ public:
 	virtual void writeFloat(float value);
 	virtual void writeInt(int32_t value);
 	virtual void writeString(const char * c);
-
 };
 
 

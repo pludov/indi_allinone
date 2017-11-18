@@ -9,6 +9,7 @@
 #define INDIINTVECTORMEMBER_H_
 
 #include "IndiVectorMember.h"
+#include "Symbol.h"
 
 class IndiNumberVector;
 
@@ -19,8 +20,8 @@ class IndiIntVectorMember : public IndiVectorMember {
 	int32_t min, max;
 public:
 	IndiIntVectorMember(IndiNumberVector * vector, 
-			const __FlashStringHelper * name, 
-			const __FlashStringHelper * label,
+			Symbol name, 
+			Symbol label,
 			int32_t min, int32_t max);
 
 	void setValue(int32_t v);

@@ -20,11 +20,11 @@ class IndiVector;
 
 class WriteBuffer {
 protected:
-	char * ptr;
+	uint8_t * ptr;
 	int left;
 	int totalSize;
 public:
-	WriteBuffer(char * into, int size);
+	WriteBuffer(uint8_t * into, int size);
 
 	void append(char c);
 	
@@ -35,6 +35,8 @@ public:
 
 	virtual bool supportUpdateValue() const = 0;
 
+	virtual void startWelcomePacket() = 0;
+	
 	virtual void writeDeleteVectorPacket(const IndiVector & vec) = 0;
 	
 	virtual void startAnnounceVectorPacket(const IndiVector & vec) = 0;

@@ -19,13 +19,25 @@ class IndiProtocol
 {
 protected:
 	friend class IndiVector;
-	char * notifPacket;
-	Stream * serial;
-	char * writeBuffer;
+	uint8_t * notifPacket;
+	uint8_t * ackPacket;
+	
+	uint8_t * writeBuffer;
 	int writeBufferLeft;
 	
 	uint8_t clientId;
 	IndiProtocol * next;
+
+
+	uint8_t * incomingPacket;
+	int incomingPacketSize;
+	// Set to true as soon as a complete packet is received.
+	bool incomingPacketReady;
+	// When an ack is ready > 0.
+	int ackPacketSize;
+
+	// First message must be a restarted packet.
+	bool welcomed;
 
 	// Linked list of dirty Vectors
 	uint8_t * nextDirtyVector;
@@ -36,8 +48,20 @@ protected:
 	void dirtied(IndiVector * which);
 	void popDirty(DirtyVector & result);
 	
+	
+
+	// Called when incomingPacketReady is set to true
+	virtual void onIncomingPacketReady() {};
+	// When the ackPAcketBuffer was just written
+	virtual void onAckPacketBufferEmpty() {};
 public:
-	IndiProtocol(Stream * target);
+	IndiProtocol();
+
+	// Clear any pending write/ack/read/... and restart the announce process
+	void reset();
+
+	// Something arrived
+	void received(uint8_t value);
 };
 
 

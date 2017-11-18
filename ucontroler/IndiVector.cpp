@@ -4,7 +4,10 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
+
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
@@ -35,6 +38,13 @@ void IndiVector::notifyUpdate(uint8_t which)
 	{
 		DEBUG("dirtied: ", which);
 		dw->dirtied(this);
+	}
+}
+
+void IndiVector::resetClient(uint8_t clientId)
+{
+	for(int commId = 0; commId < VECTOR_COMM_COUNT; ++commId) {
+		notifStatus[commId] &= ~(((uint8_t)1)<<clientId);
 	}
 }
 
@@ -129,7 +139,7 @@ void IndiVector::sendMutation(WriteBuffer & into)
 
 void IndiVector::sendValue(WriteBuffer & into)
 {
-	Serial.println("REQUESTED value update");
+	DEBUG(F("REQUESTED value update"));
 	
 	if (!into.supportUpdateValue()) {
 		sendMutation(into);
@@ -139,7 +149,7 @@ void IndiVector::sendValue(WriteBuffer & into)
 		// Mutation when hidden should not be sent.
 		return;
 	}
-	Serial.println("SENDING value update");
+	DEBUG(F("SENDING value update"));
 	into.startUpdateValuesPacket(*this);
 	into.writeVectorUid(uid);
 	for(IndiVectorMember * cur = first; cur; cur = cur->next)

@@ -3,12 +3,15 @@
 
 #include <csetjmp>
 #include "Symbol.h"
+#include "WriteBuffer.h"
+#include "BinSerialWriteBuffer.h"
 
 #ifndef ARDUINO
 #include <string>
 #endif
 
 class IndiDevice;
+class IndiProtocol;
 
 class BinSerialReadBuffer {
     std::jmp_buf parsePoint;
@@ -19,7 +22,7 @@ protected:
 
     [[ noreturn ]] void fail(Symbol s);
     // safe to call fail from here
-    void internalReadAndApply(IndiDevice & applyTo);
+    void internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer);
     
     uint8_t readUint7();
     uint8_t readOne();
@@ -39,7 +42,7 @@ protected:
 public:
     BinSerialReadBuffer(uint8_t * buffer, int size);
     // false indicate problem with data
-    bool readAndApply(IndiDevice & applyTo);
+    bool readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSerialWriteBuffer & answer);
 };
 
 #endif

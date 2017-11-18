@@ -9,7 +9,7 @@
 #include "IndiVector.h"
 
 
-BinSerialWriteBuffer::BinSerialWriteBuffer(char * into, int size): WriteBuffer(into, size)
+BinSerialWriteBuffer::BinSerialWriteBuffer(uint8_t * into, int size): WriteBuffer(into, size)
 {}
 
 void BinSerialWriteBuffer::writeStringChar(uint8_t c)
@@ -64,6 +64,11 @@ void BinSerialWriteBuffer::appendSymbol(Symbol str, uint8_t suffix)
 
 bool BinSerialWriteBuffer::supportUpdateValue() const {
 	return true;
+}
+
+void BinSerialWriteBuffer::startWelcomePacket()
+{
+    appendPacketControl(PACKET_RESTARTED);
 }
 
 void BinSerialWriteBuffer::writeDeleteVectorPacket(const IndiVector & vec)

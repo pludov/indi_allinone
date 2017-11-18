@@ -8,7 +8,7 @@
 #include "IndiVector.h"
 #include "Utils.h"
 
-XmlWriteBuffer::XmlWriteBuffer(char * into, int size): WriteBuffer(into, size)
+XmlWriteBuffer::XmlWriteBuffer(uint8_t * into, int size): WriteBuffer(into, size)
 {}
 
 
@@ -154,6 +154,10 @@ void XmlWriteBuffer::appendSymbol(Symbol s, uint8_t suffix)
 
 bool XmlWriteBuffer::supportUpdateValue() const {
 	return false;
+}
+void XmlWriteBuffer::startWelcomePacket()
+{
+	append(F("<welcome/>"));
 }
 
 void XmlWriteBuffer::writeDeleteVectorPacket(const IndiVector & vec)

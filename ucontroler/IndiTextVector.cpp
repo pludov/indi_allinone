@@ -4,23 +4,26 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiTextVector.h"
-
+#include "BinSerialProtocol.h"
+#include "CommonUtils.h"
 
 const VectorKind IndiTextVectorKind {
 	.defVectorText = F("defTextVector"),
 	.newVectorText = F("newTextVector"),
 	.oneMemberText = F("oneText"),
-	.uid = 1
+	.uid = IndiTextVectorKindUid
 };
 
-IndiTextVector::IndiTextVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)
+IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol label)
     :IndiVector(group, name, label)
 {
 }

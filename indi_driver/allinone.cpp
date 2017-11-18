@@ -26,6 +26,7 @@
 
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
+#include "IndiProtocol.h"
 #include "BinSerialProtocol.h"
 #include "BinSerialReadBuffer.h"
 #include <unistd.h>
@@ -127,11 +128,114 @@ bool SimpleDevice::Handshake()
     return true;
 }
 
+
+class CustomIndiProtocol : public IndiProtocol
+{
+    IndiDevice * device;
+public:
+    CustomIndiProtocol(IndiDevice * device) {
+        this->device = device;
+    }
+    
+    bool canRead()
+    {
+        return !incomingPacketReady;
+    }
+    
+    bool canWrite()
+    {
+        if (writeBufferLeft) {
+            return true;
+        }
+        fillBuffer();
+        return writeBufferLeft > 0;
+    }
+
+    uint8_t write() {
+        uint8_t r = *writeBuffer;
+        writeBuffer ++;
+	writeBufferLeft --;
+	return r;
+    }
+    
+    void flushIncomingMessages()
+    {
+        if (incomingPacketReady) {
+            BinSerialReadBuffer bsrb(incomingPacket, incomingPacketSize);
+            BinSerialWriteBuffer answer(ackPacket, ACK_PACKET_MAX_SIZE);
+
+            incomingPacketSize = 0;
+            incomingPacketReady = false;
+            if (!bsrb.readAndApply(*device, *this, answer)) {
+		reset();
+            } else {
+                if (!answer.isEmpty()) {
+		    ackPacketSize = answer.size();
+		}
+            }
+        }
+    }
+};
+
 void SimpleDevice::backgroundProcessor(int fd)
 {
     IndiDevice * dev = new IndiDevice(255);
+    CustomIndiProtocol * proto = new CustomIndiProtocol(dev);
+    uint8_t packet[1];
+  
+  
+    fd_set readset;
+    fd_set writeset;
     
-    uint8_t packet[4096];
+    while(true) {
+        bool canRead = proto->canRead();
+        bool canWrite = proto->canWrite();
+        FD_ZERO(&readset);
+        FD_ZERO(&writeset);
+        
+        if (canRead) {
+            FD_SET(fd, &readset);
+        }
+        if (canWrite) {
+            FD_SET(fd, &writeset);
+        }
+        int result = select(fd + 1, canRead ? &readset : NULL, canWrite ? &writeset : NULL, NULL, NULL);
+        if (canRead && FD_ISSET(fd, &readset)) {
+            int rd = read(fd, &packet, 1);
+            if (rd == 1) {
+                proto->received(packet[0]);
+            } else if (rd == 0) {
+                break;
+            } else {
+                if (errno != EAGAIN) {
+                    perror("read");
+                    break;
+                }
+            }
+        }
+        if (canWrite && FD_ISSET(fd, &writeset) && proto->canWrite()) {
+            packet[0] = proto->write();
+            int wr = write(fd, &packet, 1);
+            if (wr == 1) {
+            } else if (wr == 0) {
+                break;
+            } else {
+                if (errno != EAGAIN) {
+                    perror("write");
+                    break;
+                }
+            }
+        }
+        proto->flushIncomingMessages();
+    }
+    
+/*    int rd;
+    while((rd = read(fd, &packet, 1)) == 1)
+    {
+        proto->received(packet[0]);
+        proto->flushIncomingMessages();
+    }*/
+/*    uint8_t packet[4096];
     uint16_t packetSize = 0;
     uint16_t bytesInBuff = 0;
     bool inPacket = false;
@@ -140,6 +244,7 @@ void SimpleDevice::backgroundProcessor(int fd)
     // FIXME: add a timeout of about 1s
     while((rd = read(fd, packet + packetSize, 1)) == 1)
     {
+        proto->received(packet[0]);
         uint8_t v = packet[packetSize];
 
         if (v >= MIN_PACKET_START && v <= MAX_PACKET_START) {
@@ -157,7 +262,7 @@ void SimpleDevice::backgroundProcessor(int fd)
             } else {
                DEBUGF(INDI::Logger::DBG_DEBUG, "Receveid packt of size %d", packetSize);
                BinSerialReadBuffer reader(packet, packetSize);
-               reader.readAndApply(*dev);
+               reader.readAndApply(*dev, );
                packetSize = 0;
                inPacket = false;
             }
@@ -169,12 +274,12 @@ void SimpleDevice::backgroundProcessor(int fd)
                }
             }
         }
-    }
-    if (rd == -1) {            
+    }*/
+/*    if (rd == -1) {            
         DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
     } else {
         DEBUG(INDI::Logger::DBG_ERROR, "Channel closed.");
-    }
+    }*/
 }
 
 void * SimpleDevice::backgroundProcessorStarter(void*rawContext)

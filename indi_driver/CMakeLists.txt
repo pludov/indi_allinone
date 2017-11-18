@@ -21,7 +21,12 @@ set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/allinone.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/WriteBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialReadBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialWriteBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiDevice.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiProtocol.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVector.cpp
    )
 
 add_executable(indi_allinone ${indiallinone_SRCS})

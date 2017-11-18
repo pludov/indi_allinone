@@ -16,10 +16,12 @@ class XmlWriteBuffer : public WriteBuffer {
 	void appendXmlEscaped(const char * s);
 	
 public:
-	XmlWriteBuffer(char * into, int size);
+	XmlWriteBuffer(uint8_t * into, int size);
 
 	virtual bool supportUpdateValue() const;
 
+	virtual void startWelcomePacket();
+	
 	virtual void writeDeleteVectorPacket(const IndiVector & vec);
 	
 	virtual void startAnnounceVectorPacket(const IndiVector & vec);

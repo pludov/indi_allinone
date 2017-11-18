@@ -4,7 +4,9 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "Symbol.h"
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
@@ -12,12 +14,14 @@
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiNumberVector.h"
+#include "BinSerialProtocol.h"
+#include "CommonUtils.h"
 
 const VectorKind IndiNumberVectorKind {
 	.defVectorText = F("defNumberVector"),
 	.newVectorText = F("newNumberVector"),
 	.oneMemberText = F("oneNumber"),
-	.uid = 0
+	.uid = IndiNumberVectorKindUid
 };
 
 IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol label)

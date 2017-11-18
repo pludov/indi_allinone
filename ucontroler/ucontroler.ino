@@ -345,14 +345,14 @@ void setup() {
 	ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
 
 
-	char buffer[4096];
+	uint8_t buffer[4096];
 	XmlWriteBuffer into(buffer, 4096);
 // 	IndiDevice::instance().dump(into);
 
 
 	if (into.finish()) {
 		Serial.print("root:");
-		Serial.println(buffer);
+		Serial.println((char*)buffer);
 	} else {
 		Serial.println("Not enough space");
 	}

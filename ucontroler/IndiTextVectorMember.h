@@ -9,6 +9,7 @@
 #define INDITEXTVECTORMEMBER_H_
 
 #include "IndiVectorMember.h"
+#include "Symbol.h"
 
 class IndiTextVector;
 
@@ -17,8 +18,8 @@ class IndiTextVectorMember : public IndiVectorMember {
 	char * value;
 public:
 	IndiTextVectorMember(IndiTextVector * vector,
-			const __FlashStringHelper * name,
-			const __FlashStringHelper * label,
+			Symbol name,
+			Symbol label,
 			uint8_t maxSze);
 	virtual ~IndiTextVectorMember();
 

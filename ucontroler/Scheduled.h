@@ -29,6 +29,10 @@ protected:
 	Scheduled();
 	
 	virtual void tick() = 0;
+
+	// Called at least once every ms (potentially during sleep, ...)
+	virtual void idle() {};
+
 	virtual ~Scheduled() = 0;
 };
 

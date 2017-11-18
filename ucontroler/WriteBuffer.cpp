@@ -16,7 +16,7 @@
 #include "Utils.h"
 #include "IndiVector.h"
 
-WriteBuffer::WriteBuffer(char * into, int size)
+WriteBuffer::WriteBuffer(uint8_t * into, int size)
 {
 	this->ptr = into;
 	this->left = size;

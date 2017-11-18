@@ -4,7 +4,9 @@
  *  Created on: 27 févr. 2015
  *      Author: utilisateur
  */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
@@ -14,8 +16,8 @@
 
 
 IndiVectorMember::IndiVectorMember(IndiVector * vector, 
-	const __FlashStringHelper * name, 
-	const __FlashStringHelper * label)
+	Symbol name, 
+	Symbol label)
 {
 	this->vector = vector;
 	next = 0;

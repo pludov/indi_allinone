@@ -9,6 +9,7 @@
 #define INDIFLOATVECTORMEMBER_H_
 
 #include "IndiVectorMember.h"
+#include "Symbol.h"
 
 class IndiNumberVector;
 
@@ -18,8 +19,8 @@ class IndiFloatVectorMember : public IndiVectorMember {
 	double min, max;
 public:
 	IndiFloatVectorMember(IndiNumberVector * vector, 
-			const __FlashStringHelper * name, 
-			const __FlashStringHelper * label,
+			Symbol name, 
+			Symbol label,
 			double min, double max);
 
 	void setValue(double v);

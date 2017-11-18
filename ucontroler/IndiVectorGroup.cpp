@@ -9,7 +9,7 @@
 #include "WriteBuffer.h"
 #include "Utils.h"
 
-IndiVectorGroup::IndiVectorGroup(const __FlashStringHelper * name, int8_t suffix)
+IndiVectorGroup::IndiVectorGroup(Symbol name, int8_t suffix)
 {
     this->suffix = suffix;
 	this->name = name;

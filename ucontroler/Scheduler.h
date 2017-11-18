@@ -24,6 +24,8 @@ public:
 	Scheduler();
 	void loop();
 
+	void yield();
+
 	static Scheduler & instance() __attribute__ ((const));
 };
 

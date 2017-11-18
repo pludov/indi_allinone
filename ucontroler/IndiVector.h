@@ -76,7 +76,7 @@ protected:
 	 */
 	bool isDirty(uint8_t clientId, uint8_t commId);
 	bool cleanDirty(uint8_t clientId, uint8_t commId);
-
+	void resetClient(uint8_t clientId);
 	void notifyUpdate(uint8_t commId);
 	
 	void dumpMembers(WriteBuffer & into);

@@ -5,9 +5,18 @@
 
 #include "BinSerialReadBuffer.h"
 #include "BinSerialProtocol.h"
+#include "IndiProtocol.h"
+#include "IndiVector.h"
+#include "IndiTextVector.h"
+#include "IndiNumberVector.h"
 #include "CommonUtils.h"
 #include "Symbol.h"
 
+
+const VectorKind * kindsByUid[IndiMaxVectorKind + 1] = {
+    &IndiTextVectorKind,
+    &IndiNumberVectorKind
+};
 
 BinSerialReadBuffer::BinSerialReadBuffer(uint8_t * buffer, int size)
 {
@@ -16,17 +25,17 @@ BinSerialReadBuffer::BinSerialReadBuffer(uint8_t * buffer, int size)
     this->left = size;
 }
 
-bool BinSerialReadBuffer::readAndApply(IndiDevice & applyTo)
+bool BinSerialReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSerialWriteBuffer & answer)
 {
     volatile bool error = true;
     if (setjmp(parsePoint) == 0) {
-        internalReadAndApply(applyTo);
+        internalReadAndApply(applyTo, proto, answer);
         error = false;
     }
     return !error;
 }
 
-void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo)
+void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer)
 {
     uint8_t ctrl = readPacketControl();
     DEBUG(F("[PACKET START]"));
@@ -34,9 +43,32 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo)
         case PACKET_RESTARTED:
         {
             DEBUG(F("[RESTART]"));
+#ifdef ARDUINO
+            // Reset the whole protocol
+            proto.reset();
+            answer.appendPacketControl(PACKET_RESTARTED);
+            answer.appendPacketControl(PACKET_END);
+#endif
             break;
         }
-            
+        
+#ifndef ARDUINO
+        case PACKET_MESSAGE:
+        {
+            char buffer[128];
+            int id = 0;
+            while(!isAtEnd()) {
+                uint8_t v = readUint7();
+                buffer[id++] = v;
+                if (id == 127) {
+                    break;
+                }
+            }
+            buffer[id] = 0; 
+            DEBUG(F("DEBUG: "), buffer);
+            break;
+        }
+
         case PACKET_ANNOUNCE:
         {
             DEBUG(F("[ANNOUNCE]"));
@@ -49,17 +81,24 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo)
             DEBUG(F("[FLAG]"), flag);
             uint8_t typeUid = readUid();
             DEBUG(F(" UID:"), typeUid);
-            while(!isAtEnd()) {
-                DEBUG(F("[Vector]"));
-
+            if (typeUid >IndiMaxVectorKind) {
+                fail(F("Wrong vector kind"));
             }
+            
+            const VectorKind & kind = *(kindsByUid[typeUid]);
+            // while(!isAtEnd()) {
+            //     DEBUG(F("[Vector]"));
+                
+            // }
             break;
         }
+#endif
         default:
-            DEBUG("Wrong kind: ", ctrl);
+            DEBUG("Wrong kind: ", (int)ctrl);
             fail(F("Wrong kind"));
 
     }
+
     if (readPacketControl() != PACKET_END) {
         fail(F("Packet too big"));
     }

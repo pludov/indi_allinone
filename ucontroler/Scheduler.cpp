@@ -13,29 +13,12 @@ Scheduler::Scheduler()
 	this->first = 0;
 }
 
-
-// Wait the end of the previous signal
-void waitSigEnd(unsigned long currentSigEnd) {
-	long int wait;
-	do {
-		unsigned long int currentNanos = micros();
-		wait = currentSigEnd - currentNanos;
-
-		if (wait > 16000) {
-			delayMicroseconds(10000);
-		}
-	} while (wait > 16000);
-	if (wait > 0) {
-		delayMicroseconds(wait);
-	}
-}
-
 // Wait the end of the previous signal if that is soon (< 5ms). Otherwise return false
 boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 	long int wait;
 	UTime currentNanos = UTime::now();
 	wait = currentSigEnd - currentNanos;
-	if (wait < 5000) {
+	if (wait < 1000) {
 		if (wait > 0)
 			delayMicroseconds(wait);
 		return true;
@@ -46,6 +29,8 @@ boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 
 void Scheduler::loop()
 {
+	yield();
+	
 	UTime now = UTime::now();
 	Scheduled * targetForLoop = 0;
 	// On prend en priorité les p0 qui arrivent bientot
@@ -103,6 +88,13 @@ void Scheduler::loop()
 	}
 }
 
+void Scheduler::yield()
+{
+	for(Scheduled * sch = first; sch; sch = sch->nextScheduled)
+	{
+		sch->idle();
+	}
+}
 
 static Scheduler * instancePtr = 0;
 
