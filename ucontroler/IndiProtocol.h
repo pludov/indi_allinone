@@ -8,14 +8,16 @@
 #ifndef INDIPROTOCOL_H_
 #define INDIPROTOCOL_H_
 
-#include "Scheduled.h"
+/*#include "Scheduled.h"*/
 #include "WriteBuffer.h"
 
 class IndiVector;
 struct DirtyVector;
+class Stream;
 
-class IndiProtocol : public Scheduled
+class IndiProtocol
 {
+protected:
 	friend class IndiVector;
 	char * notifPacket;
 	Stream * serial;
@@ -36,7 +38,6 @@ class IndiProtocol : public Scheduled
 	
 public:
 	IndiProtocol(Stream * target);
-	void tick();
 };
 
 

@@ -16,7 +16,8 @@
 const VectorKind IndiNumberVectorKind {
 	.defVectorText = F("defNumberVector"),
 	.newVectorText = F("newNumberVector"),
-	.oneMemberText = F("oneNumber")
+	.oneMemberText = F("oneNumber"),
+	.uid = 0
 };
 
 IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol label)

@@ -32,6 +32,7 @@
 #include <EEPROM.h>                           // EEPROM Library
 
 #include "IndiProtocol.h"
+#include "ScheduledIndiProtocol.h"
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
@@ -339,8 +340,8 @@ void setup() {
 
 	DewHeater * dw = new DewHeater(11, 1);
 
-	IndiProtocol * serialWriter = new IndiProtocol(&Serial);
-	IndiProtocol * serialWriter2 = new IndiProtocol(&Serial1);
+	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
+	ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
 
 
 	char buffer[4096];

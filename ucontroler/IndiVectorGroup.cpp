@@ -15,7 +15,7 @@ IndiVectorGroup::IndiVectorGroup(const __FlashStringHelper * name, int8_t suffix
 	this->name = name;
 }
 
-void IndiVectorGroup::dumpXmlEncoded(WriteBuffer & into) const
+/*void IndiVectorGroup::dumpXmlEncoded(WriteBuffer & into) const
 {
     into.appendXmlEscaped(name);
     if (suffix) {
@@ -23,3 +23,4 @@ void IndiVectorGroup::dumpXmlEncoded(WriteBuffer & into) const
         into.append(Utils::hex(suffix));
     }
 }
+*/

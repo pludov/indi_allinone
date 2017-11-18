@@ -25,7 +25,8 @@
 #include "connectionplugins/connectionserial.h"
 
 #include "WriteBuffer.h"
-
+#include "IndiDevice.h"
+#include "BinSerialProtocol.h"
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -114,7 +115,7 @@ bool SimpleDevice::Handshake()
         DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
         return false;
     }
-
+    // FIXME: join previous thread
     BackgroundProcessorContext * context = new BackgroundProcessorContext();
     context->device = this;
     context->port = PortFD;
@@ -127,19 +128,50 @@ bool SimpleDevice::Handshake()
 
 void SimpleDevice::backgroundProcessor(int fd)
 {
-    char buffer [128];
+    IndiDevice * dev = new IndiDevice(255);
+    
+    uint8_t packet[4096];
+    uint16_t packetSize = 0;
+    uint16_t bytesInBuff = 0;
+    bool inPacket = false;
     int rd;
-    while((rd = read(fd, buffer, 127)) != -1) {
-        if (rd == 0) {
-            break;
+    
+    // FIXME: add a timeout of about 1s
+    while((rd = read(fd, packet + packetSize, 1)) == 1)
+    {
+        uint8_t v = packet[packetSize];
+
+        if (v >= MIN_PACKET_START && v <= MAX_PACKET_START) {
+            if (packetSize != 0) {
+                DEBUGF(INDI::Logger::DBG_DEBUG, "Packet interrupted after %d", packetSize);
+                packet[0] = v;
+            }
+            packetSize = 1;
+            inPacket = true;
+        } else if (v == PACKET_END) {
+            if (!inPacket) {
+               DEBUGF(INDI::Logger::DBG_DEBUG, "End of unknown packet after %d", packetSize);
+               packetSize = 0;
+               inPacket = false;
+            } else {
+               DEBUGF(INDI::Logger::DBG_DEBUG, "Receveid packt of size %d", packetSize);
+               packetSize = 0;
+               inPacket = false;
+            }
+        } else {
+            if (inPacket) {
+               packetSize++;
+               if (packetSize == 4096) {
+                   DEBUG(INDI::Logger::DBG_DEBUG, "Packet overflow");
+               }
+            }
         }
-        buffer[rd] = 0;
-        DEBUGF(INDI::Logger::DBG_DEBUG, "Read: %s", buffer);
-        // write(2, buffer, rd);
     }
-            
-    DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
-   
+    if (rd == -1) {            
+        DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
+    } else {
+        DEBUG(INDI::Logger::DBG_ERROR, "Channel closed.");
+    }
 }
 
 void * SimpleDevice::backgroundProcessorStarter(void*rawContext)

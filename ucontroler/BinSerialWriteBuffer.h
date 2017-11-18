@@ -1,23 +1,22 @@
-#ifndef XMLWRITEBUFFER_H_
-#define XMLWRITEBUFFER_H_ 1
+#ifndef BINSERIALWRITEBUFFER_H_
+#define BINSERIALWRITEBUFFER_H_ 1
 
 #include "WriteBuffer.h"
 
 
-class XmlWriteBuffer : public WriteBuffer {
+class BinSerialWriteBuffer : public WriteBuffer {
+    void appendSymbol(Symbol s, uint8_t suffix);
+    void appendPacketControl(uint8_t v);
+    void appendUid(uint8_t uid);
 
-	void appendSymbol(Symbol s, uint8_t suffix);
-	void append(const char * s);
-	void append(Symbol s);
-	void append(char c) { WriteBuffer::append(c); }
-	void appendXmlEscaped(char c);
+    void appendUint7(uint8_t value) { WriteBuffer::append(value); }
+    void writeStringChar(uint8_t ch);
 
-	void appendXmlEscaped(Symbol s);
-	void appendXmlEscaped(const char * s);
-	
 public:
-	XmlWriteBuffer(char * into, int size);
+	BinSerialWriteBuffer(char * into, int size);
 
+    virtual bool finish();
+    
 	virtual bool supportUpdateValue() const;
 
 	virtual void writeDeleteVectorPacket(const IndiVector & vec);

@@ -12,6 +12,7 @@
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 
+#include "CommonUtils.h"
 
 IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag)
 {
@@ -32,7 +33,7 @@ void IndiVector::notifyUpdate(uint8_t which)
 
 	for(IndiProtocol * dw = device.firstWriter; dw; dw = dw->next)
 	{
-		Serial.println("dirtied");
+		DEBUG("dirtied: ", which);
 		dw->dirtied(this);
 	}
 }
@@ -49,7 +50,7 @@ bool IndiVector::cleanDirty(uint8_t clientId, uint8_t commId)
 	uint8_t mask = 1 << clientId;
 	uint8_t val = notifStatus[commId];
 	if (!(val & mask)) {
-		val |= mask;
+		notifStatus[commId] |= mask;
 		return true;
 	}
 	return false;
@@ -128,6 +129,8 @@ void IndiVector::sendMutation(WriteBuffer & into)
 
 void IndiVector::sendValue(WriteBuffer & into)
 {
+	Serial.println("REQUESTED value update");
+	
 	if (!into.supportUpdateValue()) {
 		sendMutation(into);
 		return;
@@ -136,6 +139,7 @@ void IndiVector::sendValue(WriteBuffer & into)
 		// Mutation when hidden should not be sent.
 		return;
 	}
+	Serial.println("SENDING value update");
 	into.startUpdateValuesPacket(*this);
 	into.writeVectorUid(uid);
 	for(IndiVectorMember * cur = first; cur; cur = cur->next)

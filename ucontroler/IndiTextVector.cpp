@@ -16,7 +16,8 @@
 const VectorKind IndiTextVectorKind {
 	.defVectorText = F("defTextVector"),
 	.newVectorText = F("newTextVector"),
-	.oneMemberText = F("oneText")
+	.oneMemberText = F("oneText"),
+	.uid = 1
 };
 
 IndiTextVector::IndiTextVector(IndiVectorGroup * group, const __FlashStringHelper * name, const __FlashStringHelper * label)

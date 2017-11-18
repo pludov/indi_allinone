@@ -7,14 +7,16 @@
 #include <Arduino.h>
 #include "WriteBuffer.h"
 #include "XmlWriteBuffer.h"
+#include "BinSerialWriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 
-// a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
-#define CHAR_XMIT_DELAY 79
+#include "CommonUtils.h"
+
+
 
 #define NOTIF_PACKET_MAX_SIZE 2048
 
@@ -26,9 +28,7 @@ IndiProtocol::IndiProtocol(Stream * target)
 	this->notifPacket = (char*)malloc(NOTIF_PACKET_MAX_SIZE);
 	this->writeBuffer = 0;
 	this->writeBufferLeft = 0;
-	this->priority = 100;
-	this->nextTick = UTime::now();
-
+	
 	this->next = device.firstWriter;
 	this->clientId = this->next ? this->next->clientId + 1 : 0;
 	device.firstWriter = this;
@@ -86,6 +86,7 @@ void IndiProtocol::popDirty(DirtyVector & result)
 		result.vector = v;
 		for(int i = 0; i < VECTOR_COMM_COUNT; ++i) {
 			if (v->cleanDirty(clientId, i)) {
+				DEBUG("vector ", vectorId, " dirty at ", i);
 				result.dirtyFlags |= (1 << i);
 			}
 		}
@@ -114,7 +115,7 @@ void IndiProtocol::fillBuffer()
 
 		// FIXME: depending on dirtyFlags, ...
 
-		XmlWriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
+		BinSerialWriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
 		if (toSend.dirtyFlags & (1 << VECTOR_ANNOUNCED)) {
 			toSend.vector->sendAnnounce(wf);
 		} else if (toSend.dirtyFlags & (1 << VECTOR_MUTATION)) {
@@ -135,34 +136,4 @@ void IndiProtocol::fillBuffer()
 			// WTF ? on peut rien faire... on oublie
 		}
 	}while(true);
-}
-
-void IndiProtocol::tick()
-{
-	int spaceAvailable = serial->availableForWrite();
-	if (writeBufferLeft == 0 && spaceAvailable > 8) {
-		fillBuffer();
-	}
-
-	if (writeBufferLeft > 0) {
-		int nbCarToWait;
-		if (spaceAvailable > 0) {
-			// On attend que les caractères aient été écrits.
-			nbCarToWait = spaceAvailable;
-			if (nbCarToWait > writeBufferLeft) {
-				nbCarToWait = writeBufferLeft;
-			}
-			serial->write(writeBuffer, nbCarToWait);
-			writeBuffer += nbCarToWait;
-			writeBufferLeft -= nbCarToWait;
-		} else {
-			nbCarToWait = 1;
-		}
-		this->nextTick = UTime::now() + nbCarToWait * CHAR_XMIT_DELAY;
-		return;
-	} else {
-		// On ne s'excite pas tout de suite, il n'y a pas de place ou rien à dire
-		this->nextTick = UTime::now() + 8 * CHAR_XMIT_DELAY;
-		return;
-	}
 }

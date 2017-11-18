@@ -8,7 +8,6 @@
 #ifndef INDIDEVICE_H_
 #define INDIDEVICE_H_
 
-#include "Scheduled.h"
 #include "WriteBuffer.h"
 
 class IndiVector;

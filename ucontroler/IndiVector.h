@@ -39,6 +39,7 @@ struct VectorKind {
 	Symbol defVectorText;
 	Symbol newVectorText;
 	Symbol oneMemberText;
+	uint8_t uid;
 };
 
 class IndiVector {
@@ -47,6 +48,7 @@ class IndiVector {
 	friend class IndiVectorMember;
 	friend class WriteBuffer;
 	friend class XmlWriteBuffer;
+	friend class BinSerialWriteBuffer;
 protected:
 	Symbol name;
 	int8_t nameSuffix;
@@ -60,7 +62,7 @@ protected:
 	// 2 bits for each writer : announced, updated
 	uint8_t notifStatus[VECTOR_COMM_COUNT];
 	
-	int8_t uid;
+	uint8_t uid;
 
 	/** 
 	 * clientId : IndiProtocol id

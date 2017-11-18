@@ -27,15 +27,8 @@ public:
 	WriteBuffer(char * into, int size);
 
 	void append(char c);
-	void append(const char * s);
-	void append(Symbol s);
-
-	void appendXmlEscaped(char c);
-
-	void appendXmlEscaped(Symbol s);
-	void appendXmlEscaped(const char * s);
-	void appendSymbol(Symbol s, uint8_t suffix);
-	bool finish();
+	
+	virtual bool finish();
 	int size();
 	bool isEmpty();
 

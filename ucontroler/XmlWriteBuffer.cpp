@@ -6,10 +6,142 @@
 
 #include "XmlWriteBuffer.h"
 #include "IndiVector.h"
-
+#include "Utils.h"
 
 XmlWriteBuffer::XmlWriteBuffer(char * into, int size): WriteBuffer(into, size)
 {}
+
+
+#ifdef ARDUINO
+
+void XmlWriteBuffer::append(const __FlashStringHelper * str)
+{
+	PGM_P p = reinterpret_cast<PGM_P>(str);
+
+	while (1) {
+		char c = pgm_read_byte(p++);
+		if (c == 0) break;
+		append(c);
+	}
+}
+
+#else
+
+void XmlWriteBuffer::append(std::string str)
+{
+	for(int u = 0; u < str.length(); ++u)
+	{
+		char c = str[u];
+		append(c);
+	}
+}
+
+#endif
+
+void XmlWriteBuffer::appendXmlEscaped(char c) {
+	switch(c) {
+		case '"':
+			append(F("&quot;"));
+			break;
+		case '\'':
+			append(F("&apos;"));
+			break;
+		case '<':
+			append(F("&lt;"));
+			break;
+		case '>':
+			append(F("&gt;"));
+			break;
+		case ';':
+			append(F("&amp;"));
+			break;
+		default:
+			append(c);
+	}
+}
+
+#ifdef ARDUINO
+
+void XmlWriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
+{
+	PGM_P p = reinterpret_cast<PGM_P>(str);
+	
+	while (1) {
+		unsigned char c = pgm_read_byte(p++);
+		if (c == 0) break;
+		appendXmlEscaped(c);
+	}
+}
+
+#else
+
+void XmlWriteBuffer::appendXmlEscaped(std::string str)
+{
+	for(int u = 0; u < str.length(); ++u)
+	{
+		unsigned char c = str[u];
+		appendXmlEscaped(c);
+	}
+}
+
+
+#endif
+
+void XmlWriteBuffer::appendXmlEscaped(const char * s)
+{
+	while(*s) {
+		appendXmlEscaped(*(s++));
+	}
+}
+
+void XmlWriteBuffer::append(const char * s)
+{
+	append('"');
+	while(*s) {
+		unsigned char c = *(s++);
+		switch (c) {
+			case '\\':
+			case '"':
+			case '/':
+				append('\\');
+				append(c);
+				break;
+			case '\b':
+				append('\\');
+				append('b');
+				break;
+			case '\t':
+				append('\\');
+				append('t');
+				break;
+			case '\n':
+				append('\\');
+				append('n');
+				break;
+			case '\f':
+				append('\\');
+				append('f');
+				break;
+			case '\r':
+				append('\\');
+				append('i');
+				break;
+			default:
+				if (c < ' ') {
+					append('\\');
+					append('u');
+					append('0');
+					append('0');
+					append(Utils::hex(c >> 4));
+					append(Utils::hex(c & 15));
+				} else {
+					append(c);
+				}
+		}
+	}
+	append('"');
+}
+	
 
 void XmlWriteBuffer::appendSymbol(Symbol s, uint8_t suffix)
 {

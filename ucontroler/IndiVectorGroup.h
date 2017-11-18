@@ -8,15 +8,17 @@
 #ifndef INDIVECTORGROUP_H_
 #define INDIVECTORGROUP_H_
 
+#include "Symbol.h"
+
 class WriteBuffer;
 
 class IndiVectorGroup {
-	const __FlashStringHelper * name;
+	Symbol name;
 	int8_t suffix;
 public:
-	IndiVectorGroup(const __FlashStringHelper * name, int8_t suffix = 0);
+	IndiVectorGroup(Symbol name, int8_t suffix = 0);
 
-	void dumpXmlEncoded(WriteBuffer & into) const;
+	// void dumpXmlEncoded(WriteBuffer & into) const;
 };
 
 

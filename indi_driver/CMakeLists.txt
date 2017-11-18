@@ -20,6 +20,7 @@ include_directories( ${INDI_INCLUDE_DIR})
 set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/allinone.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/WriteBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiDevice.cpp
    )
 
 add_executable(indi_allinone ${indiallinone_SRCS})

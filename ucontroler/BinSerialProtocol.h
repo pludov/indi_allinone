@@ -1,0 +1,20 @@
+#ifndef BINSERIALPROTOCOL_H_
+#define BINSERIALPROTOCOL_H_ 1
+
+
+// Must be > 127
+#define PACKET_MAX_DATA 240
+
+// Sent when a client is restarted and
+#define PACKET_RESTARTED 250
+#define PACKET_ANNOUNCE 251
+#define PACKET_MUTATE 252
+#define PACKET_UPDATE 253
+#define PACKET_DELETE 254
+#define PACKET_END 255
+
+
+#define MIN_PACKET_START PACKET_RESTARTED
+#define MAX_PACKET_START PACKET_DELETE
+
+#endif
