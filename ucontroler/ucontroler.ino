@@ -37,6 +37,7 @@
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 #include "XmlWriteBuffer.h"
+#include "BinSerialReadBuffer.h"
 
 #include "utime.h"
 #include "MainLogic.h"

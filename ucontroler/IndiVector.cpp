@@ -94,7 +94,7 @@ void IndiVector::sendDefinition(WriteBuffer & into)
 	for(IndiVectorMember * cur = first; cur; cur=cur->next)
 	{
 		into.startMember(*this);
-		if (hasMemberSubtype()) {
+		if (kind().hasMemberSubtype()) {
 			into.writeVectorMemberSubtype(cur->getSubtype());
 		}
 		into.writeVectorMemberName(cur->name, nameSuffix);

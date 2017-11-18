@@ -27,6 +27,7 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "BinSerialProtocol.h"
+#include "BinSerialReadBuffer.h"
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -155,6 +156,8 @@ void SimpleDevice::backgroundProcessor(int fd)
                inPacket = false;
             } else {
                DEBUGF(INDI::Logger::DBG_DEBUG, "Receveid packt of size %d", packetSize);
+               BinSerialReadBuffer reader(packet, packetSize);
+               reader.readAndApply(*dev);
                packetSize = 0;
                inPacket = false;
             }

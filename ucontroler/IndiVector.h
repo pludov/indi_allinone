@@ -34,12 +34,18 @@ class IndiVectorGroup;
 class IndiIntVectorMember;
 
 
+#define VECTORKIND_NEED_MEMBER_SUBTYPE 1
 struct VectorKind {
 	// is uid required here ?
 	Symbol defVectorText;
 	Symbol newVectorText;
 	Symbol oneMemberText;
 	uint8_t uid;
+	uint8_t flag;
+
+	/** true if member must be typed */
+	bool hasMemberSubtype() const { return flag & VECTORKIND_NEED_MEMBER_SUBTYPE; };
+
 };
 
 class IndiVector {
@@ -89,8 +95,6 @@ public:
 	
 	void set(uint8_t flagToChange, bool status);
 	
-	/** true if member must be typed */
-	virtual bool hasMemberSubtype() const = 0;
 	virtual const VectorKind & kind() const = 0;
 	
 	/**
