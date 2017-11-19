@@ -117,6 +117,8 @@ bool SimpleDevice::Handshake()
         DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
         return false;
     }
+    tcflush(PortFD, TCIOFLUSH);
+    
     // FIXME: join previous thread
     BackgroundProcessorContext * context = new BackgroundProcessorContext();
     context->device = this;
