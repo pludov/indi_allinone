@@ -11,7 +11,7 @@
 #include "IndiNumberVector.h"
 #include "CommonUtils.h"
 #include "Symbol.h"
-
+#include "Utils.h"
 
 const VectorKind * kindsByUid[IndiMaxVectorKind + 1] = {
     &IndiTextVectorKind,
@@ -37,6 +37,46 @@ bool BinSerialReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & prot
 
 void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer)
 {
+#ifndef ARDUINO
+
+    int toDisplayOffset = ptr;
+    while(toDisplayOffset < left) {
+        int thisLoop = left - toDisplayOffset;
+        if (thisLoop  > 30) thisLoop = 30;
+
+        char display[3 * thisLoop + 1];
+        char * dp = display;
+        for(int i = 0; i < thisLoop; ++i)
+        {
+            uint8_t c = buffer[toDisplayOffset + i];
+            *(dp++) = Utils::hex(c >> 4);
+            *(dp++) = Utils::hex(c & 15);
+            *(dp++) = ' ';
+        }
+        *dp = '\0';
+        DEBUG(F("Received (hex): "), display);
+    
+        dp = display;
+        for(int i = 0; i < thisLoop; ++i)
+        {
+            uint8_t c = buffer[toDisplayOffset + i];
+            if (c > 27 && c < 128) {
+                *(dp++) = c;
+            } else {
+                *(dp++) = ' ';
+            }
+            *(dp++) = ' ';
+            *(dp++) = ' ';
+        }
+        *dp = '\0';
+        DEBUG(F("Received (asc): "), display);
+
+        toDisplayOffset += thisLoop;
+    
+    }
+
+
+#endif
     uint8_t ctrl = readPacketControl();
     DEBUG(F("[PACKET START]"));
     switch(ctrl) {
