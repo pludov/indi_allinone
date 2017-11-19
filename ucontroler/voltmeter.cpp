@@ -11,7 +11,7 @@
 #include "Status.h"
 #include "Config.h"
 
-Voltmeter::Voltmeter(uint8_t pin) {
+Voltmeter::Voltmeter(uint8_t pin) : Scheduled::Scheduled(F("Voltmeter")) {
 	this->priority = 2;
 	this->tickExpectedDuration = US(250);
 	this->pin = pin;

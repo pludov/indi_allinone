@@ -2,7 +2,7 @@
 
 #include "DewHeater.h"
 #include "Utils.h"
-
+#include "CommonUtils.h"
 #define STATUS_NEED_SCAN 0
 #define STATUS_MEASURE 1
 #define STATUS_IDLE 2
@@ -14,7 +14,7 @@
 
 
 DewHeater::DewHeater(int pin, int suffix)
-    :Scheduled(),
+    :Scheduled(F("DewHeater")),
     group(F("DEW_HEATER")),
     statusVec(&group, F("DEW_HEATER_TEMP"), F("HW Temperature")),
     temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100),
@@ -70,7 +70,7 @@ static void formatAddr(byte * addr, char * buffer)
 
 void DewHeater::scan()
 {
-    Serial.println("scan\n");
+    DEBUG(F("scan"));
     
     oneWire.reset_search();
     if (!oneWire.search(addr)) {
@@ -94,7 +94,7 @@ void DewHeater::scan()
     uid.setValue(strAddr);
     // FIXME: update variables from scan...
     
-    Serial.printf("scan ok at %s\n", strAddr);
+    DEBUG(F("scan ok at "), strAddr);
     
     this->status = STATUS_IDLE;
     this->nextTick = UTime::now() + MS(100);
@@ -103,20 +103,19 @@ void DewHeater::scan()
 void DewHeater::startMeasure()
 {
     long t1 = micros();
-    Serial.println("startMeasure\n");
+    DEBUG(F("startMeasure"));
     oneWire.reset();
     oneWire.skip();
     oneWire.write(0x44, 1);
     long t2 = micros();
     this->status = STATUS_MEASURE;
     this->nextTick = UTime::now() + MS(800);
-    Serial.print("startmeasure done in ");
-    Serial.println(t2 - t1);
+    DEBUG(F("startmeasure done in "), t2 - t1);
 }
 
 void DewHeater::endMeasure()
 {
-    Serial.println("endMeasure\n");
+    DEBUG(F("endMeasure"));
     long t1 = micros();
     oneWire.reset();
     oneWire.skip();
@@ -128,11 +127,10 @@ void DewHeater::endMeasure()
         data[i] = oneWire.read();
     }
     long t2 = micros();
-    Serial.print("measure done in ");
-    Serial.println(t2 - t1);
+    DEBUG(F("measure done in "), t2 - t1);
 
     if (OneWire::crc8(data, 8) != data[8]) {
-        Serial.println("Invalid data");
+        DEBUG(F("Invalid data"));
         failed();
         return;
     }

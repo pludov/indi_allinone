@@ -19,7 +19,7 @@
 
 
 
-MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled() {
+MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled(F("MeteoTemp")) {
 	_pin = pin;
 	_type = type;
 	_count = 6;

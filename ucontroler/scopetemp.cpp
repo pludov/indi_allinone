@@ -24,7 +24,7 @@
 // Duration in ~ms of a read
 #define READ_TRY_DURATION MS(18)
 
-ScopeTemp::ScopeTemp(OneWire * oneWire): dallas(oneWire)
+ScopeTemp::ScopeTemp(OneWire * oneWire): Scheduled::Scheduled(F("ScopeTemp")), dallas(oneWire)
 {
 	dallas.setWaitForConversion(false);
 	this->priority = 2;

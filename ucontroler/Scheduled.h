@@ -11,12 +11,13 @@
 #define  NEVER  -0x80000000
 
 #include "utime.h"
+#include "Symbol.h"
 
 class Scheduled
 {
 	friend class Scheduler;
 	Scheduled * nextScheduled;
-	
+	Symbol debugName;
 		
 protected:
 	// When is the next tick scheduled
@@ -26,7 +27,7 @@ protected:
 	// priority 0 = don't be late. Other = can be late
 	int priority;
 
-	Scheduled();
+	Scheduled(Symbol debugName);
 	
 	virtual void tick() = 0;
 

@@ -21,6 +21,7 @@ static inline int8_t sgn(long val) {
 }
 
 Motor::Motor(const uint8_t * pins, uint8_t positionConfigId, int fastestPerHalfStep)
+	:Scheduled(F("Motor"))
 {
 	this->fastestPerHalfStep = fastestPerHalfStep;
 	this->positionConfigId = positionConfigId;

@@ -52,6 +52,7 @@ void IndiProtocol::reset()
 	this->writeBufferLeft = 0;
 	this->incomingPacketSize = 0;
 	this->incomingPacketReady = 0;
+	this->ackPacketSize = 0;
 	this->welcomed = 0;
 
 	if (device.variableCount) {
@@ -213,7 +214,7 @@ void IndiProtocol::fillBuffer()
 			writeBufferLeft = wf.size();
 			return;
 		} else {
-			// WTF ? on peut rien faire... on oublie
+			// WTF ? on peut rien faire... on oublie ?
 		}
 	}while(true);
 }

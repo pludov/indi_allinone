@@ -27,8 +27,15 @@ boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 	}
 }
 
+static long lastMicros = 0;
+
 void Scheduler::loop()
 {
+	long newMicros = micros();
+	if (newMicros - lastMicros >  2000000) {
+		Serial1.println(F("alive"));
+		lastMicros = newMicros;
+	}
 	yield();
 	
 	UTime now = UTime::now();

@@ -167,7 +167,7 @@ public:
             incomingPacketSize = 0;
             incomingPacketReady = false;
             if (!bsrb.readAndApply(*device, *this, answer)) {
-		reset();
+		//reset();
             } else {
                 if (!answer.isEmpty()) {
 		    ackPacketSize = answer.size();

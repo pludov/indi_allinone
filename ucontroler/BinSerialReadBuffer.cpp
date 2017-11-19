@@ -78,9 +78,9 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
             readSymbol(str, 32);
             DEBUG(F("[LABEL]"), str);
             uint8_t flag = readUint7();;
-            DEBUG(F("[FLAG]"), flag);
+            DEBUG(F("[FLAG]"), (int)flag);
             uint8_t typeUid = readUid();
-            DEBUG(F(" UID:"), typeUid);
+            DEBUG(F(" UID:"), (int)typeUid);
             if (typeUid >IndiMaxVectorKind) {
                 fail(F("Wrong vector kind"));
             }

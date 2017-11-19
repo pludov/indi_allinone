@@ -291,7 +291,8 @@ void setup() {
 	// initialize serial for ASCOM
 	Serial.begin(115200);
 	Serial1.begin(115200);
-
+	Serial1.println(F("Init!"));
+	
 	delay(500);
 #ifdef DEBUG
 	Serial.println(F("Welcome on board"));
@@ -342,10 +343,10 @@ void setup() {
 	DewHeater * dw = new DewHeater(11, 1);
 
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
-	ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
+	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
+	Serial1.println(F("Welcome!"));
 
-
-	uint8_t buffer[4096];
+	/*uint8_t buffer[4096];
 	XmlWriteBuffer into(buffer, 4096);
 // 	IndiDevice::instance().dump(into);
 
@@ -355,7 +356,7 @@ void setup() {
 		Serial.println((char*)buffer);
 	} else {
 		Serial.println("Not enough space");
-	}
+	}*/
 
 
 }

@@ -2,10 +2,10 @@
 #define COMMONUTILS_H 1
 
 #ifdef ARDUINO
-#define DEBUG1(A) { Serial.write((char)249); Serial.print(A); Serial.write(255); }
-#define DEBUG2(A, B) { Serial.write((char)249); Serial.print(A);Serial.print(B); Serial.write(255); }
-#define DEBUG3(A, B, C) { Serial.write((char)249); Serial.print(A);Serial.print(B);Serial.print(C); Serial.write(255);}
-#define DEBUG4(A, B, C, D) { Serial.write((char)249); Serial.print(A);Serial.print(B);Serial.print(C);Serial.print(D); Serial.write(255);}
+#define DEBUG1(A) { Serial1.print(A);   Serial1.write('\r');Serial1.write('\n'); }
+#define DEBUG2(A, B) { Serial1.print(A);Serial1.print(B);   Serial1.write('\r');Serial1.write('\n'); }
+#define DEBUG3(A, B, C) { Serial1.print(A);Serial1.print(B);Serial1.print(C);   Serial1.write('\r');Serial1.write('\n');}
+#define DEBUG4(A, B, C, D) { Serial1.print(A);Serial1.print(B);Serial1.print(C);Serial1.print(D);   Serial1.write('\r');Serial1.write('\n');}
 #else
 
 #include <iostream>

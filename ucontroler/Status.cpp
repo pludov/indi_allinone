@@ -36,7 +36,7 @@ IndiFloatVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since powe
 //	return (unsigned int)(SERIAL_TX_BUFFER_SIZE + Serial._tx_buffer_head - Serial._tx_buffer_tail) % SERIAL_TX_BUFFER_SIZE;
 //}
 
-Status::Status()
+Status::Status():Scheduled::Scheduled(F("Status"))
 {
 	this->nextTick = UTime::now();
 	this->priority = 2;

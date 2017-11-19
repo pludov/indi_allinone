@@ -10,7 +10,8 @@
 #define CHAR_XMIT_DELAY 79
 
 ScheduledIndiProtocol::ScheduledIndiProtocol(Stream * target)
-        : IndiProtocol::IndiProtocol()
+		: IndiProtocol::IndiProtocol(),
+			Scheduled::Scheduled(F("IndiProto"))
 {
 	this->serial = target;
     this->priority = 100;
@@ -83,9 +84,26 @@ void ScheduledIndiProtocol::tick()
 	}
 }
 
-
+static unsigned long lastIdleMicros = 0;
 void ScheduledIndiProtocol::idle()
 {
+	unsigned long m = micros();
+
+	if (m - lastIdleMicros > 1000000) {
+		lastIdleMicros = m;
+		Serial1.println(m);
+		Serial1.print(F("I:"));
+		Serial1.print(incomingPacketSize);
+		Serial1.print(F("=>"));
+		Serial1.println(incomingPacketReady);
+		Serial1.print(F("O:"));
+		Serial1.println(writeBufferLeft);
+		if (!welcomed) {
+			Serial1.println(F("Welc"));
+		}
+	}
+
+
 	// Read if available
 	while ((!incomingPacketReady) && serial->available()) {
 		uint8_t v = serial->read();

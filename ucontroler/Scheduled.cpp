@@ -9,8 +9,9 @@
 #include "Scheduled.h"
 #include "Scheduler.h"
 
-Scheduled::Scheduled()
+Scheduled::Scheduled(Symbol debug)
 {
+	this->debugName = debug;
 	this->nextTick = UTime::never();
 	this->priority = 0;
 	this->tickExpectedDuration = US(0);

@@ -15,7 +15,7 @@
 
 extern PWMResistor resistor;
 
-MainLogic::MainLogic() {
+MainLogic::MainLogic():Scheduled::Scheduled(F("MainLogic")) {
 	this->nextTick = UTime::now();
 	this->priority = 1;
 	this->tickExpectedDuration = MS(1);
