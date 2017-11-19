@@ -14,6 +14,8 @@
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiNumberVector.h"
+#include "IndiIntVectorMember.h"
+#include "IndiFloatVectorMember.h"
 #include "BinSerialProtocol.h"
 #include "CommonUtils.h"
 
@@ -21,11 +23,32 @@ const VectorKind IndiNumberVectorKind {
 	.defVectorText = F("defNumberVector"),
 	.newVectorText = F("newNumberVector"),
 	.oneMemberText = F("oneNumber"),
-	.uid = IndiNumberVectorKindUid
+	.uid = IndiNumberVectorKindUid,
+	.flag = VECTORKIND_NEED_MEMBER_SUBTYPE,
+	.vectorFactory = &IndiNumberVector::vectorFactory,
+	.memberFactory = &IndiNumberVector::memberFactory
 };
 
-IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol label)
-    :IndiVector(group, name, label)
+IndiVector * IndiNumberVector::vectorFactory(Symbol name, Symbol label)
+{
+	return new IndiNumberVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
+}
+
+IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType)
+{
+	// Uses subtype as length
+	switch(subType) {
+	case IndiIntVectorMember::subType:
+		// FIXME: min/max
+		return new IndiIntVectorMember((IndiNumberVector*)vector, name, label, 0, 0);
+	case IndiFloatVectorMember::subType:
+		return new IndiFloatVectorMember((IndiNumberVector*)vector, name, label, 0, 0);
+	}
+	return 0;
+}
+
+IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol label, uint8_t initialFlag, bool autoregister)
+    :IndiVector(group, name, label, initialFlag, autoregister)
 {
 }
 
@@ -51,11 +74,6 @@ void IndiNumberVector::sendAnnounce(WriteBuffer & into)
     dumpMembers(into);
 	into.append(F("</defNumberVector>\n"));
 }*/
-
-bool IndiNumberVector::hasMemberSubtype() const
-{
-	return true;
-}
 
 const VectorKind & IndiNumberVector::kind() const
 {

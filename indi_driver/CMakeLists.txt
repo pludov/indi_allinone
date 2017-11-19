@@ -19,14 +19,20 @@ include_directories( ${INDI_INCLUDE_DIR})
 
 set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/allinone.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/ReadBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/WriteBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialReadBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialWriteBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiDevice.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiProtocol.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiIntVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiFloatVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorGroup.cpp
    )
 
 add_executable(indi_allinone ${indiallinone_SRCS})

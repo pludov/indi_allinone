@@ -43,6 +43,11 @@ void IndiFloatVectorMember::writeValue(WriteBuffer & into) const
 	into.writeFloat(value);
 }
 
+void IndiFloatVectorMember::readValue(ReadBuffer & from)
+{
+	value = from.readFloat();
+}
+
 /*
 void IndiFloatVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {

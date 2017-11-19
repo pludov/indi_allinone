@@ -7,6 +7,7 @@
 #include "BinSerialProtocol.h"
 #include "IndiProtocol.h"
 #include "IndiVector.h"
+#include "IndiVectorMember.h"
 #include "IndiTextVector.h"
 #include "IndiNumberVector.h"
 #include "CommonUtils.h"
@@ -18,65 +19,12 @@ const VectorKind * kindsByUid[IndiMaxVectorKind + 1] = {
     &IndiNumberVectorKind
 };
 
-BinSerialReadBuffer::BinSerialReadBuffer(uint8_t * buffer, int size)
+BinSerialReadBuffer::BinSerialReadBuffer(uint8_t * buffer, int size) : ReadBuffer::ReadBuffer(buffer, size)
 {
-    this->buffer = buffer;
-    this->ptr = 0;
-    this->left = size;
-}
-
-bool BinSerialReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSerialWriteBuffer & answer)
-{
-    volatile bool error = true;
-    if (setjmp(parsePoint) == 0) {
-        internalReadAndApply(applyTo, proto, answer);
-        error = false;
-    }
-    return !error;
 }
 
 void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer)
 {
-#ifndef ARDUINO
-
-    int toDisplayOffset = ptr;
-    while(toDisplayOffset < left) {
-        int thisLoop = left - toDisplayOffset;
-        if (thisLoop  > 30) thisLoop = 30;
-
-        char display[3 * thisLoop + 1];
-        char * dp = display;
-        for(int i = 0; i < thisLoop; ++i)
-        {
-            uint8_t c = buffer[toDisplayOffset + i];
-            *(dp++) = Utils::hex(c >> 4);
-            *(dp++) = Utils::hex(c & 15);
-            *(dp++) = ' ';
-        }
-        *dp = '\0';
-        DEBUG(F("Received (hex): "), display);
-    
-        dp = display;
-        for(int i = 0; i < thisLoop; ++i)
-        {
-            uint8_t c = buffer[toDisplayOffset + i];
-            if (c > 27 && c < 128) {
-                *(dp++) = c;
-            } else {
-                *(dp++) = ' ';
-            }
-            *(dp++) = ' ';
-            *(dp++) = ' ';
-        }
-        *dp = '\0';
-        DEBUG(F("Received (asc): "), display);
-
-        toDisplayOffset += thisLoop;
-    
-    }
-
-
-#endif
     uint8_t ctrl = readPacketControl();
     DEBUG(F("[PACKET START]"));
     switch(ctrl) {
@@ -112,24 +60,47 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
         case PACKET_ANNOUNCE:
         {
             DEBUG(F("[ANNOUNCE]"));
-            char str[32];
-            readSymbol(str, 32);
-            DEBUG(F("[NAME]"), str);
-            readSymbol(str, 32);
-            DEBUG(F("[LABEL]"), str);
-            uint8_t flag = readUint7();;
-            DEBUG(F("[FLAG]"), (int)flag);
             uint8_t typeUid = readUid();
-            DEBUG(F(" UID:"), (int)typeUid);
+            DEBUG(F(" [TYPE]:"), (int)typeUid);
+
             if (typeUid >IndiMaxVectorKind) {
                 fail(F("Wrong vector kind"));
             }
+
+            char name[64];
+            readSymbol(name, 64);
+            DEBUG(F(" [NAME]"), name);
+            char label[64];
+            readSymbol(label, 32);
+            DEBUG(F(" [LABEL]"), label);
+            uint8_t flag = readUint7();;
+            DEBUG(F(" [FLAG]"), (int)flag);
             
+            uint8_t clientUid = readUid();
+            DEBUG(F(" [UID]"), (int)clientUid);
+
             const VectorKind & kind = *(kindsByUid[typeUid]);
-            // while(!isAtEnd()) {
-            //     DEBUG(F("[Vector]"));
+            IndiVector * vec = kind.newVector(name, label);
+            while(!isAtEnd()) {
+                uint8_t subType = 0;
+                if (kind.hasMemberSubtype()) {
+                    subType = readUid();
+                }
+                DEBUG(F(" [Member] subtype="), (int)subType);
+
+                readSymbol(name, 64);
+                DEBUG(F("  [NAME]"), name);
                 
-            // }
+                readSymbol(label, 64);
+                DEBUG(F("  [LABEL]"), label);
+                
+                IndiVectorMember * member = kind.newMember(vec, name, label, subType);
+
+                if (!member) {
+                    fail(F("Wrong vector subtype"));
+                }
+                member->readValue(*this);
+            }
             break;
         }
 #endif
@@ -145,21 +116,12 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
     DEBUG(F("[PACKET END]"));
 }
 
-void BinSerialReadBuffer::fail(Symbol why)
+
+void BinSerialReadBuffer::readString(char * buffer, int maxSize)
 {
-    DEBUG(F("Packet parsing error: "), why);
-    longjmp(parsePoint, 1);
+	readSymbol(buffer, maxSize);
 }
 
-uint8_t BinSerialReadBuffer::readOne()
-{
-    if (!left) fail(F("Malformed packet"));
-    uint8_t c = *buffer;
-
-    buffer++;
-    left--;
-    return c;
-}
 
 uint8_t BinSerialReadBuffer::readUint7()
 {
@@ -168,11 +130,6 @@ uint8_t BinSerialReadBuffer::readUint7()
         fail(F("Wrong uint7"));
     }
     return r;
-}
-uint8_t BinSerialReadBuffer::peekOne()
-{
-    if (!left) fail(F("Malformed packet"));
-    return *buffer;
 }
 
 uint8_t BinSerialReadBuffer::readStringChar()
@@ -226,7 +183,7 @@ float BinSerialReadBuffer::readFloat()
     readSymbol(buffer, 32);
     float f;
     if (sscanf(buffer, "%f", &f) != 1) {
-        DEBUG("Failing float: ", buffer);
+        DEBUG(F("Failing float: "), buffer);
         fail(F("Float format error"));
     }
     return f;

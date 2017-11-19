@@ -1,48 +1,36 @@
 #ifndef BINSERIALREADBUFFER_H_
 #define BINSERIALREADBUFFER_H_ 1
 
-#include <csetjmp>
+#include <setjmp.h>
 #include "Symbol.h"
 #include "WriteBuffer.h"
+#include "ReadBuffer.h"
 #include "BinSerialWriteBuffer.h"
 
-#ifndef ARDUINO
-#include <string>
-#endif
+
 
 class IndiDevice;
 class IndiProtocol;
 
-class BinSerialReadBuffer {
-    std::jmp_buf parsePoint;
+class BinSerialReadBuffer : public ReadBuffer{
 protected:
-    uint8_t * buffer;
-    int ptr;
-    int left;
-
-    [[ noreturn ]] void fail(Symbol s);
     // safe to call fail from here
-    void internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer);
+    virtual void internalReadAndApply(IndiDevice & applyTo, IndiProtocol &proto, BinSerialWriteBuffer & answer);
     
     uint8_t readUint7();
-    uint8_t readOne();
-    uint8_t peekOne();
     uint8_t readStringChar();
     uint8_t readUid();
     uint8_t readPacketControl();
     bool isAtEnd();
     void readSymbol(char * buffer, int maxLength);
-    float readFloat();
-    int32_t readInt();
     
-#ifndef ARDUINO
-    std::string getError();
-#endif
     
 public:
     BinSerialReadBuffer(uint8_t * buffer, int size);
-    // false indicate problem with data
-    bool readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSerialWriteBuffer & answer);
+
+    virtual float readFloat();
+    virtual int32_t readInt();
+    virtual void readString(char * buffer, int maxSize);
 };
 
 #endif

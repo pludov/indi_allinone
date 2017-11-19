@@ -10,6 +10,7 @@
 
 #include "IndiVectorMember.h"
 #include "Symbol.h"
+#include "BinSerialProtocol.h"
 
 class IndiNumberVector;
 
@@ -27,8 +28,9 @@ public:
 
 	virtual uint8_t getSubtype() const { return subType; };
 	virtual void writeValue(WriteBuffer & into) const;
+	virtual void readValue(ReadBuffer & from);
 
-	static constexpr int subType = 1;
+	static constexpr int subType = IndiNumberVectorMemberFloat;
 };
 
 #endif /* INDIFLOATVECTORMEMBER_H_ */

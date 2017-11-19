@@ -16,6 +16,7 @@ class IndiTextVector;
 class IndiTextVectorMember : public IndiVectorMember {
 	friend class IndiVector;
 	char * value;
+	uint8_t maxSize;
 public:
 	IndiTextVectorMember(IndiTextVector * vector,
 			Symbol name,
@@ -28,6 +29,8 @@ public:
 	virtual uint8_t getSubtype() const { return 0; };
 
 	virtual void writeValue(WriteBuffer & into) const;
+	virtual void readValue(ReadBuffer & from);
+
 };
 
 #endif /* INDITEXTVECTORMEMBER_H_ */

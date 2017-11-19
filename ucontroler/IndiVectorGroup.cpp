@@ -1,10 +1,6 @@
-/*
- * Status.cpp
- *
- *  Created on: 27 févr. 2015
- *      Author: utilisateur
- */
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "IndiVectorGroup.h"
 #include "WriteBuffer.h"
 #include "Utils.h"

@@ -1,7 +1,7 @@
 #ifndef INDISYMBOLS_H_
 #define INDISYMBOLS_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 #ifdef ARDUINO
 

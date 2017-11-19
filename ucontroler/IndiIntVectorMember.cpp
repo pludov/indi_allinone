@@ -42,6 +42,12 @@ void IndiIntVectorMember::writeValue(WriteBuffer & into) const
 	into.writeInt(value);
 }
 
+void IndiIntVectorMember::readValue(ReadBuffer & from)
+{
+	value = from.readInt();
+}
+
+
 /*
 void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {

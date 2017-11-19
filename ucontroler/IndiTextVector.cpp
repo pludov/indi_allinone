@@ -13,6 +13,7 @@
 #include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiTextVector.h"
+#include "IndiTextVectorMember.h"
 #include "BinSerialProtocol.h"
 #include "CommonUtils.h"
 
@@ -20,21 +21,30 @@ const VectorKind IndiTextVectorKind {
 	.defVectorText = F("defTextVector"),
 	.newVectorText = F("newTextVector"),
 	.oneMemberText = F("oneText"),
-	.uid = IndiTextVectorKindUid
+	.uid = IndiTextVectorKindUid,
+	.flag = 0,
+	.vectorFactory = &IndiTextVector::vectorFactory,
+	.memberFactory = &IndiTextVector::memberFactory
 };
 
-IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol label)
-    :IndiVector(group, name, label)
+IndiVector * IndiTextVector::vectorFactory(Symbol name, Symbol label)
+{
+	return new IndiTextVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
+}
+
+IndiVectorMember * IndiTextVector::memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType)
+{
+	// Uses subtype as length
+	return new IndiTextVectorMember((IndiTextVector*)vector, name, label, subType);
+}
+
+IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag, bool autoregister)
+    :IndiVector(group, name, label, flag, autoregister)
 {
 }
 
 const VectorKind & IndiTextVector::kind() const {
 	return IndiTextVectorKind;
-}
-
-
-bool IndiTextVector::hasMemberSubtype() const {
-	return false;
 }
 
 /*void IndiTextVector::dump(WriteBuffer & into)

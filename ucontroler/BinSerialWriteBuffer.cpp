@@ -156,6 +156,7 @@ void BinSerialWriteBuffer::writeString(const char * str)
         uint8_t c = *(str++);
         writeStringChar(c);
     }
+    writeStringChar(0);
 }
 
 void BinSerialWriteBuffer::writeFloat(float value)

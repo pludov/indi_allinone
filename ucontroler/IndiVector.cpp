@@ -17,7 +17,7 @@
 
 #include "CommonUtils.h"
 
-IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag)
+IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag, bool autoregister)
 {
 	this->group = group;
 	this->name = name;
@@ -26,7 +26,9 @@ IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8
 	this->last = 0;
 	this->nameSuffix = 0;
 	this->flag = initialFlag;
-	IndiDevice::instance().add(this);
+	if (autoregister) {
+		IndiDevice::instance().add(this);
+	}
 }
 
 void IndiVector::notifyUpdate(uint8_t which)

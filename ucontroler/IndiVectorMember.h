@@ -9,6 +9,7 @@
 #define INDIVECTORMEMBER_H_
 
 #include "Symbol.h"
+#include "ReadBuffer.h"
 
 class IndiVectorMember {
 	friend class IndiVector;
@@ -28,6 +29,7 @@ public:
 	virtual uint8_t getSubtype() const = 0;
 
 	virtual void writeValue(WriteBuffer & into) const = 0;
+	virtual void readValue(ReadBuffer & from) = 0;
 };
 
 #endif /* INDIVECTORMEMBER_H_ */

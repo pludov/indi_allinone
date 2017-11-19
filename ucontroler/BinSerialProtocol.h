@@ -5,6 +5,9 @@
 #define IndiNumberVectorKindUid 1
 #define IndiMaxVectorKind IndiNumberVectorKindUid
 
+#define IndiNumberVectorMemberInt 0
+#define IndiNumberVectorMemberFloat 1
+
 struct VectorKind;
 extern const VectorKind * kindsByUid[IndiMaxVectorKind + 1];
 

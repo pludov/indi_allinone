@@ -35,6 +35,10 @@ class IndiIntVectorMember;
 
 
 #define VECTORKIND_NEED_MEMBER_SUBTYPE 1
+
+typedef IndiVector * (*FuncNewVector)(Symbol name, Symbol label);
+typedef IndiVectorMember * (*FuncNewMember)(IndiVector * vec, Symbol name, Symbol label, uint8_t subType);
+
 struct VectorKind {
 	// is uid required here ?
 	Symbol defVectorText;
@@ -43,9 +47,14 @@ struct VectorKind {
 	uint8_t uid;
 	uint8_t flag;
 
+	FuncNewVector vectorFactory;
+	FuncNewMember memberFactory;
+
 	/** true if member must be typed */
 	bool hasMemberSubtype() const { return flag & VECTORKIND_NEED_MEMBER_SUBTYPE; };
-
+	IndiVector * newVector(Symbol name, Symbol label) const {return (*vectorFactory)(name, label); };
+	IndiVectorMember * newMember(IndiVector * parent, Symbol name, Symbol label, uint8_t subType) const {return (*memberFactory)(parent, name, label, subType); };
+	
 };
 
 class IndiVector {
@@ -83,7 +92,7 @@ protected:
 
 	void sendDefinition(WriteBuffer & into);
 public:
-	IndiVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE);
+	IndiVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
 
 	bool hidden() const {
 		return flag & VECTOR_HIDDEN;

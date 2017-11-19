@@ -1,7 +1,7 @@
 #ifndef WRITEBUFFER_H_
 #define WRITEBUFFER_H_
 
-#include <cstdint>
+#include <stdint.h>
 #include "Symbol.h"
 
 // The request types

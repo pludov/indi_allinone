@@ -8,6 +8,8 @@
 #include <Arduino.h>
 #endif
 
+#include <string.h>
+
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
@@ -27,6 +29,7 @@ IndiTextVectorMember::IndiTextVectorMember(IndiTextVector * vector,
 {
     this->value = (char*)malloc(((int)maxSize) + 1);
     this->value[0] = 0;
+    this->maxSize = maxSize;
 }
 
 IndiTextVectorMember::~IndiTextVectorMember()
@@ -48,6 +51,12 @@ void IndiTextVectorMember::writeValue(WriteBuffer & into) const
 {
 	into.writeString(this->value);
 }
+
+void IndiTextVectorMember::readValue(ReadBuffer & from)
+{
+	from.readString(value, maxSize);
+}
+
 /*
 void IndiTextVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {
