@@ -27,7 +27,7 @@ extern PWMResistor resistor;
 
 IndiVectorGroup statusGroup(F("Status"));
 IndiNumberVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
-IndiFloatVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset (s)"), 0, 1e36);
+IndiFloatVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset (s)"), 0, 1e36, 1);
 
 //
 //static int pendingWrite()

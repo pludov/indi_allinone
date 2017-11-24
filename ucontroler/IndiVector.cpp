@@ -31,6 +31,15 @@ IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8
 	}
 }
 
+int IndiVector::getMemberCount() const
+{
+	int i = 0;
+	for(IndiVectorMember * child = first; child; child = child->next) {
+		i++;
+	}
+	return i;
+}
+
 void IndiVector::notifyUpdate(uint8_t which)
 {
 	IndiDevice & device = IndiDevice::instance();
@@ -80,6 +89,8 @@ void IndiVector::set(uint8_t flagToChange, bool status)
 	if (flag != oldFlag) {
 		if (flagToChange == VECTOR_HIDDEN) {
 			notifyUpdate(VECTOR_ANNOUNCED);
+		} else if (flagToChange == VECTOR_BUSY) {
+			notifyUpdate(VECTOR_VALUE);
 		} else {
 			notifyUpdate(VECTOR_MUTATION);
 		}
@@ -154,6 +165,7 @@ void IndiVector::sendValue(WriteBuffer & into)
 	DEBUG(F("SENDING value update"));
 	into.startUpdateValuesPacket(*this);
 	into.writeVectorUid(uid);
+	into.writeVectorFlag(flag & VECTOR_BUSY);
 	for(IndiVectorMember * cur = first; cur; cur = cur->next)
 	{
 		cur->writeValue(into);

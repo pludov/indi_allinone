@@ -12,15 +12,18 @@
 
 class IndiVector;
 class IndiProtocol;
+class IndiDeviceMutator;
 
 class IndiDevice {
 	friend class IndiProtocol;
+public:
 	IndiVector ** list;
 	int variableCount;
 	IndiProtocol * firstWriter;
 protected:
 	friend class IndiVector;
 	void add(IndiVector * v);
+
 public:
 	IndiDevice(int variableCount);
 	void dump(WriteBuffer & into);

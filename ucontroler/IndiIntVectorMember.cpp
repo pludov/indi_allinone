@@ -22,11 +22,10 @@ IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector,
 	Symbol name, 
 	Symbol label,
 	int32_t min,
-    int32_t max)
-    :IndiVectorMember(vector, name, label)
+    int32_t max,
+	int32_t step)
+    :IndiNumberVectorMember(vector, name, label, min, max, step)
 {
-	this->min = min;
-	this->max = max;
 	this->value = 0;
 }
 

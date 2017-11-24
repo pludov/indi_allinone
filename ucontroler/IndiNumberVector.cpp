@@ -40,9 +40,9 @@ IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, Symbol n
 	switch(subType) {
 	case IndiIntVectorMember::subType:
 		// FIXME: min/max
-		return new IndiIntVectorMember((IndiNumberVector*)vector, name, label, 0, 0);
+		return new IndiIntVectorMember((IndiNumberVector*)vector, name, label, 0, 0, 0);
 	case IndiFloatVectorMember::subType:
-		return new IndiFloatVectorMember((IndiNumberVector*)vector, name, label, 0, 0);
+		return new IndiFloatVectorMember((IndiNumberVector*)vector, name, label, 0, 0, 0);
 	}
 	return 0;
 }

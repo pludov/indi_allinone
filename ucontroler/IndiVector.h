@@ -64,7 +64,7 @@ class IndiVector {
 	friend class WriteBuffer;
 	friend class XmlWriteBuffer;
 	friend class BinSerialWriteBuffer;
-protected:
+public:
 	Symbol name;
 	int8_t nameSuffix;
 	Symbol label;
@@ -72,6 +72,7 @@ protected:
 	IndiVectorGroup * group;
 	IndiVectorMember * first, * last;
 	
+	// VECTOR_READABLE, VECTOR_WRITABLE, VECTOR_BUSY or not
 	uint8_t flag;
 
 	// 2 bits for each writer : announced, updated
@@ -104,6 +105,8 @@ public:
 	
 	void set(uint8_t flagToChange, bool status);
 	
+	int getMemberCount() const;
+
 	virtual const VectorKind & kind() const = 0;
 	
 	/**

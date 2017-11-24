@@ -17,8 +17,8 @@ DewHeater::DewHeater(int pin, int suffix)
     :Scheduled(F("DewHeater")),
     group(F("DEW_HEATER")),
     statusVec(&group, F("DEW_HEATER_TEMP"), F("HW Temperature")),
-    temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100),
-    pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100),
+    temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100, 1),
+    pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100, 1),
     uidVec(&group, F("DEW_HEATER_UID"), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 

@@ -14,6 +14,7 @@
 class IndiVector;
 struct DirtyVector;
 class Stream;
+class IndiDeviceMutator;
 
 class IndiProtocol
 {
@@ -56,6 +57,8 @@ protected:
 	virtual void onAckPacketBufferEmpty() {};
 public:
 	IndiProtocol();
+
+	virtual IndiDeviceMutator * getMutator() { return nullptr; };
 
 	// Clear any pending write/ack/read/... and restart the announce process
 	void reset();

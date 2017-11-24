@@ -6,6 +6,7 @@
 #include "BinSerialReadBuffer.h"
 #include "BinSerialProtocol.h"
 #include "IndiProtocol.h"
+#include "IndiDeviceMutator.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 #include "IndiTextVector.h"
@@ -60,6 +61,10 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
         case PACKET_ANNOUNCE:
         {
             DEBUG(F("[ANNOUNCE]"));
+        	IndiDeviceMutator * mutator = proto.getMutator();
+        	if (!mutator) {
+        		fail(F("Announce not supported here"));
+        	}
             uint8_t typeUid = readUid();
             DEBUG(F(" [TYPE]:"), (int)typeUid);
 
@@ -79,8 +84,12 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
             uint8_t clientUid = readUid();
             DEBUG(F(" [UID]"), (int)clientUid);
 
+            // FIXME: delete this when fail !
             const VectorKind & kind = *(kindsByUid[typeUid]);
+
             IndiVector * vec = kind.newVector(name, label);
+            vec->uid = clientUid;
+            vec->flag = flag;
             while(!isAtEnd()) {
                 uint8_t subType = 0;
                 if (kind.hasMemberSubtype()) {
@@ -101,7 +110,38 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
                 }
                 member->readValue(*this);
             }
+            // FIXME: bound check
+            applyTo.list[vec->uid] = vec;
+            mutator->announced(vec);
+            DEBUG(F("Done with announcement"));
             break;
+        }
+        case PACKET_UPDATE:
+        {
+        	DEBUG(F("[UPDATE]"));
+			IndiDeviceMutator * mutator = proto.getMutator();
+
+			uint8_t clientUid = readUid();
+			DEBUG(F(" [UID]"), (int)clientUid);
+			// FIXME: bound check
+			IndiVector * target = applyTo.list[clientUid];
+			if (!target) {
+				fail(F("Wrong target vector for update"));
+			}
+			uint8_t flag = readUint7();
+			target->flag = (target->flag & ~VECTOR_BUSY) | (flag & VECTOR_BUSY);
+
+			for(IndiVectorMember * mem = target->first; mem && !isAtEnd(); mem=mem->next)
+			{
+				// FIXME: partial read leads to corrupted value
+				mem->readValue(*this);
+			}
+
+			if (mutator) {
+				mutator->updated(target);
+			}
+            DEBUG(F("Done with update"));
+			break;
         }
 #endif
         default:

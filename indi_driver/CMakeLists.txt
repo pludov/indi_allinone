@@ -30,6 +30,7 @@ set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVector.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVector.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiIntVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiFloatVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorGroup.cpp

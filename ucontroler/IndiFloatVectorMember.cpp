@@ -23,11 +23,10 @@ IndiFloatVectorMember::IndiFloatVectorMember(IndiNumberVector * vector,
 	Symbol name, 
 	Symbol label,
 	double min,
-    double max)
-    :IndiVectorMember(vector, name, label)
+    double max,
+	double step)
+    :IndiNumberVectorMember(vector, name, label, min, max, step)
 {
-	this->min = min;
-	this->max = max;
 	this->value = 0;
 }
 

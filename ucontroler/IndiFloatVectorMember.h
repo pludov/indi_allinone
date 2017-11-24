@@ -9,26 +9,34 @@
 #define INDIFLOATVECTORMEMBER_H_
 
 #include "IndiVectorMember.h"
+#include "IndiNumberVectorMember.h"
 #include "Symbol.h"
 #include "BinSerialProtocol.h"
 
 class IndiNumberVector;
 
-class IndiFloatVectorMember : public IndiVectorMember {
+class IndiFloatVectorMember : public IndiNumberVectorMember {
 	friend class IndiVector;
 	double value;
-	double min, max;
 public:
 	IndiFloatVectorMember(IndiNumberVector * vector, 
 			Symbol name, 
 			Symbol label,
-			double min, double max);
+			double min, double max, double step);
 
 	void setValue(double v);
 
 	virtual uint8_t getSubtype() const { return subType; };
 	virtual void writeValue(WriteBuffer & into) const;
 	virtual void readValue(ReadBuffer & from);
+
+	double getValue() const {
+		return value;
+	}
+
+	virtual double getDoubleValue() const {
+		return value;
+	}
 
 	static constexpr int subType = IndiNumberVectorMemberFloat;
 };

@@ -13,8 +13,8 @@
 
 class IndiVectorMember {
 	friend class IndiVector;
+public:
 	IndiVectorMember * next;
-protected:
 	Symbol name;
 	Symbol label;
 	IndiVector * vector;
