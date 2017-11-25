@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1.0)
 PROJECT(allinone CXX C)
 set (CMAKE_CXX_STANDARD 11)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 # set(RULES_INSTALL_DIR "/etc/udev/rules.d")
@@ -19,6 +20,7 @@ include_directories( ${INDI_INCLUDE_DIR})
 
 set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/allinone.cpp
+   ${CMAKE_SOURCE_DIR}/Lock.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/ReadBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/WriteBuffer.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialReadBuffer.cpp

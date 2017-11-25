@@ -22,6 +22,7 @@
 #include <iostream>
 #include <map>
 #include "simpledevice.h"
+#include "Lock.h"
 
 #include "indicom.h"
 #include "indiapi.h"
@@ -31,6 +32,7 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiVector.h"
+#include "IndiProtocol.h"
 #include "IndiVectorMember.h"
 #include "IndiNumberVectorMember.h"
 #include "IndiProtocol.h"
@@ -97,6 +99,15 @@ void ISSnoopDevice(XMLEle *root)
     INDI_UNUSED(root);
 }
 
+SimpleDevice::SimpleDevice() : INDI::DefaultDevice(), backgroundProcessorThread(){
+	sharingMutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+	doneCond = PTHREAD_COND_INITIALIZER;
+	backgroundProcessorStarted = false;
+	terminateBackgroundProcessorThread = false;
+	backgroundProcessorThreadDone = false;
+	currentIndiProtocol = 0;
+}
+
 bool SimpleDevice::initProperties()
 {
     INDI::DefaultDevice::initProperties();
@@ -113,45 +124,6 @@ struct BackgroundProcessorContext {
     SimpleDevice * device;
     int port;
 };
-
-bool SimpleDevice::Handshake()
-{
-    int PortFD = serialConnection->getPortFD();
-    
-    /* Drop RTS */
-    int i = 0;
-    i |= TIOCM_RTS;
-    if (ioctl(PortFD, TIOCMBIC, &i) != 0)
-    {
-        DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
-        return false;
-    }
-    tcflush(PortFD, TCIOFLUSH);
-
-    // FIXME: join previous thread
-    
-    if (pipe(protocolPipe) != 0) {
-    	DEBUGF(INDI::Logger::DBG_ERROR, "pipe error %s.", strerror(errno));
-		return false;
-    }
-    for(int i = 0; i < 2; ++i) {
-    	if (fcntl(protocolPipe[i], F_SETFL, O_NONBLOCK) == -1) {
-    		perror("fcntl");
-    		close(protocolPipe[0]);
-    		close(protocolPipe[1]);
-    		return false;
-    	}
-    }
-
-    BackgroundProcessorContext * context = new BackgroundProcessorContext();
-    context->device = this;
-    context->port = PortFD;
-
-    pthread_create(&backgroundProcessorThread, nullptr, &SimpleDevice::backgroundProcessorStarter, context);
-
-    DEBUGF(INDI::Logger::DBG_DEBUG, "Connected successfuly to simulated %s. Retrieving startup data...", getDeviceName());
-    return true;
-}
 
 struct IndiVectorImage {
 	bool announced;
@@ -220,6 +192,7 @@ public:
     		incomingPacketSize = 0;
     		incomingPacketReady = false;
     		if (!bsrb.readAndApply(*device, *this, answer)) {
+    			// FIXME: when proto is ready this will really be an error
     			//reset();
     		} else {
     			if (!answer.isEmpty()) {
@@ -394,6 +367,7 @@ public:
 		}
     }
 
+    // Must own the lock of target->sharingMutex
     bool reqNewNumber(const char *name, double values[], char *names[], int n)
     {
     	auto item = propsByName.find(std::string(name));
@@ -456,11 +430,87 @@ public:
     }
 };
 
+void SimpleDevice::killBackgroundProcessor(Lock & held)
+{
+	if (!backgroundProcessorStarted) {
+		return;
+	}
+	terminateBackgroundProcessorThread = true;
+
+	while(!backgroundProcessorThreadDone) {
+		write(protocolPipe[1], (char*)&protocolPipe, 1);
+		pthread_cond_wait(&doneCond, &sharingMutex);
+	}
+
+	delete currentIndiProtocol;
+	delete currentIndiDevice;
+	close(protocolPipe[0]);
+	close(protocolPipe[1]);
+
+	backgroundProcessorStarted = false;
+}
+
+bool SimpleDevice::Handshake()
+{
+    int PortFD = serialConnection->getPortFD();
+
+    /* Drop RTS */
+    int i = 0;
+    i |= TIOCM_RTS;
+    if (ioctl(PortFD, TIOCMBIC, &i) != 0)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
+        return false;
+    }
+    tcflush(PortFD, TCIOFLUSH);
+
+    Lock lock(&sharingMutex);
+
+    lock.lock();
+
+    // join previous thread
+    killBackgroundProcessor(lock);
+
+
+    if (pipe(protocolPipe) != 0) {
+    	DEBUGF(INDI::Logger::DBG_ERROR, "pipe error %s.", strerror(errno));
+		return false;
+    }
+    for(int i = 0; i < 2; ++i) {
+    	if (fcntl(protocolPipe[i], F_SETFL, O_NONBLOCK) == -1) {
+    		perror("fcntl");
+    		close(protocolPipe[0]);
+    		close(protocolPipe[1]);
+    		return false;
+    	}
+    }
+
+    currentIndiDevice = new IndiDevice(255);
+    currentIndiProtocol = new CustomIndiProtocol(currentIndiDevice, this, this->protocolPipe[1]);
+
+    backgroundProcessorStarted = true;
+    terminateBackgroundProcessorThread = false;
+    backgroundProcessorThreadDone = false;
+
+    BackgroundProcessorContext * context = new BackgroundProcessorContext();
+    context->device = this;
+    context->port = PortFD;
+
+    pthread_create(&backgroundProcessorThread, nullptr, &SimpleDevice::backgroundProcessorStarter, context);
+
+    DEBUGF(INDI::Logger::DBG_DEBUG, "Connected successfuly to simulated %s. Retrieving startup data...", getDeviceName());
+    return true;
+}
+
 bool SimpleDevice::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
 	if (INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n)) {
 		return true;
 	}
+	Lock lock(&sharingMutex);
+
+	lock.lock();
+
 	std::cerr << "new number\n";
 	if (currentIndiProtocol == nullptr) {
 
@@ -474,23 +524,42 @@ static int max(int a, int b)
 	return a > b ? a : b;
 }
 
+bool SimpleDevice::checkBackgroundProcessorThreadEnd() {
+	if (terminateBackgroundProcessorThread) {
+		backgroundProcessorThreadDone = true;
+		pthread_cond_broadcast(&doneCond);
+		return true;
+	}
+	return false;
+}
+
+
 void SimpleDevice::backgroundProcessor(int fd)
 {
-    IndiDevice * dev = new IndiDevice(255);
-    CustomIndiProtocol * proto = new CustomIndiProtocol(dev, this, this->protocolPipe[1]);
-    currentIndiProtocol = proto;
+    // thread protection. The mutex is released only during select
+	// (a pipe is used when this select must continue)
+	Lock lock(&sharingMutex);
+
+	lock.lock();
+
     uint8_t packet[1];
   
   
     fd_set readset;
     fd_set writeset;
-    // FIXME: thread protection
     while(true) {
-        bool canRead = proto->canRead();
-        bool canWrite = proto->canWrite();
+        bool canRead = currentIndiProtocol->canRead();
+        bool canWrite = currentIndiProtocol->canWrite();
+
+        int pipeFd = this->protocolPipe[0];
+
+        if (checkBackgroundProcessorThreadEnd()) break;
+
+        lock.release();
+
         FD_ZERO(&readset);
         FD_ZERO(&writeset);
-        FD_SET(this->protocolPipe[0], &readset);
+        FD_SET(pipeFd, &readset);
         if (canRead) {
             FD_SET(fd, &readset);
         }
@@ -498,17 +567,23 @@ void SimpleDevice::backgroundProcessor(int fd)
             FD_SET(fd, &writeset);
         }
 
-        int result = select(max(fd, this->protocolPipe[0]) + 1, &readset, canWrite ? &writeset : NULL, NULL, NULL);
-        if (FD_ISSET(this->protocolPipe[0], &readset)) {
+        int result = select(max(fd, pipeFd) + 1, &readset, canWrite ? &writeset : NULL, NULL, NULL);
+
+        lock.lock();
+
+        if (checkBackgroundProcessorThreadEnd()) break;
+
+        if (FD_ISSET(pipeFd, &readset)) {
         	char buffer[256];
-        	std::cerr<<"Woken by external cond\n";
-        	read(this->protocolPipe[0], buffer, 256);
-        	std::cerr<<"Flushed external cond\n";
+        	read(pipeFd, buffer, 256);
         }
+
+
         if (canRead && FD_ISSET(fd, &readset)) {
             int rd = read(fd, &packet, 1);
             if (rd == 1) {
-                proto->received(packet[0]);
+
+            	currentIndiProtocol->received(packet[0]);
             } else if (rd == 0) {
                 break;
             } else {
@@ -518,8 +593,8 @@ void SimpleDevice::backgroundProcessor(int fd)
                 }
             }
         }
-        if (canWrite && FD_ISSET(fd, &writeset) && proto->canWrite()) {
-            packet[0] = proto->write();
+        if (canWrite && FD_ISSET(fd, &writeset) && currentIndiProtocol->canWrite()) {
+            packet[0] = currentIndiProtocol->write();
             int wr = write(fd, &packet, 1);
             if (wr == 1) {
             } else if (wr == 0) {
@@ -531,60 +606,13 @@ void SimpleDevice::backgroundProcessor(int fd)
                 }
             }
         }
-        proto->flushIncomingMessages();
+        currentIndiProtocol->flushIncomingMessages();
     }
     
-/*    int rd;
-    while((rd = read(fd, &packet, 1)) == 1)
-    {
-        proto->received(packet[0]);
-        proto->flushIncomingMessages();
-    }*/
-/*    uint8_t packet[4096];
-    uint16_t packetSize = 0;
-    uint16_t bytesInBuff = 0;
-    bool inPacket = false;
-    int rd;
-    
-    // FIXME: add a timeout of about 1s
-    while((rd = read(fd, packet + packetSize, 1)) == 1)
-    {
-        proto->received(packet[0]);
-        uint8_t v = packet[packetSize];
+    // FIXME: delete all vectors (for indi sync)
 
-        if (v >= MIN_PACKET_START && v <= MAX_PACKET_START) {
-            if (packetSize != 0) {
-                DEBUGF(INDI::Logger::DBG_DEBUG, "Packet interrupted after %d", packetSize);
-                packet[0] = v;
-            }
-            packetSize = 1;
-            inPacket = true;
-        } else if (v == PACKET_END) {
-            if (!inPacket) {
-               DEBUGF(INDI::Logger::DBG_DEBUG, "End of unknown packet after %d", packetSize);
-               packetSize = 0;
-               inPacket = false;
-            } else {
-               DEBUGF(INDI::Logger::DBG_DEBUG, "Receveid packt of size %d", packetSize);
-               BinSerialReadBuffer reader(packet, packetSize);
-               reader.readAndApply(*dev, );
-               packetSize = 0;
-               inPacket = false;
-            }
-        } else {
-            if (inPacket) {
-               packetSize++;
-               if (packetSize == 4096) {
-                   DEBUG(INDI::Logger::DBG_DEBUG, "Packet overflow");
-               }
-            }
-        }
-    }*/
-/*    if (rd == -1) {            
-        DEBUGF(INDI::Logger::DBG_ERROR, "IOCTL error %s.", strerror(errno));
-    } else {
-        DEBUG(INDI::Logger::DBG_ERROR, "Channel closed.");
-    }*/
+    backgroundProcessorThreadDone = true;
+	pthread_cond_broadcast(&doneCond);
 }
 
 void * SimpleDevice::backgroundProcessorStarter(void*rawContext)

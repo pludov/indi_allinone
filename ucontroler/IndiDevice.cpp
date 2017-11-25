@@ -32,6 +32,9 @@ IndiDevice & IndiDevice::instance()
 IndiDevice::IndiDevice(int variableCount)
 {
 	list = (IndiVector**)malloc(sizeof(IndiVector*)*variableCount);
+	for(int i = 0; i < variableCount;++i) {
+		this->list[i] = nullptr;
+	}
 	this->variableCount = 0;
 	this->firstWriter = 0;
 }

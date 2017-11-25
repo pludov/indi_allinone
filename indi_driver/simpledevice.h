@@ -32,26 +32,43 @@ class Serial;
 }
 
 class CustomIndiProtocol;
+class IndiDevice;
+class Lock;
 
 class SimpleDevice : public INDI::DefaultDevice
 {
+	void killBackgroundProcessor(Lock & held);
 
   public:
-    SimpleDevice() = default;
+    SimpleDevice();
     virtual bool initProperties();
 
-    // FIXME: protect under mutex
-    CustomIndiProtocol * currentIndiProtocol;
-    // Use to wakeup the select thread
-    int protocolPipe[2];
-  protected:
+    // Protection mutex
+    pthread_mutex_t sharingMutex;
+
+    pthread_cond_t doneCond;
+
     // Thread for data readings
     pthread_t backgroundProcessorThread;
-    pthread_mutex_t lock;
+
+    bool backgroundProcessorStarted;
+    // protect under mutex
+    CustomIndiProtocol * currentIndiProtocol;
+    IndiDevice * currentIndiDevice;
+
+    // Use to wakeup the select thread
+    int protocolPipe[2];
+
+    // Set to true when backgroundProcessor is supposed to stop
+    bool terminateBackgroundProcessorThread;
+    bool backgroundProcessorThreadDone;
+
+  protected:
 
     bool Handshake();
     const char *getDefaultName();
 
+    bool checkBackgroundProcessorThreadEnd();
     void backgroundProcessor(int fd);
 
     static void * backgroundProcessorStarter(void * rawContext);
