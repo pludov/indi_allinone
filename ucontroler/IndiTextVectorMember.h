@@ -26,7 +26,7 @@ public:
 
 	void setValue(const char * value);
 
-	virtual uint8_t getSubtype() const { return 0; };
+	virtual uint8_t getSubtype() const { return maxSize; };
 
 	virtual void writeValue(WriteBuffer & into) const;
 	virtual void readValue(ReadBuffer & from);

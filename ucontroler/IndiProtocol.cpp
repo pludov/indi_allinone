@@ -57,8 +57,10 @@ void IndiProtocol::reset()
 	this->welcomed = 0;
 
 	if (device.variableCount) {
-		for(int i = 0; i < device.variableCount -1; ++i) {
+		for(int i = 0; i < device.variableCount; ++i) {
 			device.list[i]->resetClient(this->clientId);
+		}
+		for(int i = 0; i < device.variableCount - 1; ++i) {
 			this->nextDirtyVector[i] = i + 1;
 		}
 		this->nextDirtyVector[device.variableCount - 1] = VECNONE;
@@ -208,8 +210,6 @@ void IndiProtocol::fillBuffer()
 			return;
 		}
 
-		// FIXME: depending on dirtyFlags, ...
-
 		BinSerialWriteBuffer wf(notifPacket, NOTIF_PACKET_MAX_SIZE);
 		if (toSend.dirtyFlags & (1 << VECTOR_ANNOUNCED)) {
 			toSend.vector->sendAnnounce(wf);
@@ -220,6 +220,7 @@ void IndiProtocol::fillBuffer()
 		}
 		if (wf.isEmpty()) {
 			// Next.
+			DEBUG(F("Dirty vector generated empty notif"));
 			continue;
 		}
 

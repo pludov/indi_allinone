@@ -22,7 +22,7 @@ const VectorKind IndiTextVectorKind {
 	.newVectorText = F("newTextVector"),
 	.oneMemberText = F("oneText"),
 	.uid = IndiTextVectorKindUid,
-	.flag = 0,
+	.flag = VECTORKIND_NEED_MEMBER_SUBTYPE,
 	.vectorFactory = &IndiTextVector::vectorFactory,
 	.memberFactory = &IndiTextVector::memberFactory
 };
@@ -39,7 +39,7 @@ IndiVectorMember * IndiTextVector::memberFactory(IndiVector * vector, Symbol nam
 }
 
 IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag, bool autoregister)
-    :IndiVector(group, name, label, flag, autoregister)
+    :IndiVector(group, name, label, initialFlag, autoregister)
 {
 }
 

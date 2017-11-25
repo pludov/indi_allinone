@@ -26,6 +26,7 @@ IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8
 	this->last = 0;
 	this->nameSuffix = 0;
 	this->flag = initialFlag;
+	this->uid = VECNONE;
 	if (autoregister) {
 		IndiDevice::instance().add(this);
 	}

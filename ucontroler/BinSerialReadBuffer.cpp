@@ -72,11 +72,11 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
                 fail(F("Wrong vector kind"));
             }
 
-            char name[64];
+            char name[65];
             readSymbol(name, 64);
             DEBUG(F(" [NAME]"), name);
-            char label[64];
-            readSymbol(label, 32);
+            char label[65];
+            readSymbol(label, 64);
             DEBUG(F(" [LABEL]"), label);
             uint8_t flag = readUint7();;
             DEBUG(F(" [FLAG]"), (int)flag);
@@ -276,7 +276,7 @@ bool BinSerialReadBuffer::isAtEnd()
 void BinSerialReadBuffer::readSymbol(char * buffer, int maxLength)
 {
     int i = 0;
-    while(i < maxLength) {
+    while(i <= maxLength) {
         uint8_t v = readStringChar();
         buffer[i ++] = v;
         if (!v) return;
@@ -296,7 +296,7 @@ void BinSerialReadBuffer::skipSymbol(int maxLength)
 
 float BinSerialReadBuffer::readFloat()
 {
-    char buffer[32];
+    char buffer[33];
     readSymbol(buffer, 32);
     float f;
     if (sscanf(buffer, "%f", &f) != 1) {

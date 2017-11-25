@@ -45,6 +45,7 @@ struct VectorKind {
 	Symbol newVectorText;
 	Symbol oneMemberText;
 	uint8_t uid;
+	// VECTORKIND_NEED_MEMBER_SUBTYPE
 	uint8_t flag;
 
 	FuncNewVector vectorFactory;
