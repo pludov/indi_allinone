@@ -30,6 +30,8 @@ public:
 
 	virtual void writeValue(WriteBuffer & into) const = 0;
 	virtual void readValue(ReadBuffer & from) = 0;
+	virtual void skipUpdateValue(ReadBuffer & from) const = 0;
+	virtual void writeUpdateValue(WriteBuffer & into, void * ptr) const = 0;
 };
 
 #endif /* INDIVECTORMEMBER_H_ */

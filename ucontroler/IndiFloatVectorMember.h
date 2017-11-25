@@ -29,6 +29,8 @@ public:
 	virtual uint8_t getSubtype() const { return subType; };
 	virtual void writeValue(WriteBuffer & into) const;
 	virtual void readValue(ReadBuffer & from);
+	virtual void skipUpdateValue(ReadBuffer & from) const;
+	virtual void writeUpdateValue(WriteBuffer & into, void * ptr) const;
 
 	double getValue() const {
 		return value;

@@ -53,6 +53,7 @@ void IndiProtocol::reset()
 	this->incomingPacketSize = 0;
 	this->incomingPacketReady = 0;
 	this->ackPacketSize = 0;
+	this->requestPacketSize = 0;
 	this->welcomed = 0;
 
 	if (device.variableCount) {
@@ -102,7 +103,11 @@ void IndiProtocol::received(uint8_t v)
 				incomingPacketSize = 0;
 			}
 		} else {
-			DEBUG(F("Discard:"), (char)v);
+			if (v < 32 || v > 128) {
+				DEBUG(F("Discard: #"), (int)v);
+			} else {
+				DEBUG(F("Discard:"), (char)v);
+			}
 		}
 	}
 }
@@ -129,7 +134,6 @@ void IndiProtocol::dirtied(IndiVector* vector)
 		this->lastDirtyVector = which;
 	}
 }
-
 
 struct DirtyVector {
 	IndiVector * vector;
@@ -167,9 +171,19 @@ void IndiProtocol::fillBuffer()
 		// An ack is ready. Push it in the notif buffer
 		memcpy(notifPacket, ackPacket, ackPacketSize);
 		writeBufferLeft = ackPacketSize;
+		writeBuffer = notifPacket;
 		ackPacketSize = 0;
 		onAckPacketBufferEmpty();
 		return;
+	}
+
+	if (requestPacketSize > 0) {
+		// An ack is ready. Push it in the notif buffer
+		memcpy(notifPacket, requestPacket, requestPacketSize);
+		writeBufferLeft = requestPacketSize;
+		writeBuffer = notifPacket;
+		requestPacketSize = 0;
+		onRequestPacketBufferEmpty();
 	}
 
 	if (!welcomed) {

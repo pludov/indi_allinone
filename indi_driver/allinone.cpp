@@ -38,6 +38,7 @@
 #include "BinSerialProtocol.h"
 #include "BinSerialReadBuffer.h"
 #include <unistd.h>
+#include <fcntl.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 
@@ -126,8 +127,22 @@ bool SimpleDevice::Handshake()
         return false;
     }
     tcflush(PortFD, TCIOFLUSH);
-    
+
     // FIXME: join previous thread
+    
+    if (pipe(protocolPipe) != 0) {
+    	DEBUGF(INDI::Logger::DBG_ERROR, "pipe error %s.", strerror(errno));
+		return false;
+    }
+    for(int i = 0; i < 2; ++i) {
+    	if (fcntl(protocolPipe[i], F_SETFL, O_NONBLOCK) == -1) {
+    		perror("fcntl");
+    		close(protocolPipe[0]);
+    		close(protocolPipe[1]);
+    		return false;
+    	}
+    }
+
     BackgroundProcessorContext * context = new BackgroundProcessorContext();
     context->device = this;
     context->port = PortFD;
@@ -166,10 +181,13 @@ class CustomIndiProtocol : public IndiProtocol, public IndiDeviceMutator
 {
     IndiDevice * device;
     SimpleDevice * target;
+    int wakeFd;
 public:
-    CustomIndiProtocol(IndiDevice * device, SimpleDevice * target) : IndiDeviceMutator(){
+    CustomIndiProtocol(IndiDevice * device, SimpleDevice * target, int wakeFd) : IndiDeviceMutator(){
         this->device = device;
         this->target = target;
+        this->wakeFd = wakeFd;
+        this->requestPacket = (uint8_t*)malloc(REQUEST_PACKET_MAX_SIZE);
     }
     
     bool canRead()
@@ -375,31 +393,118 @@ public:
 				}
 		}
     }
+
+    bool reqNewNumber(const char *name, double values[], char *names[], int n)
+    {
+    	auto item = propsByName.find(std::string(name));
+    	if (item == propsByName.end()) {
+    		return false;
+    	}
+
+    	// FIXME: wait until notifPacket is idle
+    	if (requestPacketSize) {
+    		std::cerr << "Write buffer overflow. FIFO needed";
+    		return false;
+    	}
+
+    	IndiVector * vector = item->second->vector;
+
+    	BinSerialWriteBuffer req(requestPacket, REQUEST_PACKET_MAX_SIZE);
+    	req.appendPacketControl(PACKET_REQUEST);
+    	req.appendUid(vector->uid);
+    	int memId = 0;
+    	int prevMem = -1;
+    	for(IndiVectorMember * mem = vector->first; mem; mem = mem->next)
+    	{
+    		int memPres = -1;
+    		for(int i = 0 ; i < n; ++i) {
+    			if (mem->name == names[i]) {
+    				memPres = i;
+    				break;
+    			}
+    		}
+
+    		if (memPres != -1) {
+    			// Add a skip
+    			int skip = (memId - prevMem - 1);
+    			while(skip >= 127) {
+    				req.appendUint7(skip);
+    				skip -= 127;
+    			}
+    			req.appendUint7(skip);
+
+    			// Add the value
+    			mem->writeUpdateValue(req, values + memPres);
+    			prevMem = memId;
+    		}
+    		memId++;
+    	}
+
+    	if (req.finish()) {
+    		req.debug();
+    		requestPacketSize = req.size();
+    		::write(wakeFd, (char*)&wakeFd, 1);
+			std::cerr << "request packet queued\n";
+    		return true;
+    	} else {
+    		std::cerr << "Packet overflow !\n";
+    	}
+
+
+    	return false;
+
+    }
 };
+
+bool SimpleDevice::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
+{
+	if (INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n)) {
+		return true;
+	}
+	std::cerr << "new number\n";
+	if (currentIndiProtocol == nullptr) {
+
+		return false;
+	}
+	return currentIndiProtocol->reqNewNumber(name, values, names, n);
+}
+
+static int max(int a, int b)
+{
+	return a > b ? a : b;
+}
 
 void SimpleDevice::backgroundProcessor(int fd)
 {
     IndiDevice * dev = new IndiDevice(255);
-    CustomIndiProtocol * proto = new CustomIndiProtocol(dev, this);
+    CustomIndiProtocol * proto = new CustomIndiProtocol(dev, this, this->protocolPipe[1]);
+    currentIndiProtocol = proto;
     uint8_t packet[1];
   
   
     fd_set readset;
     fd_set writeset;
-    
+    // FIXME: thread protection
     while(true) {
         bool canRead = proto->canRead();
         bool canWrite = proto->canWrite();
         FD_ZERO(&readset);
         FD_ZERO(&writeset);
-        
+        FD_SET(this->protocolPipe[0], &readset);
         if (canRead) {
             FD_SET(fd, &readset);
         }
         if (canWrite) {
             FD_SET(fd, &writeset);
         }
-        int result = select(fd + 1, canRead ? &readset : NULL, canWrite ? &writeset : NULL, NULL, NULL);
+
+        int result = select(max(fd, this->protocolPipe[0]) + 1, &readset, canWrite ? &writeset : NULL, NULL, NULL);
+        if (FD_ISSET(this->protocolPipe[0], &readset)) {
+        	char buffer[256];
+        	std::cerr<<"Woken by external cond\n";
+        	read(this->protocolPipe[0], buffer, 256);
+        	std::cerr<<"Flushed external cond\n";
+        }
         if (canRead && FD_ISSET(fd, &readset)) {
             int rd = read(fd, &packet, 1);
             if (rd == 1) {

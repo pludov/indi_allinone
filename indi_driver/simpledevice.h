@@ -31,13 +31,19 @@ namespace Connection
 class Serial;
 }
 
+class CustomIndiProtocol;
 
 class SimpleDevice : public INDI::DefaultDevice
 {
+
   public:
     SimpleDevice() = default;
     virtual bool initProperties();
 
+    // FIXME: protect under mutex
+    CustomIndiProtocol * currentIndiProtocol;
+    // Use to wakeup the select thread
+    int protocolPipe[2];
   protected:
     // Thread for data readings
     pthread_t backgroundProcessorThread;
@@ -47,7 +53,12 @@ class SimpleDevice : public INDI::DefaultDevice
     const char *getDefaultName();
 
     void backgroundProcessor(int fd);
+
     static void * backgroundProcessorStarter(void * rawContext);
 
     Connection::Serial *serialConnection { nullptr };
+  public:
+    virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
+
+
 };

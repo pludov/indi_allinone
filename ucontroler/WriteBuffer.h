@@ -29,8 +29,8 @@ public:
 	void append(char c);
 	
 	virtual bool finish();
-	int size();
-	bool isEmpty();
+	int size() const;
+	bool isEmpty() const;
 
 
 	virtual bool supportUpdateValue() const = 0;

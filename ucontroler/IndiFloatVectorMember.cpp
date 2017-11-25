@@ -47,6 +47,17 @@ void IndiFloatVectorMember::readValue(ReadBuffer & from)
 	value = from.readFloat();
 }
 
+void IndiFloatVectorMember::skipUpdateValue(ReadBuffer & from) const
+{
+	from.readFloat();
+}
+
+void IndiFloatVectorMember::writeUpdateValue(WriteBuffer & into, void * ptr) const
+{
+	double * p = (double*)(ptr);
+	into.writeFloat(*p);
+}
+
 /*
 void IndiFloatVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {

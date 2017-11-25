@@ -57,6 +57,31 @@ struct VectorKind {
 	
 };
 
+class ReadBuffer;
+
+class IndiVectorUpdateRequest {
+public:
+	int updatedMemberCount;
+
+	ReadBuffer * readBuffer;
+	uint16_t endOffset;
+
+	// Ptr to actually updated member
+	IndiVectorMember * * members;
+
+	// Offset of data within readBuffer
+	uint16_t * offsets;
+
+	IndiVectorUpdateRequest(ReadBuffer * rb, IndiVectorMember * * members, uint16_t * offsets);
+
+	void addItem(IndiVectorMember * member, uint16_t offset);
+
+	void seekAt(int itemId);
+
+	void markEnd();
+	void unseek();
+};
+
 class IndiVector {
 	friend class IndiProtocol;
 	friend class IndiDevice;
@@ -86,6 +111,8 @@ public:
 	 */
 	bool isDirty(uint8_t clientId, uint8_t commId);
 	bool cleanDirty(uint8_t clientId, uint8_t commId);
+	// True on change
+	bool setDirty(uint8_t clientId, uint8_t commId);
 	void resetClient(uint8_t clientId);
 	void notifyUpdate(uint8_t commId);
 	
@@ -119,6 +146,8 @@ public:
 	virtual void sendMutation(WriteBuffer & into);
 
 	virtual void sendValue(WriteBuffer & into);
+
+	virtual void doUpdate(IndiVectorUpdateRequest & request) = 0;
 };
 
 

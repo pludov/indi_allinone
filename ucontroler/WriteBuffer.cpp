@@ -34,12 +34,12 @@ void WriteBuffer::append(char c)
 	}
 }
 
-int WriteBuffer::size()
+int WriteBuffer::size() const
 {
 	return totalSize - left;
 }
 
-bool WriteBuffer::isEmpty()
+bool WriteBuffer::isEmpty() const
 {
 	return totalSize == left;
 }

@@ -8,6 +8,7 @@ class BinSerialReadBuffer;
 class BinSerialWriteBuffer : public WriteBuffer {
 	friend class BinSerialReadBuffer;
     void appendSymbol(Symbol s, uint8_t suffix);
+public:
     void appendPacketControl(uint8_t v);
     void appendUid(uint8_t uid);
 
@@ -16,6 +17,8 @@ class BinSerialWriteBuffer : public WriteBuffer {
 
 public:
 	BinSerialWriteBuffer(uint8_t * into, int size);
+
+	void debug() const;
 
     virtual bool finish();
     

@@ -52,6 +52,15 @@ IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol la
 {
 }
 
+void IndiNumberVector::doUpdate(IndiVectorUpdateRequest & request)
+{
+	for(int i = 0; i < request.updatedMemberCount; ++i) {
+		request.seekAt(i);
+		request.members[i]->readValue(*request.readBuffer);
+	}
+}
+
+
 /*
 void IndiNumberVector::sendAnnounce(WriteBuffer & into)
 {

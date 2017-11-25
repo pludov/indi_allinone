@@ -144,6 +144,68 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 			break;
         }
 #endif
+        case PACKET_REQUEST:
+        {
+        	// Une requete.
+        	// Trouve le buffer
+        	DEBUG(F("[REQUEST]"));
+			uint8_t clientUid = readUid();
+			DEBUG(F(" [UID]"), (int)clientUid);
+			// FIXME: bound check
+			IndiVector * target = applyTo.list[clientUid];
+			if (!target) {
+				fail(F("Wrong target vector for update"));
+			}
+
+			// Rely on correct synchronisation of members here
+			// Maybe not so clever for moving options in set
+
+			int memberCount = target->getMemberCount();
+			uint16_t offset[memberCount];
+			IndiVectorMember * updates[memberCount];
+			IndiVectorUpdateRequest indiVectorUpdateRequest(this, updates, offset);
+
+			IndiVectorMember *current = target->first;
+			while(!isAtEnd()) {
+				int skip;
+				do {
+					skip = readUint7();
+					DEBUG(F("skip "), (int)skip);
+					for(int i = 0; i < skip; ++i) {
+						if (!current) fail(F("Skip too many member"));
+						current = current->next;
+						if (!current) fail(F("Skip too many member"));
+					}
+				} while(skip >= 127);
+				indiVectorUpdateRequest.addItem(current, this->getCurrentPos());
+				current->skipUpdateValue(*this);
+				current = current->next;
+			}
+			// We have all values ready.
+			indiVectorUpdateRequest.markEnd();
+
+			// Reply immediately with a pseudo busy and mark the buffer busy
+			answer.appendPacketControl(PACKET_UPDATE);
+			answer.appendUid(clientUid);
+			answer.appendUint7(VECTOR_BUSY);
+			answer.appendPacketControl(PACKET_END);
+			DEBUG(F("Doing update"));
+			target->doUpdate(indiVectorUpdateRequest);
+			indiVectorUpdateRequest.unseek();
+			// If the vector is not busy, ensure it gets back to non busy on the client side
+			if (!(target->flag & VECTOR_BUSY)) {
+				// Make sure the target is dirty
+				if (target->setDirty(proto.getClientId(), VECTOR_VALUE)) {
+					DEBUG(F("Client made ready to send non busy ASAP"));
+					proto.dirtied(target);
+				}
+			}
+
+			DEBUG(F("Done with update"));
+			break;
+        }
+
+
         default:
             DEBUG("Wrong kind: ", (int)ctrl);
             fail(F("Wrong kind"));
@@ -160,6 +222,11 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 void BinSerialReadBuffer::readString(char * buffer, int maxSize)
 {
 	readSymbol(buffer, maxSize);
+}
+
+void BinSerialReadBuffer::skipString(int maxSize)
+{
+	skipSymbol(maxSize);
 }
 
 
@@ -212,6 +279,16 @@ void BinSerialReadBuffer::readSymbol(char * buffer, int maxLength)
     while(i < maxLength) {
         uint8_t v = readStringChar();
         buffer[i ++] = v;
+        if (!v) return;
+    }
+    fail(F("Symbol overflow"));
+}
+
+void BinSerialReadBuffer::skipSymbol(int maxLength)
+{
+    int i = 0;
+    while(i < maxLength) {
+        uint8_t v = readStringChar();
         if (!v) return;
     }
     fail(F("Symbol overflow"));

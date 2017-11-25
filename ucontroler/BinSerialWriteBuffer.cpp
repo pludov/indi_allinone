@@ -7,7 +7,8 @@
 #include "BinSerialProtocol.h"
 #include "BinSerialWriteBuffer.h"
 #include "IndiVector.h"
-
+#include "CommonUtils.h"
+#include "Utils.h"
 
 BinSerialWriteBuffer::BinSerialWriteBuffer(uint8_t * into, int size): WriteBuffer(into, size)
 {}
@@ -175,4 +176,45 @@ void BinSerialWriteBuffer::writeInt(int32_t value)
         appendUint7(value & 127);
         value = value >> 7;
     }
+}
+
+void BinSerialWriteBuffer::debug() const
+{
+#ifndef ARDUINO
+	int toDisplayOffset = 0;
+	uint8_t * start = ptr - size();
+	while(toDisplayOffset < size()) {
+		int thisLoop = size() - toDisplayOffset;
+		if (thisLoop  > 30) thisLoop = 30;
+
+		char display[3 * thisLoop + 1];
+		char * dp = display;
+		for(int i = 0; i < thisLoop; ++i)
+		{
+			uint8_t c = start[toDisplayOffset + i];
+			*(dp++) = Utils::hex(c >> 4);
+			*(dp++) = Utils::hex(c & 15);
+			*(dp++) = ' ';
+		}
+		*dp = '\0';
+		DEBUG(F("Produced (hex): "), display);
+
+		dp = display;
+		for(int i = 0; i < thisLoop; ++i)
+		{
+			uint8_t c = start[toDisplayOffset + i];
+			if (c > 27 && c < 128) {
+				*(dp++) = c;
+			} else {
+				*(dp++) = ' ';
+			}
+			*(dp++) = ' ';
+			*(dp++) = ' ';
+		}
+		*dp = '\0';
+		DEBUG(F("Produced (asc): "), display);
+
+		toDisplayOffset += thisLoop;
+	}
+#endif
 }

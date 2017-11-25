@@ -57,6 +57,17 @@ void IndiTextVectorMember::readValue(ReadBuffer & from)
 	from.readString(value, maxSize);
 }
 
+void IndiTextVectorMember::skipUpdateValue(ReadBuffer & from) const
+{
+	from.skipString(maxSize);
+}
+
+void IndiTextVectorMember::writeUpdateValue(WriteBuffer & into, void * ptr) const
+{
+	// FIXME: size overflow ?
+	into.writeString((char*)ptr);
+}
+
 /*
 void IndiTextVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)
 {

@@ -3,7 +3,7 @@
 #include "BinSerialReadBuffer.h"
 #include "BinSerialWriteBuffer.h"
 #include "BinSerialProtocol.h"
-
+#include "CommonUtils.h"
 #include "IndiDevice.h"
 
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
@@ -49,6 +49,7 @@ void ScheduledIndiProtocol::tick()
 		incomingPacketSize = 0;
 		// We can reply to the packet
 		// FIXME: which protocol here ?
+		DEBUG(F("Incoming packet ready"));
 		BinSerialWriteBuffer bswb(ackPacket, ACK_PACKET_MAX_SIZE);
 		handleIncomingPacket(incomingPacket, prevIncomingPacketSize, bswb);
 		if (!bswb.isEmpty()) {
@@ -89,7 +90,7 @@ void ScheduledIndiProtocol::idle()
 {
 	unsigned long m = micros();
 
-	if (m - lastIdleMicros > 1000000) {
+	if (m - lastIdleMicros > 10000000) {
 		lastIdleMicros = m;
 		Serial1.println(m);
 		Serial1.print(F("I:"));

@@ -23,6 +23,7 @@ protected:
     uint8_t readPacketControl();
     bool isAtEnd();
     void readSymbol(char * buffer, int maxLength);
+    void skipSymbol(int maxLength);
     
     
 public:
@@ -31,6 +32,9 @@ public:
     virtual float readFloat();
     virtual int32_t readInt();
     virtual void readString(char * buffer, int maxSize);
+    virtual void skipString(int maxSize);
+
+    void debug();
 };
 
 #endif

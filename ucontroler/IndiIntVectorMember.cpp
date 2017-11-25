@@ -46,6 +46,15 @@ void IndiIntVectorMember::readValue(ReadBuffer & from)
 	value = from.readInt();
 }
 
+void IndiIntVectorMember::skipUpdateValue(ReadBuffer & from) const {
+	from.readInt();
+}
+
+void IndiIntVectorMember::writeUpdateValue(WriteBuffer & into, void * ptr) const
+{
+	double * p = (double*)ptr;
+	into.writeInt((int32_t)*p);
+}
 
 /*
 void IndiIntVectorMember::dump(WriteBuffer & into, int8_t nameSuffix)

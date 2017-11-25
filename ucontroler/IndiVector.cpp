@@ -77,6 +77,20 @@ bool IndiVector::cleanDirty(uint8_t clientId, uint8_t commId)
 	return false;
 }
 
+bool IndiVector::setDirty(uint8_t clientId, uint8_t commId)
+{
+	// Set bit to 1
+	uint8_t mask = 1 << clientId;
+	for(int i = 0; i <= commId; ++i) {
+		if (!(notifStatus[i] & mask)) {
+			return false;
+		}
+	}
+	notifStatus[commId] &= ~mask;
+
+	return true;
+}
+
 
 void IndiVector::set(uint8_t flagToChange, bool status)
 {
@@ -210,3 +224,34 @@ void IndiVector::readValue(WriteBuffer & from)
 		cur->readValue(from);
 	}
 }*/
+
+IndiVectorUpdateRequest::IndiVectorUpdateRequest(ReadBuffer * rb, IndiVectorMember * * members, uint16_t * offsets)
+{
+	this->updatedMemberCount = 0;
+	this->readBuffer = rb;
+	this->members = members;
+	this->offsets = offsets;
+}
+
+void IndiVectorUpdateRequest::addItem(IndiVectorMember * member, uint16_t offset)
+{
+	members[updatedMemberCount] = member;
+	offsets[updatedMemberCount] = offset;
+	updatedMemberCount++;
+}
+
+void IndiVectorUpdateRequest::seekAt(int itemId)
+{
+	DEBUG(F("Seek back for"), itemId, F(" at "), this->offsets[itemId]);
+	this->readBuffer->seekAt(this->offsets[itemId]);
+}
+
+void IndiVectorUpdateRequest::markEnd()
+{
+	this->endOffset = this->readBuffer->getCurrentPos();
+}
+
+void IndiVectorUpdateRequest::unseek()
+{
+	this->readBuffer->seekAt(endOffset);
+}

@@ -17,7 +17,7 @@
 ReadBuffer::ReadBuffer(uint8_t * buffer, int size)
 {
     this->buffer = buffer;
-    this->ptr = 0;
+    this->bufferOrg = buffer;
     this->left = size;
 }
 
@@ -26,16 +26,17 @@ bool ReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSer
     volatile bool error = true;
     if (setjmp(parsePoint) == 0) {
 #ifndef ARDUINO
-        int toDisplayOffset = ptr;
-        while(toDisplayOffset < left) {
-            int thisLoop = left - toDisplayOffset;
+        int toDisplayOffset = 0;
+        int toDisplayTotal = this->left;
+        while(toDisplayOffset < toDisplayTotal) {
+            int thisLoop = toDisplayTotal - toDisplayOffset;
             if (thisLoop  > 30) thisLoop = 30;
     
             char display[3 * thisLoop + 1];
             char * dp = display;
             for(int i = 0; i < thisLoop; ++i)
             {
-                uint8_t c = buffer[toDisplayOffset + i];
+                uint8_t c = bufferOrg[toDisplayOffset + i];
                 *(dp++) = Utils::hex(c >> 4);
                 *(dp++) = Utils::hex(c & 15);
                 *(dp++) = ' ';
@@ -46,7 +47,7 @@ bool ReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSer
             dp = display;
             for(int i = 0; i < thisLoop; ++i)
             {
-                uint8_t c = buffer[toDisplayOffset + i];
+                uint8_t c = bufferOrg[toDisplayOffset + i];
                 if (c > 27 && c < 128) {
                     *(dp++) = c;
                 } else {
@@ -70,7 +71,7 @@ bool ReadBuffer::readAndApply(IndiDevice & applyTo, IndiProtocol & proto, BinSer
 
 void ReadBuffer::fail(Symbol why)
 {
-    DEBUG(F("Packet parsing error: "), why);
+    DEBUG(F("Packet parsing error at "), getCurrentPos(), F(" : "),  why);
     longjmp(parsePoint, 1);
 }
 
@@ -90,3 +91,15 @@ uint8_t ReadBuffer::peekOne()
     return *buffer;
 }
 
+uint16_t ReadBuffer::getCurrentPos() const
+{
+	return buffer - bufferOrg;
+}
+
+void ReadBuffer::seekAt(uint16_t where)
+{
+	uint16_t currOffset = buffer - bufferOrg;
+	int16_t movement = where - currOffset;
+	left -= movement;
+	buffer = bufferOrg + where;
+}
