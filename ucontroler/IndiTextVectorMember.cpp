@@ -65,7 +65,7 @@ void IndiTextVectorMember::skipUpdateValue(ReadBuffer & from) const
 void IndiTextVectorMember::writeUpdateValue(WriteBuffer & into, void * ptr) const
 {
 	// FIXME: size overflow ?
-	into.writeString((char*)ptr);
+	into.writeString(*(char**)ptr);
 }
 
 /*

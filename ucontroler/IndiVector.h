@@ -44,6 +44,7 @@ struct VectorKind {
 	Symbol defVectorText;
 	Symbol newVectorText;
 	Symbol oneMemberText;
+	// IndiTextVectorKindUid, IndiNumberVectorKindUid, ...
 	uint8_t uid;
 	// VECTORKIND_NEED_MEMBER_SUBTYPE
 	uint8_t flag;

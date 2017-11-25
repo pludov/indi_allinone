@@ -77,6 +77,7 @@ class SimpleDevice : public INDI::DefaultDevice
     Connection::Serial *serialConnection { nullptr };
   public:
     virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
+    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
 
 
 };

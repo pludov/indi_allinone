@@ -35,6 +35,8 @@
 #include "IndiProtocol.h"
 #include "IndiVectorMember.h"
 #include "IndiNumberVectorMember.h"
+#include "IndiTextVector.h"
+#include "IndiTextVectorMember.h"
 #include "IndiProtocol.h"
 #include "IndiDeviceMutator.h"
 #include "BinSerialProtocol.h"
@@ -146,12 +148,14 @@ struct IndiVectorImage {
 	bool announced;
 	IndiVector * vector;
 	INumberVectorProperty * numberVectorProperty;
+	ITextVectorProperty * textVectorProperty;
 
 	IndiVectorImage(IndiVector * vector)
 	{
 		this->announced = false;
 		this->vector = vector;
 		this->numberVectorProperty = nullptr;
+		this->textVectorProperty = nullptr;
 	}
 
 	~IndiVectorImage()
@@ -160,7 +164,15 @@ struct IndiVectorImage {
 			delete vector;
 		}
 		if (numberVectorProperty) {
+			delete [] numberVectorProperty->np;
 			delete(numberVectorProperty);
+		}
+		if (textVectorProperty) {
+			for(int i = 0 ; i < textVectorProperty->ntp; ++i) {
+				free(textVectorProperty->tp[i].text);
+			}
+			delete [] textVectorProperty->tp;
+			delete(textVectorProperty);
 		}
 	}
 };
@@ -265,6 +277,25 @@ public:
 		return newVector;
     }
 
+    ITextVectorProperty * buildFromVector(IndiTextVector * vector)
+    {
+		ITextVectorProperty * newVector = new ITextVectorProperty();
+		IPerm perm = getIPerm(vector);
+		IPState state = getIPState(vector);
+		int count = vector->getMemberCount();
+
+		IText * texts = new IText[count];
+
+		int pos = 0;
+		for(IndiVectorMember * member = vector->first; member ; member = member->next)
+		{
+			IUFillText(texts + (pos++), member->name.c_str(), member->label.c_str(), ((IndiTextVectorMember*)member)->getTextValue());
+		}
+		IUFillTextVector(newVector, texts, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), "badgroup", perm, 60, state);
+
+		return newVector;
+    }
+
     IndiVectorImage * getCurrentVectorImage(uint8_t uid)
     {
     	auto ptr = propsByUid.find(uid);
@@ -330,6 +361,14 @@ public:
 
 				break;
 			}
+    	case IndiTextVectorKindUid:
+    		{
+    			ITextVectorProperty * newVector = buildFromVector((IndiTextVector*)vector);
+    			current->textVectorProperty = newVector;
+    			IDDefText(newVector, 0);
+
+    			break;
+    		}
     	}
     }
 
@@ -353,9 +392,20 @@ public:
 		case IndiNumberVectorKindUid:
 			{
 				INumberVectorProperty * newVector = buildFromVector((IndiNumberVector*)vector);
+				delete [] current->numberVectorProperty->np;
 				delete(current->numberVectorProperty);
 				current->numberVectorProperty = newVector;
 				IDSetNumber(newVector, nullptr);
+
+				break;
+			}
+		case IndiTextVectorKindUid:
+			{
+				ITextVectorProperty * newVector = buildFromVector((IndiTextVector*)vector);
+				delete [] current->textVectorProperty->tp;
+				delete(current->textVectorProperty);
+				current->textVectorProperty = newVector;
+				IDSetText(newVector, nullptr);
 
 				break;
 			}
@@ -370,19 +420,32 @@ public:
     	std::cerr << "current is " << ((long)current) << "\n";
     	switch(vector->kind().uid)
 		{
-			case IndiNumberVectorKindUid:
+		case IndiNumberVectorKindUid:
+			{
+				int pos = 0;
+				for(IndiVectorMember * member = vector->first; member ; member = member->next)
 				{
-					int pos = 0;
-					for(IndiVectorMember * member = vector->first; member ; member = member->next)
-					{
-						std::cerr << "updating: " << member->name.c_str() << "\n";
+					std::cerr << "updating: " << member->name.c_str() << "\n";
 
-						current->numberVectorProperty->np[pos++].value = ((IndiNumberVectorMember*)member)->getDoubleValue();
-					}
-					std::cerr << "setNumber\n";
-					IDSetNumber(current->numberVectorProperty, nullptr);
-					break;
+					current->numberVectorProperty->np[pos++].value = ((IndiNumberVectorMember*)member)->getDoubleValue();
 				}
+				std::cerr << "setNumber\n";
+				IDSetNumber(current->numberVectorProperty, nullptr);
+				break;
+			}
+		case IndiTextVectorKindUid:
+			{
+				int pos = 0;
+				for(IndiVectorMember * member = vector->first; member ; member = member->next)
+				{
+					std::cerr << "updating: " << member->name.c_str() << "\n";
+
+					IUSaveText(&current->textVectorProperty->tp[pos++], ((IndiTextVectorMember*)member)->getTextValue());
+				}
+				std::cerr << "setText\n";
+				IDSetText(current->textVectorProperty, nullptr);
+				break;
+			}
 		}
     }
 
@@ -394,8 +457,7 @@ public:
     	destroy(current);
     }
 
-    // Handle a request from a client to update a number vector
-    bool reqNewNumber(const char *name, double values[], char *names[], int n)
+    bool reqNewSomething(int vectorKindUid, const char *name, void * values, int valSize, char *names[], int n)
     {
     	auto item = propsByName.find(std::string(name));
     	if (item == propsByName.end()) {
@@ -408,11 +470,10 @@ public:
     		return false;
     	}
 
-    	IndiVector * vector = item->second->vector;
-
     	// check type of vector is number. Otherwise, ignore
-    	if (item->second->numberVectorProperty == nullptr) {
-    		std::cerr << "Ignore reqNewNumber for something that is not a number\n";
+    	IndiVector * vector = item->second->vector;
+    	if (vector->kind().uid != vectorKindUid) {
+    		std::cerr << "Ignore request with type mismatch\n";
     		return false;
     	}
 
@@ -441,7 +502,7 @@ public:
     			req.appendUint7(skip);
 
     			// Add the value
-    			mem->writeUpdateValue(req, values + memPres);
+    			mem->writeUpdateValue(req, (void*)(((char*)values) + valSize * memPres));
     			prevMem = memId;
     		}
     		memId++;
@@ -459,6 +520,18 @@ public:
 
     	return false;
 
+    }
+
+    // Handle a request from a client to update a number vector
+    bool reqNewNumber(const char *name, double values[], char *names[], int n)
+    {
+    	return reqNewSomething(IndiNumberVectorKindUid, name, (void*)values, sizeof(double), names, n);
+    }
+
+    bool reqNewText(const char * name, char ** values, char * names[], int n)
+    {
+    	std::cerr << "newText : " << values[0] << "\n";
+    	return reqNewSomething(IndiTextVectorKindUid, name, (void*)values, sizeof(char*), names, n);
     }
 };
 
@@ -561,6 +634,22 @@ bool SimpleDevice::ISNewNumber(const char *dev, const char *name, double values[
 		return false;
 	}
 	return currentIndiProtocol->reqNewNumber(name, values, names, n);
+}
+
+bool SimpleDevice::ISNewText(const char *dev, const char *name, char * values[], char *names[], int n)
+{
+	if (INDI::DefaultDevice::ISNewText(dev, name, values, names, n)) {
+		return true;
+	}
+	Lock lock(&sharingMutex);
+
+	lock.lock();
+
+	std::cerr << "new text\n";
+	if (currentIndiProtocol == nullptr) {
+		return false;
+	}
+	return currentIndiProtocol->reqNewText(name, values, names, n);
 }
 
 static int max(int a, int b)

@@ -26,6 +26,8 @@ public:
 
 	void setValue(const char * value);
 
+	const char * getTextValue() const { return value; };
+
 	virtual uint8_t getSubtype() const { return maxSize; };
 
 	virtual void writeValue(WriteBuffer & into) const;
