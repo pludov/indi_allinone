@@ -106,7 +106,24 @@ SimpleDevice::SimpleDevice() : INDI::DefaultDevice(), backgroundProcessorThread(
 	terminateBackgroundProcessorThread = false;
 	backgroundProcessorThreadDone = false;
 	currentIndiProtocol = 0;
+	currentIndiDevice = 0;
 }
+
+class DisconnectHookConnectionSerial : public Connection::Serial
+{
+	SimpleDevice * callOnDisconnect;
+public:
+	DisconnectHookConnectionSerial(SimpleDevice * device) : Connection::Serial(device) {
+		this->callOnDisconnect = device;
+	}
+
+	virtual ~DisconnectHookConnectionSerial() {}
+	virtual bool Disconnect() {
+		this->callOnDisconnect->beforeDisconnect();
+
+		return Connection::Serial::Disconnect();
+	}
+};
 
 bool SimpleDevice::initProperties()
 {
@@ -114,7 +131,7 @@ bool SimpleDevice::initProperties()
 
     addAuxControls();
 
-    serialConnection = new Connection::Serial(this);
+    serialConnection = new DisconnectHookConnectionSerial(this);
     serialConnection->registerHandshake([&]() { return Handshake(); });
     registerConnection(serialConnection);
     return true;
@@ -276,7 +293,7 @@ public:
     	delete(image);
     }
 
-
+    // Called by indiProtocol after a vector has been announced
     virtual void announced(IndiVector * vector) {
     	// If a vector with same name/uid/type exists, keep it
 
@@ -316,6 +333,7 @@ public:
     	}
     }
 
+    // Called by indiProtocol after a vector has been mutated (any change except type/name)
     virtual void mutated(IndiVector * vector)
     {
     	// Check that the vector exists and still has the same name
@@ -344,6 +362,7 @@ public:
 		}
     }
 
+    // Called by indiProtocol after a vector has been updated
     virtual void updated(IndiVector * vector)
     {
     	std::cerr << "updated: " << ((long)vector) << "\n";
@@ -367,7 +386,15 @@ public:
 		}
     }
 
-    // Must own the lock of target->sharingMutex
+    // FIXME: who is responsible for delete of vector
+    virtual void deleted(IndiVector * vector)
+    {
+    	IndiVectorImage * current = getCurrentVectorImage(vector->uid);
+    	IDDelete(target->getDeviceName(), current->vector->name.c_str(), nullptr);
+    	destroy(current);
+    }
+
+    // Handle a request from a client to update a number vector
     bool reqNewNumber(const char *name, double values[], char *names[], int n)
     {
     	auto item = propsByName.find(std::string(name));
@@ -375,13 +402,15 @@ public:
     		return false;
     	}
 
-    	// FIXME: wait until notifPacket is idle
+    	// FIXME: wait until requestPacketSize is idle
     	if (requestPacketSize) {
     		std::cerr << "Write buffer overflow. FIFO needed";
     		return false;
     	}
 
     	IndiVector * vector = item->second->vector;
+
+    	// FIXME: check type of vector is number. Otherwise, ignore
 
     	BinSerialWriteBuffer req(requestPacket, REQUEST_PACKET_MAX_SIZE);
     	req.appendPacketControl(PACKET_REQUEST);
@@ -424,11 +453,18 @@ public:
     		std::cerr << "Packet overflow !\n";
     	}
 
-
     	return false;
 
     }
 };
+
+void SimpleDevice::beforeDisconnect()
+{
+	std::cerr << "Stopping processing thread\n";
+	Lock l(&sharingMutex);
+	l.lock();
+	killBackgroundProcessor(l);
+}
 
 void SimpleDevice::killBackgroundProcessor(Lock & held)
 {
@@ -440,6 +476,10 @@ void SimpleDevice::killBackgroundProcessor(Lock & held)
 	while(!backgroundProcessorThreadDone) {
 		write(protocolPipe[1], (char*)&protocolPipe, 1);
 		pthread_cond_wait(&doneCond, &sharingMutex);
+	}
+	for(auto it = currentIndiProtocol->propsByUid.begin(); it !=currentIndiProtocol->propsByUid.end(); ++it)
+	{
+		currentIndiProtocol->deleted(it->second->vector);
 	}
 
 	delete currentIndiProtocol;

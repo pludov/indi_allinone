@@ -63,6 +63,7 @@ class SimpleDevice : public INDI::DefaultDevice
     bool terminateBackgroundProcessorThread;
     bool backgroundProcessorThreadDone;
 
+    void beforeDisconnect();
   protected:
 
     bool Handshake();
