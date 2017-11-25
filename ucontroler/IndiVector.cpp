@@ -231,6 +231,7 @@ IndiVectorUpdateRequest::IndiVectorUpdateRequest(ReadBuffer * rb, IndiVectorMemb
 	this->readBuffer = rb;
 	this->members = members;
 	this->offsets = offsets;
+	this->endOffset = 0;
 }
 
 void IndiVectorUpdateRequest::addItem(IndiVectorMember * member, uint16_t offset)

@@ -209,7 +209,7 @@ public:
     		incomingPacketSize = 0;
     		incomingPacketReady = false;
     		if (!bsrb.readAndApply(*device, *this, answer)) {
-    			// FIXME: when proto is ready this will really be an error
+    			// FIXME: when proto is fully implemented, this will really be an error
     			//reset();
     		} else {
     			if (!answer.isEmpty()) {
@@ -402,7 +402,7 @@ public:
     		return false;
     	}
 
-    	// FIXME: wait until requestPacketSize is idle
+    	// FIXME: cannot queue . We must wait until requestPacketSize is idle
     	if (requestPacketSize) {
     		std::cerr << "Write buffer overflow. FIFO needed";
     		return false;
@@ -410,7 +410,11 @@ public:
 
     	IndiVector * vector = item->second->vector;
 
-    	// FIXME: check type of vector is number. Otherwise, ignore
+    	// check type of vector is number. Otherwise, ignore
+    	if (item->second->numberVectorProperty == nullptr) {
+    		std::cerr << "Ignore reqNewNumber for something that is not a number\n";
+    		return false;
+    	}
 
     	BinSerialWriteBuffer req(requestPacket, REQUEST_PACKET_MAX_SIZE);
     	req.appendPacketControl(PACKET_REQUEST);
@@ -649,8 +653,6 @@ void SimpleDevice::backgroundProcessor(int fd)
         currentIndiProtocol->flushIncomingMessages();
     }
     
-    // FIXME: delete all vectors (for indi sync)
-
     backgroundProcessorThreadDone = true;
 	pthread_cond_broadcast(&doneCond);
 }
