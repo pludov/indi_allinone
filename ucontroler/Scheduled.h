@@ -27,7 +27,7 @@ protected:
 	// priority 0 = don't be late. Other = can be late
 	int priority;
 
-	Scheduled(Symbol debugName);
+	Scheduled(const Symbol & debugName);
 	
 	virtual void tick() = 0;
 

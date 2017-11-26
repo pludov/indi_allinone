@@ -25,6 +25,7 @@ protected:
 	int totalSize;
 public:
 	WriteBuffer(uint8_t * into, int size);
+	virtual ~WriteBuffer();
 
 	void append(char c);
 	
@@ -56,12 +57,12 @@ public:
 	
 	
 
-	virtual void writeVectorName(Symbol name, uint8_t suffix) = 0;
-	virtual void writeVectorLabel(Symbol name, uint8_t suffix) = 0;
+	virtual void writeVectorName(const Symbol & name) = 0;
+	virtual void writeVectorLabel(const Symbol &  name) = 0;
 	virtual void writeVectorUid(uint8_t uid) = 0;
 	virtual void writeVectorMemberSubtype(uint8_t subtype) = 0;
-	virtual void writeVectorMemberName(Symbol name, uint8_t suffix) = 0;
-	virtual void writeVectorMemberLabel(Symbol name, uint8_t suffix) = 0;
+	virtual void writeVectorMemberName(const Symbol &  name) = 0;
+	virtual void writeVectorMemberLabel(const Symbol &  name) = 0;
 	virtual void writeFloat(float value) = 0;
 	virtual void writeInt(int32_t value) = 0;
 	virtual void writeString(const char * c) = 0;

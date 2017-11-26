@@ -20,15 +20,15 @@ class IndiSwitchVector : public IndiVector {
 	IndiSwitchVectorMember * activeOne;
 	void refreshActiveOne(IndiSwitchVectorMember * lastUpdated);
 public:
-	IndiSwitchVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+	IndiSwitchVector(IndiVectorGroup * parent, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
 	virtual ~IndiSwitchVector();
 
 	virtual const VectorKind & kind() const;
 
     virtual bool doUpdate(IndiVectorUpdateRequest & request);
 
-	static IndiVector * vectorFactory(Symbol name, Symbol label);
-	static IndiVectorMember * memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType);
+	static IndiVector * vectorFactory(const Symbol & name, const Symbol & label);
+	static IndiVectorMember * memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType);
 };
 
 #endif /* INDISWITCHVECTOR_H_ */

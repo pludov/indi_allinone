@@ -20,8 +20,8 @@
 
 
 IndiFloatVectorMember::IndiFloatVectorMember(IndiNumberVector * vector, 
-	Symbol name, 
-	Symbol label,
+	const Symbol & name,
+	const Symbol & label,
 	double min,
     double max,
 	double step)

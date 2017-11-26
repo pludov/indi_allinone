@@ -24,6 +24,7 @@ class DewHeater : public Scheduled {
     IndiSwitchVectorMember powerModeOff, powerModeForced;
 
     OneWire oneWire;
+    uint8_t pwmPin;
     uint8_t status;
     uint8_t addr[8];
 
@@ -37,7 +38,7 @@ class DewHeater : public Scheduled {
 
     void setPwmLevel(float level);
 public:
-    DewHeater(int port, int suffix);
+    DewHeater(uint8_t tempPin, uint8_t pwmPin, int suffix);
 
     virtual void tick();
 };

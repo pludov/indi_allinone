@@ -22,8 +22,8 @@ public:
 	void notifyVectorUpdate(uint8_t commId);
 public:
 	IndiVectorMember(IndiVector * vector, 
-			Symbol name, 
-			Symbol label);
+			const Symbol & name,
+			const Symbol & label);
 	virtual ~IndiVectorMember();
 	
 	virtual uint8_t getSubtype() const = 0;

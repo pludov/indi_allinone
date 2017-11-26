@@ -22,8 +22,8 @@
 #include "CommonUtils.h"
 
 IndiTextVectorMember::IndiTextVectorMember(IndiTextVector * vector,
-	Symbol name,
-    Symbol label,
+	const Symbol & name,
+	const Symbol & label,
     uint8_t maxSize)
     :IndiVectorMember(vector, name, label)
 {

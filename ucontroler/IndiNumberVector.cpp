@@ -29,12 +29,12 @@ const VectorKind IndiNumberVectorKind {
 	.memberFactory = &IndiNumberVector::memberFactory
 };
 
-IndiVector * IndiNumberVector::vectorFactory(Symbol name, Symbol label)
+IndiVector * IndiNumberVector::vectorFactory(const Symbol & name, const Symbol & label)
 {
 	return new IndiNumberVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
 }
 
-IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType)
+IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType)
 {
 	// Uses subtype as length
 	switch(subType) {
@@ -47,7 +47,7 @@ IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, Symbol n
 	return 0;
 }
 
-IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,Symbol name,Symbol label, uint8_t initialFlag, bool autoregister)
+IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,const Symbol & name,const Symbol & label, uint8_t initialFlag, bool autoregister)
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 }

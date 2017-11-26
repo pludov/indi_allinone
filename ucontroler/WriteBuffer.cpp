@@ -23,6 +23,9 @@ WriteBuffer::WriteBuffer(uint8_t * into, int size)
 	this->totalSize = size;
 }
 
+WriteBuffer::~WriteBuffer()
+{}
+
 void WriteBuffer::append(char c)
 {
 	if (this->left) {

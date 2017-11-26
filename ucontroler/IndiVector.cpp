@@ -17,14 +17,13 @@
 
 #include "CommonUtils.h"
 
-IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag, bool autoregister)
+IndiVector::IndiVector(IndiVectorGroup * group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
+	: name(name),
+	  label(label)
 {
 	this->group = group;
-	this->name = name;
-	this->label = label;
 	this->first = 0;
 	this->last = 0;
-	this->nameSuffix = 0;
 	this->flag = initialFlag;
 	this->uid = VECNONE;
 	if (autoregister) {
@@ -140,8 +139,8 @@ void IndiVector::set(uint8_t flagToChange, bool status)
 
 void IndiVector::sendDefinition(WriteBuffer & into)
 {
-	into.writeVectorName(name, nameSuffix);
-	into.writeVectorLabel(label, nameSuffix);
+	into.writeVectorName(name);
+	into.writeVectorLabel(label);
 	into.writeVectorFlag(flag);
 	into.writeVectorUid(uid);
 	for(IndiVectorMember * cur = first; cur; cur=cur->next)
@@ -150,8 +149,8 @@ void IndiVector::sendDefinition(WriteBuffer & into)
 		if (kind().hasMemberSubtype()) {
 			into.writeVectorMemberSubtype(cur->getSubtype());
 		}
-		into.writeVectorMemberName(cur->name, nameSuffix);
-		into.writeVectorMemberLabel(cur->label, nameSuffix);
+		into.writeVectorMemberName(cur->name);
+		into.writeVectorMemberLabel(cur->label);
 		
 		cur->writeValue(into);
 		into.endMember(*this);

@@ -6,9 +6,9 @@
 #include "Utils.h"
 
 IndiVectorGroup::IndiVectorGroup(Symbol name, int8_t suffix)
+	: name(name)
 {
     this->suffix = suffix;
-	this->name = name;
 }
 
 /*void IndiVectorGroup::dumpXmlEncoded(WriteBuffer & into) const

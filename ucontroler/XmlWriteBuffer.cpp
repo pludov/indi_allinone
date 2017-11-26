@@ -25,9 +25,18 @@ void XmlWriteBuffer::append(const __FlashStringHelper * str)
 	}
 }
 
+void XmlWriteBuffer::append(const Symbol & str)
+{
+	append(str.base);
+	if (str.suffix) {
+		append('_');
+		append('0' + str.suffix);
+	}
+}
+
 #else
 
-void XmlWriteBuffer::append(std::string str)
+void XmlWriteBuffer::append(const Symbol & str)
 {
 	for(int u = 0; u < str.length(); ++u)
 	{
@@ -62,14 +71,18 @@ void XmlWriteBuffer::appendXmlEscaped(char c) {
 
 #ifdef ARDUINO
 
-void XmlWriteBuffer::appendXmlEscaped(const __FlashStringHelper * str)
+void XmlWriteBuffer::appendXmlEscaped(const Symbol & str)
 {
-	PGM_P p = reinterpret_cast<PGM_P>(str);
+	PGM_P p = reinterpret_cast<PGM_P>(str.base);
 	
 	while (1) {
 		unsigned char c = pgm_read_byte(p++);
 		if (c == 0) break;
 		appendXmlEscaped(c);
+	}
+	if (str.suffix) {
+		append('_');
+		append('0' + str.suffix);
 	}
 }
 
@@ -143,13 +156,9 @@ void XmlWriteBuffer::append(const char * s)
 }
 	
 
-void XmlWriteBuffer::appendSymbol(Symbol s, uint8_t suffix)
+void XmlWriteBuffer::appendSymbol(const Symbol & s)
 {
 	appendXmlEscaped(s);
-	if (suffix) {
-		append('_');
-		append('0' + suffix);
-	}
 }
 
 bool XmlWriteBuffer::supportUpdateValue() const {
@@ -163,7 +172,7 @@ void XmlWriteBuffer::startWelcomePacket()
 void XmlWriteBuffer::writeDeleteVectorPacket(const IndiVector & vec)
 {
 	append(F("<delProperty name=\""));
-	appendSymbol(vec.name, vec.nameSuffix);
+	appendSymbol(vec.name);
 	append(F("\"/>\n"));
 }
 
@@ -202,10 +211,10 @@ void XmlWriteBuffer::endUpdateValuesPacket(const IndiVector & vec)
 {
 }
 
-void XmlWriteBuffer::writeVectorName(Symbol name, uint8_t suffix)
+void XmlWriteBuffer::writeVectorName(const Symbol &  name)
 {
 	append(F(" name=\""));
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 	append(F("\""));
 }
 
@@ -228,10 +237,10 @@ void XmlWriteBuffer::writeVectorFlag(uint8_t fl)
 	append('"');
 }
 
-void XmlWriteBuffer::writeVectorLabel(Symbol name, uint8_t suffix)
+void XmlWriteBuffer::writeVectorLabel(const Symbol &  name)
 {
 	append(F(" label=\""));
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 	append(F("\""));
 }
 
@@ -258,14 +267,14 @@ void XmlWriteBuffer::writeVectorMemberSubtype(uint8_t subtype)
 
 }
 
-void XmlWriteBuffer::writeVectorMemberName(Symbol name, uint8_t suffix)
+void XmlWriteBuffer::writeVectorMemberName(const Symbol &  name)
 {
-	writeVectorName(name, suffix);
+	writeVectorName(name);
 }
 
-void XmlWriteBuffer::writeVectorMemberLabel(Symbol name, uint8_t suffix)
+void XmlWriteBuffer::writeVectorMemberLabel(const Symbol &  name)
 {
-	writeVectorLabel(name, suffix);
+	writeVectorLabel(name);
 	append('>');
 }
 

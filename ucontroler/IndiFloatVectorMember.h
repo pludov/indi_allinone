@@ -20,8 +20,8 @@ class IndiFloatVectorMember : public IndiNumberVectorMember {
 	double value;
 public:
 	IndiFloatVectorMember(IndiNumberVector * vector, 
-			Symbol name, 
-			Symbol label,
+			const Symbol & name,
+			const Symbol & label,
 			double min, double max, double step);
 
 	void setValue(double v);

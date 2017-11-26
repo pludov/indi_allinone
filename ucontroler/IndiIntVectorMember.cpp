@@ -19,8 +19,8 @@
 #include "Symbol.h"
 
 IndiIntVectorMember::IndiIntVectorMember(IndiNumberVector * vector, 
-	Symbol name, 
-	Symbol label,
+	const Symbol & name,
+	const Symbol & label,
 	int32_t min,
     int32_t max,
 	int32_t step)

@@ -16,8 +16,8 @@ class IndiNumberVectorMember : public IndiVectorMember {
 
 public:
 	IndiNumberVectorMember(IndiNumberVector * vector,
-			Symbol name,
-			Symbol label,
+			const Symbol & name,
+			const Symbol & label,
 			double min, double max, double step);
 
 	virtual ~IndiNumberVectorMember() = 0;

@@ -20,8 +20,8 @@
 #include "CommonUtils.h"
 
 IndiSwitchVectorMember::IndiSwitchVectorMember(IndiSwitchVector * vector,
-		Symbol name,
-	    Symbol label)
+		const Symbol & name,
+		const Symbol & label)
 	:IndiVectorMember(vector, name, label)
 {
 	this->value = false;

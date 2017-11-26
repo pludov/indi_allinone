@@ -16,8 +16,10 @@
 
 
 IndiVectorMember::IndiVectorMember(IndiVector * vector, 
-	Symbol name, 
-	Symbol label)
+	const Symbol & name,
+	const Symbol & label) :
+	name(name),
+	label(label)
 {
 	this->vector = vector;
 	next = 0;
@@ -27,8 +29,6 @@ IndiVectorMember::IndiVectorMember(IndiVector * vector,
 		vector->first = this;
 	}
 	vector->last = this;
-	this->name = name;
-	this->label = label;
 }
 
 IndiVectorMember::~IndiVectorMember()

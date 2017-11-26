@@ -340,7 +340,8 @@ void setup() {
 #endif
 
 
-	DewHeater * dw = new DewHeater(11, 1);
+	DewHeater * dw = new DewHeater(11, 9, 1);
+	DewHeater * dw2 = new DewHeater(12, 10, 2);
 
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);

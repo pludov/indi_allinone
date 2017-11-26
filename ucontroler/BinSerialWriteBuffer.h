@@ -7,7 +7,7 @@ class BinSerialReadBuffer;
 
 class BinSerialWriteBuffer : public WriteBuffer {
 	friend class BinSerialReadBuffer;
-    void appendSymbol(Symbol s, uint8_t suffix);
+    void appendSymbol(const Symbol & s);
 public:
     void appendPacketControl(uint8_t v);
     void appendUid(uint8_t uid);
@@ -17,6 +17,7 @@ public:
 
 public:
 	BinSerialWriteBuffer(uint8_t * into, int size);
+	virtual ~BinSerialWriteBuffer();
 
 	void debug() const;
 
@@ -43,12 +44,12 @@ public:
 	virtual void startUpdateValuesPacket(const IndiVector & vec);
 	virtual void endUpdateValuesPacket(const IndiVector & vec);
 
-	virtual void writeVectorName(Symbol name, uint8_t suffix);
-	virtual void writeVectorLabel(Symbol name, uint8_t suffix);
+	virtual void writeVectorName(const Symbol & name);
+	virtual void writeVectorLabel(const Symbol & name);
 	virtual void writeVectorUid(uint8_t uid);
 	virtual void writeVectorMemberSubtype(uint8_t subtype);
-	virtual void writeVectorMemberName(Symbol name, uint8_t suffix);
-	virtual void writeVectorMemberLabel(Symbol name, uint8_t suffix);
+	virtual void writeVectorMemberName(const Symbol & name);
+	virtual void writeVectorMemberLabel(const Symbol & name);
 	virtual void writeFloat(float value);
 	virtual void writeInt(int32_t value);
 	virtual void writeString(const char * c);

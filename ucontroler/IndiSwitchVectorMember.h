@@ -18,8 +18,8 @@ class IndiSwitchVectorMember: public IndiVectorMember {
 	bool value;
 public:
 	IndiSwitchVectorMember(IndiSwitchVector * vector,
-				Symbol name,
-				Symbol label);
+				const Symbol & name,
+				const Symbol & label);
 	virtual ~IndiSwitchVectorMember();
 
 	void setValue(bool on);

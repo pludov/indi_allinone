@@ -6,13 +6,16 @@
 
 class XmlWriteBuffer : public WriteBuffer {
 
-	void appendSymbol(Symbol s, uint8_t suffix);
+	void appendSymbol(const Symbol &  s);
 	void append(const char * s);
-	void append(Symbol s);
+#ifdef ARDUINO
+	void append(const __FlashStringHelper * str);
+#endif
+	void append(const Symbol &  s);
 	void append(char c) { WriteBuffer::append(c); }
 	void appendXmlEscaped(char c);
 
-	void appendXmlEscaped(Symbol s);
+	void appendXmlEscaped(const Symbol & s);
 	void appendXmlEscaped(const char * s);
 	
 public:
@@ -39,12 +42,12 @@ public:
 	virtual void startUpdateValuesPacket(const IndiVector & vec);
 	virtual void endUpdateValuesPacket(const IndiVector & vec);
 
-	virtual void writeVectorName(Symbol name, uint8_t suffix);
-	virtual void writeVectorLabel(Symbol name, uint8_t suffix);
+	virtual void writeVectorName(const Symbol &  name);
+	virtual void writeVectorLabel(const Symbol &  name);
 	virtual void writeVectorUid(uint8_t uid);
 	virtual void writeVectorMemberSubtype(uint8_t subtype);
-	virtual void writeVectorMemberName(Symbol name, uint8_t suffix);
-	virtual void writeVectorMemberLabel(Symbol name, uint8_t suffix);
+	virtual void writeVectorMemberName(const Symbol &  name);
+	virtual void writeVectorMemberLabel(const Symbol &  name);
 	virtual void writeFloat(float value);
 	virtual void writeInt(int32_t value);
 	virtual void writeString(const char * c);

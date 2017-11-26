@@ -30,7 +30,7 @@ const VectorKind IndiSwitchVectorKind {
 };
 
 
-IndiVector * IndiSwitchVector::vectorFactory(Symbol name, Symbol label)
+IndiVector * IndiSwitchVector::vectorFactory(const Symbol & name, const Symbol & label)
 {
 	// FIXME: group name
 	// FIXME: ISRule (oneOfMany for now)
@@ -38,13 +38,13 @@ IndiVector * IndiSwitchVector::vectorFactory(Symbol name, Symbol label)
 }
 
 
-IndiVectorMember * IndiSwitchVector::memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType)
+IndiVectorMember * IndiSwitchVector::memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType)
 {
 	// Uses subtype as length
 	return new IndiSwitchVectorMember((IndiSwitchVector*)vector, name, label);
 }
 
-IndiSwitchVector::IndiSwitchVector(IndiVectorGroup * group,Symbol name,Symbol label, uint8_t initialFlag, bool autoregister)
+IndiSwitchVector::IndiSwitchVector(IndiVectorGroup * group,const Symbol & name,const Symbol & label, uint8_t initialFlag, bool autoregister)
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 	activeOne = nullptr;

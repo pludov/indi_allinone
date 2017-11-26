@@ -19,8 +19,8 @@ class IndiTextVectorMember : public IndiVectorMember {
 	uint8_t maxSize;
 public:
 	IndiTextVectorMember(IndiTextVector * vector,
-			Symbol name,
-			Symbol label,
+			const Symbol & name,
+			const Symbol & label,
 			uint8_t maxSze);
 	virtual ~IndiTextVectorMember();
 

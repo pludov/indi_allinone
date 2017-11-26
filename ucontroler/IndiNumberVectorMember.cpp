@@ -10,8 +10,8 @@
 #include "IndiNumberVectorMember.h"
 
 IndiNumberVectorMember::IndiNumberVectorMember(IndiNumberVector * vector,
-		Symbol name,
-		Symbol label,
+		const Symbol & name,
+		const Symbol & label,
 		double min, double max, double step)
 	: IndiVectorMember(vector, name, label)
 {

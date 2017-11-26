@@ -9,12 +9,12 @@ extern const VectorKind IndiNumberVectorKind;
 
 class IndiNumberVector : public IndiVector {
 public:
-    IndiNumberVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+    IndiNumberVector(IndiVectorGroup * parent, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
 
     virtual const VectorKind & kind() const;
 
-	static IndiVector * vectorFactory(Symbol name, Symbol label);
-	static IndiVectorMember * memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType);
+	static IndiVector * vectorFactory(const Symbol & name, const Symbol & label);
+	static IndiVectorMember * memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType);
 };
 
 #endif

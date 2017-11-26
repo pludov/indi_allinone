@@ -12,17 +12,18 @@
 #define CONTROL_TARGET_TEMP 2
 #define CONTROL_DEW_POINT_DELTA 2
 
-
-DewHeater::DewHeater(int pin, int suffix)
+DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     :Scheduled(F("DewHeater")),
-    group(F("DEW_HEATER")),
-    statusVec(&group, F("DEW_HEATER_TEMP"), F("HW Temperature")),
+    group(Symbol(F("DEW_HEATER"), suffix)),
+
+	statusVec(&group, Symbol(F("DEW_HEATER_TEMP"), suffix), F("HW Temperature")),
     temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100, 1),
     pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100, 1),
-    uidVec(&group, F("DEW_HEATER_UID"), F("Unique Identifier")),
+
+    uidVec(&group, Symbol(F("DEW_HEATER_UID"), suffix), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 
-	powerMode(&group, F("POWER_MODE"), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
+	powerMode(&group, Symbol(F("POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
 	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
 	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
 
@@ -30,9 +31,11 @@ DewHeater::DewHeater(int pin, int suffix)
 {
     this->priority = 2;
     this->status = 0;
-    
+    this->pwmPin = pwmPin;
     this->failed();
     this->nextTick = UTime::now();
+    pinMode(pwmPin, OUTPUT);
+    digitalWrite(pwmPin, 0);
 }
 
 // void setControlMode(uint8_t value)

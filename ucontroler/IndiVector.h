@@ -37,8 +37,8 @@ class IndiIntVectorMember;
 
 #define VECTORKIND_NEED_MEMBER_SUBTYPE 1
 
-typedef IndiVector * (*FuncNewVector)(Symbol name, Symbol label);
-typedef IndiVectorMember * (*FuncNewMember)(IndiVector * vec, Symbol name, Symbol label, uint8_t subType);
+typedef IndiVector * (*FuncNewVector)(const Symbol & name, const Symbol & label);
+typedef IndiVectorMember * (*FuncNewMember)(IndiVector * vec, const Symbol & name, const Symbol & label, uint8_t subType);
 
 struct VectorKind {
 	// is uid required here ?
@@ -55,8 +55,8 @@ struct VectorKind {
 
 	/** true if member must be typed */
 	bool hasMemberSubtype() const { return flag & VECTORKIND_NEED_MEMBER_SUBTYPE; };
-	IndiVector * newVector(Symbol name, Symbol label) const {return (*vectorFactory)(name, label); };
-	IndiVectorMember * newMember(IndiVector * parent, Symbol name, Symbol label, uint8_t subType) const {return (*memberFactory)(parent, name, label, subType); };
+	IndiVector * newVector(const Symbol &  name, const Symbol &  label) const {return (*vectorFactory)(name, label); };
+	IndiVectorMember * newMember(IndiVector * parent, const Symbol & name, const Symbol & label, uint8_t subType) const {return (*memberFactory)(parent, name, label, subType); };
 	
 };
 
@@ -94,7 +94,6 @@ class IndiVector {
 	friend class BinSerialWriteBuffer;
 public:
 	Symbol name;
-	int8_t nameSuffix;
 	Symbol label;
 
 	IndiVectorGroup * group;
@@ -123,7 +122,7 @@ public:
 
 	void sendDefinition(WriteBuffer & into);
 public:
-	IndiVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+	IndiVector(IndiVectorGroup * parent, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
 	virtual ~IndiVector();
 
 	bool hidden() const {

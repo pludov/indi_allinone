@@ -27,18 +27,18 @@ const VectorKind IndiTextVectorKind {
 	.memberFactory = &IndiTextVector::memberFactory
 };
 
-IndiVector * IndiTextVector::vectorFactory(Symbol name, Symbol label)
+IndiVector * IndiTextVector::vectorFactory(const Symbol & name, const Symbol & label)
 {
 	return new IndiTextVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
 }
 
-IndiVectorMember * IndiTextVector::memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType)
+IndiVectorMember * IndiTextVector::memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType)
 {
 	// Uses subtype as length
 	return new IndiTextVectorMember((IndiTextVector*)vector, name, label, subType);
 }
 
-IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8_t initialFlag, bool autoregister)
+IndiTextVector::IndiTextVector(IndiVectorGroup * group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 }

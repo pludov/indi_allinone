@@ -11,6 +11,10 @@
 BinSerialWriteBuffer::BinSerialWriteBuffer(uint8_t * into, int size): WriteBuffer(into, size)
 {}
 
+BinSerialWriteBuffer::~BinSerialWriteBuffer()
+{
+}
+
 void BinSerialWriteBuffer::writeStringChar(uint8_t c)
 {
     if (c > 127) c = 127;
@@ -37,15 +41,19 @@ bool BinSerialWriteBuffer::finish()
     return WriteBuffer::finish();
 }
 
-void BinSerialWriteBuffer::appendSymbol(Symbol str, uint8_t suffix)
+void BinSerialWriteBuffer::appendSymbol(const Symbol & str)
 {
 #ifdef ARDUINO
-    PGM_P p = reinterpret_cast<PGM_P>(str);
+    PGM_P p = reinterpret_cast<PGM_P>(str.base);
 
 	while (1) {
 		unsigned char c = pgm_read_byte(p++);
 		if (c == 0) break;
 		writeStringChar(c);
+	}
+	if (str.suffix) {
+		writeStringChar('_');
+		writeStringChar('0' + str.suffix);
 	}
 #else
     for(unsigned u = 0; u < str.length(); ++u)
@@ -54,10 +62,6 @@ void BinSerialWriteBuffer::appendSymbol(Symbol str, uint8_t suffix)
         writeStringChar(c);
     }
 #endif
-    if (suffix) {
-		writeStringChar('_');
-		writeStringChar('0' + suffix);
-    }
     writeStringChar(0);
 }
 
@@ -106,9 +110,9 @@ void BinSerialWriteBuffer::endUpdateValuesPacket(const IndiVector & vec)
 {
 }
 
-void BinSerialWriteBuffer::writeVectorName(Symbol name, uint8_t suffix)
+void BinSerialWriteBuffer::writeVectorName(const Symbol & name)
 {
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 }
 
 void BinSerialWriteBuffer::writeVectorFlag(uint8_t fl)
@@ -116,9 +120,9 @@ void BinSerialWriteBuffer::writeVectorFlag(uint8_t fl)
     appendUint7(fl);
 }
 
-void BinSerialWriteBuffer::writeVectorLabel(Symbol name, uint8_t suffix)
+void BinSerialWriteBuffer::writeVectorLabel(const Symbol & name)
 {
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 }
 
 void BinSerialWriteBuffer::writeVectorUid(uint8_t uid)
@@ -139,14 +143,14 @@ void BinSerialWriteBuffer::writeVectorMemberSubtype(uint8_t subtype)
     appendUint7(subtype);
 }
 
-void BinSerialWriteBuffer::writeVectorMemberName(Symbol name, uint8_t suffix)
+void BinSerialWriteBuffer::writeVectorMemberName(const Symbol & name)
 {
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 }
 
-void BinSerialWriteBuffer::writeVectorMemberLabel(Symbol name, uint8_t suffix)
+void BinSerialWriteBuffer::writeVectorMemberLabel(const Symbol & name)
 {
-	appendSymbol(name, suffix);
+	appendSymbol(name);
 }
 
 void BinSerialWriteBuffer::writeString(const char * str)
