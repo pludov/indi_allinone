@@ -42,8 +42,13 @@ public:
 
     virtual float readFloat() = 0;
     virtual int32_t readInt() = 0;
-    virtual void readString(char * buffer, int maxSize) = 0;
+    // Return true if buffer changed
+    virtual bool readString(char * buffer, int maxSize) = 0;
     virtual void skipString(int maxSize) = 0;
+
+    virtual bool readBool() = 0;
+	virtual void skipBool() = 0;
+
 };
 
 #endif /* WRITEBUFFER_H_ */

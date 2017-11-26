@@ -42,9 +42,11 @@ void IndiFloatVectorMember::writeValue(WriteBuffer & into) const
 	into.writeFloat(value);
 }
 
-void IndiFloatVectorMember::readValue(ReadBuffer & from)
+bool IndiFloatVectorMember::readValue(ReadBuffer & from)
 {
+	double old = value;
 	value = from.readFloat();
+	return value != old;
 }
 
 void IndiFloatVectorMember::skipUpdateValue(ReadBuffer & from) const

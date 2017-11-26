@@ -52,46 +52,46 @@ void SerialIO::sendPacket(const String & str)
 
 void SerialIO::serialEvent()
 {
-	if (stringComplete) return;
-
-	int available = Serial.available();
-	while(!stringComplete && available > 0) {
-		int inChar = Serial.read();
-		// add it to the inputString:
-		available--;
-
-		if (inputString.length() == 0){
-			// Au début, il faut forcement un <<
-			if (inChar == PACKET_PREFIX) {
-				inputString += (char)inChar;
-			} else {
-				// garbage... on ignore
-#ifdef DEBUG
-				Serial.println("ignoring garbage");
-#endif
-			}
-		} else {
-			// On est dans un packet
-			if (inChar == PACKET_PREFIX) {
-#ifdef DEBUG
-				Serial.println("ignoring garbage (reset)");
-#endif
-				// Si on reçoit un nouveau prefix, on repart de zero
-				inputString = "";
-			}
-
-			inputString += (char)inChar;
-			if (inChar == PACKET_SUFFIX) {
-				stringComplete = true;
-			} else if (inputString.length() >= InputMaxLength) {
-#ifdef DEBUG
-				Serial.println("overflow");
-#endif
-				// On met tout à la poubelle
-				inputString = "";
-			}
-		}
-	}
+//	if (stringComplete) return;
+//
+//	int available = Serial.available();
+//	while(!stringComplete && available > 0) {
+//		int inChar = Serial.read();
+//		// add it to the inputString:
+//		available--;
+//
+//		if (inputString.length() == 0){
+//			// Au début, il faut forcement un <<
+//			if (inChar == PACKET_PREFIX) {
+//				inputString += (char)inChar;
+//			} else {
+//				// garbage... on ignore
+//#ifdef DEBUG
+//				Serial.println("ignoring garbage");
+//#endif
+//			}
+//		} else {
+//			// On est dans un packet
+//			if (inChar == PACKET_PREFIX) {
+//#ifdef DEBUG
+//				Serial.println("ignoring garbage (reset)");
+//#endif
+//				// Si on reçoit un nouveau prefix, on repart de zero
+//				inputString = "";
+//			}
+//
+//			inputString += (char)inChar;
+//			if (inChar == PACKET_SUFFIX) {
+//				stringComplete = true;
+//			} else if (inputString.length() >= InputMaxLength) {
+//#ifdef DEBUG
+//				Serial.println("overflow");
+//#endif
+//				// On met tout à la poubelle
+//				inputString = "";
+//			}
+//		}
+//	}
 }
 
 String SerialIO::getReadyInput()

@@ -3,7 +3,8 @@
 
 #define IndiTextVectorKindUid 0
 #define IndiNumberVectorKindUid 1
-#define IndiMaxVectorKind IndiNumberVectorKindUid
+#define IndiSwitchVectorKindUid 2
+#define IndiMaxVectorKind IndiSwitchVectorKindUid
 
 #define IndiNumberVectorMemberInt 0
 #define IndiNumberVectorMemberFloat 1

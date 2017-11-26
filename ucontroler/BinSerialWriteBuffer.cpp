@@ -160,6 +160,11 @@ void BinSerialWriteBuffer::writeString(const char * str)
     writeStringChar(0);
 }
 
+void BinSerialWriteBuffer::writeBool(bool b)
+{
+	appendUint7(b ? 1 : 0);
+}
+
 void BinSerialWriteBuffer::writeFloat(float value)
 {
 	char buffer[32];

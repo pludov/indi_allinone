@@ -43,12 +43,16 @@ int IndiVector::getMemberCount() const
 
 void IndiVector::notifyUpdate(uint8_t which)
 {
+	// Don't bother with unregistered vectors
+	if (uid == VECNONE) {
+		return;
+	}
 	IndiDevice & device = IndiDevice::instance();
 	notifStatus[which] = 0;
 
 	for(IndiProtocol * dw = device.firstWriter; dw; dw = dw->next)
 	{
-		DEBUG("dirtied: ", which);
+		DEBUG(F("dirtied: "), (int)which);
 		dw->dirtied(this);
 	}
 }
@@ -186,6 +190,19 @@ void IndiVector::sendValue(WriteBuffer & into)
 		cur->writeValue(into);
 	}
 	into.endUpdateValuesPacket(*this);
+}
+
+
+bool IndiVector::doUpdate(IndiVectorUpdateRequest & request)
+{
+	int changeCount = 0;
+	for(int i = 0; i < request.updatedMemberCount; ++i) {
+		request.seekAt(i);
+		changeCount += request.members[i]->readValue(*request.readBuffer) ? 1 : 0;
+	}
+	if (changeCount) {
+		this->notifyUpdate(VECTOR_VALUE);
+	}
 }
 
 // not for Arduino

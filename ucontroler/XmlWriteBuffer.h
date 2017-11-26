@@ -48,6 +48,7 @@ public:
 	virtual void writeFloat(float value);
 	virtual void writeInt(int32_t value);
 	virtual void writeString(const char * c);
+	virtual void writeBool(bool b);
 
 };
 

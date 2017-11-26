@@ -295,7 +295,7 @@ void setup() {
 	
 	delay(500);
 #ifdef DEBUG
-	Serial.println(F("Welcome on board"));
+	Serial.println(F("Welcome on board2"));
 	Serial.println(F("Commands are"));
 	Serial.println(F("X - confirm"));
 	Serial.println(F("T? - set focuser pos"));

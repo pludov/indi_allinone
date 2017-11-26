@@ -43,14 +43,6 @@ IndiTextVector::IndiTextVector(IndiVectorGroup * group, Symbol name, Symbol labe
 {
 }
 
-void IndiTextVector::doUpdate(IndiVectorUpdateRequest & request)
-{
-	for(int i = 0; i < request.updatedMemberCount; ++i) {
-		request.seekAt(i);
-		request.members[i]->readValue(*request.readBuffer);
-	}
-}
-
 const VectorKind & IndiTextVector::kind() const {
 	return IndiTextVectorKind;
 }

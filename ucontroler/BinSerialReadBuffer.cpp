@@ -11,13 +11,15 @@
 #include "IndiVectorMember.h"
 #include "IndiTextVector.h"
 #include "IndiNumberVector.h"
+#include "IndiSwitchVector.h"
 #include "CommonUtils.h"
 #include "Symbol.h"
 #include "Utils.h"
 
 const VectorKind * kindsByUid[IndiMaxVectorKind + 1] = {
     &IndiTextVectorKind,
-    &IndiNumberVectorKind
+    &IndiNumberVectorKind,
+	&IndiSwitchVectorKind
 };
 
 BinSerialReadBuffer::BinSerialReadBuffer(uint8_t * buffer, int size) : ReadBuffer::ReadBuffer(buffer, size)
@@ -88,7 +90,6 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
             const VectorKind & kind = *(kindsByUid[typeUid]);
 
             IndiVector * vec = kind.newVector(name, label);
-            vec->uid = clientUid;
             vec->flag = flag;
             while(!isAtEnd()) {
                 uint8_t subType = 0;
@@ -110,7 +111,9 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
                 }
                 member->readValue(*this);
             }
+
             // FIXME: bound check
+            vec->uid = clientUid;
             applyTo.list[vec->uid] = vec;
             mutator->announced(vec);
             DEBUG(F("Done with announcement"));
@@ -177,6 +180,7 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 						if (!current) fail(F("Skip too many member"));
 					}
 				} while(skip >= 127);
+				DEBUG(F("Update of "), current->name);
 				indiVectorUpdateRequest.addItem(current, this->getCurrentPos());
 				current->skipUpdateValue(*this);
 				current = current->next;
@@ -207,7 +211,7 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 
 
         default:
-            DEBUG("Wrong kind: ", (int)ctrl);
+            DEBUG(F("Wrong kind: "), (int)ctrl);
             fail(F("Wrong kind"));
 
     }
@@ -219,7 +223,7 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 }
 
 
-void BinSerialReadBuffer::readString(char * buffer, int maxSize)
+bool BinSerialReadBuffer::readString(char * buffer, int maxSize)
 {
 	readSymbol(buffer, maxSize);
 }
@@ -229,6 +233,18 @@ void BinSerialReadBuffer::skipString(int maxSize)
 	skipSymbol(maxSize);
 }
 
+bool BinSerialReadBuffer::readBool()
+{
+	uint8_t v = readUint7();
+	if (v == 0) return false;
+	if (v == 1) return true;
+	fail(F("Not a bool"));
+}
+
+void BinSerialReadBuffer::skipBool()
+{
+	readBool();
+}
 
 uint8_t BinSerialReadBuffer::readUint7()
 {
@@ -273,13 +289,22 @@ bool BinSerialReadBuffer::isAtEnd()
     return (v == PACKET_END);
 }
 
-void BinSerialReadBuffer::readSymbol(char * buffer, int maxLength)
+bool BinSerialReadBuffer::readSymbol(char * buffer, int maxLength)
 {
     int i = 0;
+    bool changed = false;
     while(i <= maxLength) {
         uint8_t v = readStringChar();
-        buffer[i ++] = v;
-        if (!v) return;
+        if (!changed) {
+        	if (buffer[i] != v) {
+        		buffer[i] = v;
+        		changed = true;
+        	}
+        } else {
+        	buffer[i] = v;
+        }
+        i++;
+        if (!v) return changed;
     }
     fail(F("Symbol overflow"));
 }

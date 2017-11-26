@@ -37,6 +37,8 @@
 #include "IndiNumberVectorMember.h"
 #include "IndiTextVector.h"
 #include "IndiTextVectorMember.h"
+#include "IndiSwitchVector.h"
+#include "IndiSwitchVectorMember.h"
 #include "IndiProtocol.h"
 #include "IndiDeviceMutator.h"
 #include "BinSerialProtocol.h"
@@ -149,6 +151,7 @@ struct IndiVectorImage {
 	IndiVector * vector;
 	INumberVectorProperty * numberVectorProperty;
 	ITextVectorProperty * textVectorProperty;
+	ISwitchVectorProperty * switchVectorProperty;
 
 	IndiVectorImage(IndiVector * vector)
 	{
@@ -156,16 +159,22 @@ struct IndiVectorImage {
 		this->vector = vector;
 		this->numberVectorProperty = nullptr;
 		this->textVectorProperty = nullptr;
+		this->switchVectorProperty = nullptr;
 	}
 
 	~IndiVectorImage()
 	{
+		cleanVectorProperty();
 		if (vector) {
 			delete vector;
 		}
+	}
+
+	void cleanVectorProperty() {
 		if (numberVectorProperty) {
 			delete [] numberVectorProperty->np;
 			delete(numberVectorProperty);
+			numberVectorProperty = nullptr;
 		}
 		if (textVectorProperty) {
 			for(int i = 0 ; i < textVectorProperty->ntp; ++i) {
@@ -173,6 +182,12 @@ struct IndiVectorImage {
 			}
 			delete [] textVectorProperty->tp;
 			delete(textVectorProperty);
+			textVectorProperty = nullptr;
+		}
+		if (switchVectorProperty) {
+			delete [] switchVectorProperty->sp;
+			delete(switchVectorProperty);
+			switchVectorProperty = nullptr;
 		}
 	}
 };
@@ -296,6 +311,27 @@ public:
 		return newVector;
     }
 
+    ISwitchVectorProperty * buildFromVector(IndiSwitchVector * vector)
+    {
+		ISwitchVectorProperty * newVector = new ISwitchVectorProperty();
+		IPerm perm = getIPerm(vector);
+		IPState state = getIPState(vector);
+		int count = vector->getMemberCount();
+
+		ISwitch * switches = new ISwitch[count];
+
+		int pos = 0;
+		for(IndiVectorMember * member = vector->first; member ; member = member->next)
+		{
+			ISState value = ((IndiSwitchVectorMember*)member)->getValue() ? ISState::ISS_ON : ISState::ISS_OFF;
+			IUFillSwitch(switches + (pos++), member->name.c_str(), member->label.c_str(), value);
+		}
+		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), "badgroup", perm, ISRule::ISR_1OFMANY, 60, state);
+
+		return newVector;
+    }
+
+
     IndiVectorImage * getCurrentVectorImage(uint8_t uid)
     {
     	auto ptr = propsByUid.find(uid);
@@ -369,6 +405,15 @@ public:
 
     			break;
     		}
+    	case IndiSwitchVectorKindUid:
+    		{
+    			ISwitchVectorProperty * newVector = buildFromVector((IndiSwitchVector*)vector);
+    			current->switchVectorProperty = newVector;
+    			IDDefSwitch(newVector, 0);
+    			break;
+    		}
+    	default:
+    		std::cerr << "Unsupported vector kind for announce: " << ((int)vector->kind().uid) << "\n";
     	}
     }
 
@@ -392,8 +437,7 @@ public:
 		case IndiNumberVectorKindUid:
 			{
 				INumberVectorProperty * newVector = buildFromVector((IndiNumberVector*)vector);
-				delete [] current->numberVectorProperty->np;
-				delete(current->numberVectorProperty);
+				current->cleanVectorProperty();
 				current->numberVectorProperty = newVector;
 				IDSetNumber(newVector, nullptr);
 
@@ -402,13 +446,23 @@ public:
 		case IndiTextVectorKindUid:
 			{
 				ITextVectorProperty * newVector = buildFromVector((IndiTextVector*)vector);
-				delete [] current->textVectorProperty->tp;
-				delete(current->textVectorProperty);
+				current->cleanVectorProperty();
 				current->textVectorProperty = newVector;
 				IDSetText(newVector, nullptr);
 
 				break;
 			}
+		case IndiSwitchVectorKindUid:
+			{
+				ISwitchVectorProperty * newVector = buildFromVector((IndiSwitchVector*)vector);
+				current->cleanVectorProperty();
+				current->switchVectorProperty = newVector;
+				IDSetSwitch(newVector, nullptr);
+
+				break;
+			}
+		default:
+			std::cerr << "Unsupported vector kind for mutate: " << ((int)vector->kind().uid) << "\n";
 		}
     }
 
@@ -446,6 +500,21 @@ public:
 				IDSetText(current->textVectorProperty, nullptr);
 				break;
 			}
+		case IndiSwitchVectorKindUid:
+			{
+				int pos = 0;
+				for(IndiVectorMember * member = vector->first; member ; member = member->next)
+				{
+					std::cerr << "updating: " << member->name.c_str() << "\n";
+
+					current->switchVectorProperty->sp[pos++].s = ((IndiSwitchVectorMember*)member)->getValue() ? ISState::ISS_ON : ISState::ISS_OFF;
+				}
+				std::cerr << "setSwitch\n";
+				IDSetSwitch(current->switchVectorProperty, nullptr);
+				break;
+			}
+		default:
+			std::cerr << "Unsupported vector kind for update: " << ((int)vector->kind().uid) << "\n";
 		}
     }
 
@@ -464,7 +533,8 @@ public:
     		return false;
     	}
 
-    	// FIXME: cannot queue . We must wait until requestPacketSize is idle
+    	// FIXME: check that no other request is currently in process.
+    	// Peer cannot enqueue messages. We must wait until requestPacketSize is idle
     	if (requestPacketSize) {
     		std::cerr << "Write buffer overflow. FIFO needed";
     		return false;
@@ -530,8 +600,16 @@ public:
 
     bool reqNewText(const char * name, char ** values, char * names[], int n)
     {
-    	std::cerr << "newText : " << values[0] << "\n";
     	return reqNewSomething(IndiTextVectorKindUid, name, (void*)values, sizeof(char*), names, n);
+    }
+
+    bool reqNewSwitch(const char * name, ISState values [], char * names[], int n)
+    {
+    	bool boolValues[n];
+    	for(int i = 0; i < n; ++i) {
+    		boolValues[i] = values[i] != ISState::ISS_OFF;
+    	}
+    	return reqNewSomething(IndiSwitchVectorKindUid, name, (void*)boolValues, sizeof(bool), names, n);
     }
 };
 
@@ -650,6 +728,22 @@ bool SimpleDevice::ISNewText(const char *dev, const char *name, char * values[],
 		return false;
 	}
 	return currentIndiProtocol->reqNewText(name, values, names, n);
+}
+
+bool SimpleDevice::ISNewSwitch(const char *dev, const char *name, ISState states[], char *names[], int n)
+{
+	if (INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n)) {
+		return true;
+	}
+	Lock lock(&sharingMutex);
+
+	lock.lock();
+
+	std::cerr << "new text\n";
+	if (currentIndiProtocol == nullptr) {
+		return false;
+	}
+	return currentIndiProtocol->reqNewSwitch(name, states, names, n);
 }
 
 static int max(int a, int b)

@@ -52,9 +52,9 @@ void IndiTextVectorMember::writeValue(WriteBuffer & into) const
 	into.writeString(this->value);
 }
 
-void IndiTextVectorMember::readValue(ReadBuffer & from)
+bool IndiTextVectorMember::readValue(ReadBuffer & from)
 {
-	from.readString(value, maxSize);
+	return from.readString(value, maxSize);
 }
 
 void IndiTextVectorMember::skipUpdateValue(ReadBuffer & from) const

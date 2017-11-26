@@ -19,6 +19,7 @@
 #define VECTOR_BUSY 4
 #define VECTOR_HIDDEN 8
 
+
 // define/delete property
 #define VECTOR_ANNOUNCED 0
 // when a flag of the prop/vector change (busy, ro, ...)
@@ -149,7 +150,8 @@ public:
 
 	virtual void sendValue(WriteBuffer & into);
 
-	virtual void doUpdate(IndiVectorUpdateRequest & request) = 0;
+	// True on change, false otherwise
+	virtual bool doUpdate(IndiVectorUpdateRequest & request);
 };
 
 

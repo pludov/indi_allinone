@@ -41,9 +41,11 @@ void IndiIntVectorMember::writeValue(WriteBuffer & into) const
 	into.writeInt(value);
 }
 
-void IndiIntVectorMember::readValue(ReadBuffer & from)
+bool IndiIntVectorMember::readValue(ReadBuffer & from)
 {
+	int prev = value;
 	value = from.readInt();
+	return prev != value;
 }
 
 void IndiIntVectorMember::skipUpdateValue(ReadBuffer & from) const {

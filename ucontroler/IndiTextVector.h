@@ -13,8 +13,6 @@ public:
     
 	virtual const VectorKind & kind() const;
 
-	virtual void doUpdate(IndiVectorUpdateRequest & request);
-
 	// FIXME: group !
 	static IndiVector * vectorFactory(Symbol name, Symbol label);
 	static IndiVectorMember * memberFactory(IndiVector * vector, Symbol name, Symbol label, uint8_t subType);

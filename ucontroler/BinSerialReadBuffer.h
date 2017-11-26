@@ -22,7 +22,8 @@ protected:
     uint8_t readUid();
     uint8_t readPacketControl();
     bool isAtEnd();
-    void readSymbol(char * buffer, int maxLength);
+    // Returns true on change
+    bool readSymbol(char * buffer, int maxLength);
     void skipSymbol(int maxLength);
     
     
@@ -31,8 +32,11 @@ public:
 
     virtual float readFloat();
     virtual int32_t readInt();
-    virtual void readString(char * buffer, int maxSize);
+    virtual bool readString(char * buffer, int maxSize);
     virtual void skipString(int maxSize);
+
+    virtual bool readBool();
+    virtual void skipBool();
 
     void debug();
 };

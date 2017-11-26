@@ -152,7 +152,6 @@ void IndiProtocol::popDirty(DirtyVector & result)
 		result.vector = v;
 		for(int i = 0; i < VECTOR_COMM_COUNT; ++i) {
 			if (v->cleanDirty(clientId, i)) {
-				DEBUG("vector ", vectorId, " dirty at ", i);
 				result.dirtyFlags |= (1 << i);
 			}
 		}

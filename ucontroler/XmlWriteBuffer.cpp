@@ -274,6 +274,15 @@ void XmlWriteBuffer::writeString(const char * str)
 	appendXmlEscaped(str);
 }
 
+void XmlWriteBuffer::writeBool(bool b)
+{
+	if (b) {
+		append(F("true"));
+	} else {
+		append(F("false"));
+	}
+}
+
 
 void XmlWriteBuffer::writeFloat(float value)
 {

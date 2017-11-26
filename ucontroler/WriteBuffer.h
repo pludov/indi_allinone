@@ -65,7 +65,7 @@ public:
 	virtual void writeFloat(float value) = 0;
 	virtual void writeInt(int32_t value) = 0;
 	virtual void writeString(const char * c) = 0;
-
+	virtual void writeBool(bool value) = 0;
 };
 
 #endif /* WRITEBUFFER_H_ */
