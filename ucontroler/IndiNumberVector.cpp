@@ -11,7 +11,6 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
-#include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiNumberVector.h"
 #include "IndiIntVectorMember.h"
@@ -29,9 +28,9 @@ const VectorKind IndiNumberVectorKind {
 	.memberFactory = &IndiNumberVector::memberFactory
 };
 
-IndiVector * IndiNumberVector::vectorFactory(const Symbol & name, const Symbol & label)
+IndiVector * IndiNumberVector::vectorFactory(const Symbol & group, const Symbol & name, const Symbol & label)
 {
-	return new IndiNumberVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
+	return new IndiNumberVector(group, name, label, VECTOR_READABLE, false);
 }
 
 IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType)
@@ -47,7 +46,7 @@ IndiVectorMember * IndiNumberVector::memberFactory(IndiVector * vector, const Sy
 	return 0;
 }
 
-IndiNumberVector::IndiNumberVector(IndiVectorGroup * group,const Symbol & name,const Symbol & label, uint8_t initialFlag, bool autoregister)
+IndiNumberVector::IndiNumberVector(const Symbol & group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 }

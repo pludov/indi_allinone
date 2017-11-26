@@ -11,7 +11,6 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
-#include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
@@ -30,11 +29,11 @@ const VectorKind IndiSwitchVectorKind {
 };
 
 
-IndiVector * IndiSwitchVector::vectorFactory(const Symbol & name, const Symbol & label)
+IndiVector * IndiSwitchVector::vectorFactory(const Symbol & group, const Symbol & name, const Symbol & label)
 {
 	// FIXME: group name
 	// FIXME: ISRule (oneOfMany for now)
-	return new IndiSwitchVector(new IndiVectorGroup(F("plop")), name, label, VECTOR_READABLE, false);
+	return new IndiSwitchVector(group, name, label, VECTOR_READABLE, false);
 }
 
 
@@ -44,7 +43,7 @@ IndiVectorMember * IndiSwitchVector::memberFactory(IndiVector * vector, const Sy
 	return new IndiSwitchVectorMember((IndiSwitchVector*)vector, name, label);
 }
 
-IndiSwitchVector::IndiSwitchVector(IndiVectorGroup * group,const Symbol & name,const Symbol & label, uint8_t initialFlag, bool autoregister)
+IndiSwitchVector::IndiSwitchVector(const Symbol & group, const Symbol & name,const Symbol & label, uint8_t initialFlag, bool autoregister)
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 	activeOne = nullptr;

@@ -110,6 +110,11 @@ void BinSerialWriteBuffer::endUpdateValuesPacket(const IndiVector & vec)
 {
 }
 
+void BinSerialWriteBuffer::writeVectorGroup(const Symbol & group)
+{
+	appendSymbol(group);
+}
+
 void BinSerialWriteBuffer::writeVectorName(const Symbol & name)
 {
 	appendSymbol(name);

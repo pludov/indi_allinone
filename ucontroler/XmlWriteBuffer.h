@@ -42,6 +42,7 @@ public:
 	virtual void startUpdateValuesPacket(const IndiVector & vec);
 	virtual void endUpdateValuesPacket(const IndiVector & vec);
 
+	virtual void writeVectorGroup(const Symbol & group);
 	virtual void writeVectorName(const Symbol &  name);
 	virtual void writeVectorLabel(const Symbol &  name);
 	virtual void writeVectorUid(uint8_t uid);

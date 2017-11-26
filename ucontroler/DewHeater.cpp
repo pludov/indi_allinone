@@ -16,14 +16,14 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     :Scheduled(F("DewHeater")),
     group(Symbol(F("DEW_HEATER"), suffix)),
 
-	statusVec(&group, Symbol(F("DEW_HEATER_TEMP"), suffix), F("HW Temperature")),
+	statusVec(group, Symbol(F("DEW_HEATER_TEMP"), suffix), F("HW Temperature")),
     temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100, 1),
     pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100, 1),
 
-    uidVec(&group, Symbol(F("DEW_HEATER_UID"), suffix), F("Unique Identifier")),
+    uidVec(group, Symbol(F("DEW_HEATER_UID"), suffix), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 
-	powerMode(&group, Symbol(F("POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
+	powerMode(group, Symbol(F("POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
 	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
 	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
 

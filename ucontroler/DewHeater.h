@@ -3,7 +3,6 @@
 
 #include <OneWire.h>
 #include "Scheduled.h"
-#include "IndiVectorGroup.h"
 #include "IndiNumberVector.h"
 #include "IndiFloatVectorMember.h"
 #include "IndiTextVector.h"
@@ -12,7 +11,7 @@
 #include "IndiSwitchVectorMember.h"
 
 class DewHeater : public Scheduled {
-    IndiVectorGroup group;
+    Symbol group;
     IndiNumberVector statusVec;
     IndiFloatVectorMember temperature;
     IndiFloatVectorMember pwm;

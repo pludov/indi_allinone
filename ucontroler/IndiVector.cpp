@@ -11,17 +11,16 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
-#include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 
 #include "CommonUtils.h"
 
-IndiVector::IndiVector(IndiVectorGroup * group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
-	: name(name),
+IndiVector::IndiVector(const Symbol & group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
+	: group(group),
+	  name(name),
 	  label(label)
 {
-	this->group = group;
 	this->first = 0;
 	this->last = 0;
 	this->flag = initialFlag;
@@ -139,6 +138,7 @@ void IndiVector::set(uint8_t flagToChange, bool status)
 
 void IndiVector::sendDefinition(WriteBuffer & into)
 {
+	into.writeVectorGroup(group);
 	into.writeVectorName(name);
 	into.writeVectorLabel(label);
 	into.writeVectorFlag(flag);

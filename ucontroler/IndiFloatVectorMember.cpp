@@ -10,7 +10,6 @@
 #include "WriteBuffer.h"
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
-#include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 #include "IndiNumberVector.h"

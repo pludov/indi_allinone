@@ -31,13 +31,12 @@
 class IndiProtocol;
 class IndiDevice;
 class IndiVectorMember;
-class IndiVectorGroup;
 class IndiIntVectorMember;
 
 
 #define VECTORKIND_NEED_MEMBER_SUBTYPE 1
 
-typedef IndiVector * (*FuncNewVector)(const Symbol & name, const Symbol & label);
+typedef IndiVector * (*FuncNewVector)(const Symbol & group, const Symbol & name, const Symbol & label);
 typedef IndiVectorMember * (*FuncNewMember)(IndiVector * vec, const Symbol & name, const Symbol & label, uint8_t subType);
 
 struct VectorKind {
@@ -55,7 +54,7 @@ struct VectorKind {
 
 	/** true if member must be typed */
 	bool hasMemberSubtype() const { return flag & VECTORKIND_NEED_MEMBER_SUBTYPE; };
-	IndiVector * newVector(const Symbol &  name, const Symbol &  label) const {return (*vectorFactory)(name, label); };
+	IndiVector * newVector(const Symbol & group, const Symbol &  name, const Symbol &  label) const {return (*vectorFactory)(group, name, label); };
 	IndiVectorMember * newMember(IndiVector * parent, const Symbol & name, const Symbol & label, uint8_t subType) const {return (*memberFactory)(parent, name, label, subType); };
 	
 };
@@ -93,10 +92,10 @@ class IndiVector {
 	friend class XmlWriteBuffer;
 	friend class BinSerialWriteBuffer;
 public:
+	Symbol group;
 	Symbol name;
 	Symbol label;
 
-	IndiVectorGroup * group;
 	IndiVectorMember * first, * last;
 	
 	// VECTOR_READABLE, VECTOR_WRITABLE, VECTOR_BUSY or not
@@ -122,7 +121,7 @@ public:
 
 	void sendDefinition(WriteBuffer & into);
 public:
-	IndiVector(IndiVectorGroup * parent, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+	IndiVector(const Symbol & group, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
 	virtual ~IndiVector();
 
 	bool hidden() const {

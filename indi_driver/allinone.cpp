@@ -287,7 +287,7 @@ public:
 			IUFillNumber(numbers + (pos++), member->name.c_str(), member->label.c_str(), "%.f", 0, 10000, 1, ((IndiNumberVectorMember*)member)->getDoubleValue());
 
 		}
-		IUFillNumberVector(newVector, numbers, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), "badgroup", perm, 60, state);
+		IUFillNumberVector(newVector, numbers, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, 60, state);
 
 		return newVector;
     }
@@ -306,7 +306,7 @@ public:
 		{
 			IUFillText(texts + (pos++), member->name.c_str(), member->label.c_str(), ((IndiTextVectorMember*)member)->getTextValue());
 		}
-		IUFillTextVector(newVector, texts, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), "badgroup", perm, 60, state);
+		IUFillTextVector(newVector, texts, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, 60, state);
 
 		return newVector;
     }
@@ -326,7 +326,7 @@ public:
 			ISState value = ((IndiSwitchVectorMember*)member)->getValue() ? ISState::ISS_ON : ISState::ISS_OFF;
 			IUFillSwitch(switches + (pos++), member->name.c_str(), member->label.c_str(), value);
 		}
-		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), "badgroup", perm, ISRule::ISR_1OFMANY, 60, state);
+		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, ISRule::ISR_1OFMANY, 60, state);
 
 		return newVector;
     }
@@ -469,9 +469,7 @@ public:
     // Called by indiProtocol after a vector has been updated
     virtual void updated(IndiVector * vector)
     {
-    	std::cerr << "updated: " << ((long)vector) << "\n";
     	IndiVectorImage * current = getCurrentVectorImage(vector->uid);
-    	std::cerr << "current is " << ((long)current) << "\n";
     	switch(vector->kind().uid)
 		{
 		case IndiNumberVectorKindUid:

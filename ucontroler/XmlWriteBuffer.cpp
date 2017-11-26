@@ -218,6 +218,13 @@ void XmlWriteBuffer::writeVectorName(const Symbol &  name)
 	append(F("\""));
 }
 
+void XmlWriteBuffer::writeVectorGroup(const Symbol & group)
+{
+	append(F(" group=\""));
+	appendSymbol(group);
+	append(F("\""));
+}
+
 void XmlWriteBuffer::writeVectorFlag(uint8_t fl)
 {
 	append(F(" propertyState=\""));

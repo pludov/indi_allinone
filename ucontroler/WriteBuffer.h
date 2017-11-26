@@ -56,7 +56,7 @@ public:
 	virtual void endUpdateValuesPacket(const IndiVector & vec) = 0;
 	
 	
-
+	virtual void writeVectorGroup(const Symbol & group) = 0;
 	virtual void writeVectorName(const Symbol & name) = 0;
 	virtual void writeVectorLabel(const Symbol &  name) = 0;
 	virtual void writeVectorUid(uint8_t uid) = 0;

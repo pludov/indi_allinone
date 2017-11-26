@@ -33,7 +33,6 @@
 
 #include "IndiProtocol.h"
 #include "ScheduledIndiProtocol.h"
-#include "IndiVectorGroup.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
 #include "XmlWriteBuffer.h"

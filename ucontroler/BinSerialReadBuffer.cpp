@@ -73,7 +73,9 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
             if (typeUid >IndiMaxVectorKind) {
                 fail(F("Wrong vector kind"));
             }
-
+            char group[65];
+            readSymbol(group, 64);
+            DEBUG(F(" [GROUP]"), group);
             char name[65];
             readSymbol(name, 64);
             DEBUG(F(" [NAME]"), name);
@@ -89,7 +91,7 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
             // FIXME: delete this when fail !
             const VectorKind & kind = *(kindsByUid[typeUid]);
 
-            IndiVector * vec = kind.newVector(name, label);
+            IndiVector * vec = kind.newVector(group, name, label);
             vec->flag = flag;
             while(!isAtEnd()) {
                 uint8_t subType = 0;

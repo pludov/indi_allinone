@@ -9,12 +9,11 @@ extern const VectorKind IndiTextVectorKind;
 
 class IndiTextVector : public IndiVector {
 public:
-    IndiTextVector(IndiVectorGroup * parent, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+    IndiTextVector(const Symbol & group, const Symbol & name, const Symbol & label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
     
 	virtual const VectorKind & kind() const;
 
-	// FIXME: group !
-	static IndiVector * vectorFactory(const Symbol & name, const Symbol & label);
+	static IndiVector * vectorFactory(const Symbol & group, const Symbol & name, const Symbol & label);
 	static IndiVectorMember * memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType);
 
 };

@@ -17,17 +17,21 @@
 #include "SerialIO.h"
 
 #include "IndiNumberVector.h"
-#include "IndiVectorGroup.h"
 #include "IndiFloatVectorMember.h"
+#include "IndiTextVector.h"
+#include "IndiTextVectorMember.h"
 
 extern PWMResistor resistor;
 
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
 
-IndiVectorGroup statusGroup(F("Status"));
-IndiNumberVector uptime(&statusGroup, F("UPTIME"), F("Time since power up/reset"));
+Symbol statusGroup(F("Status"));
+IndiNumberVector uptime(statusGroup, F("UPTIME"), F("Time since power up/reset"), VECTOR_READABLE | VECTOR_WRITABLE);
 IndiFloatVectorMember uptimeValue(&uptime, F("UPTIME_VALUE"), F("Time since power up/reset (s)"), 0, 1e36, 1);
+
+IndiTextVector freeText(statusGroup, F("FREETEXT"), F("Free text"), VECTOR_READABLE|VECTOR_WRITABLE);
+IndiTextVectorMember freeTextValue(&freeText, F("FREETEXT_VALUE"), F("Free text"), 64);
 
 //
 //static int pendingWrite()
@@ -57,7 +61,7 @@ void Status::needUpdate()
 
 void Status::tick()
 {
-	uptimeValue.setValue(millis() / 1000.0);
+	uptimeValue.setValue(uptimeValue.getDoubleValue() + 10.0);
 	this->nextTick += LongDuration::seconds(10);
 }
 
