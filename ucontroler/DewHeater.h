@@ -8,6 +8,8 @@
 #include "IndiFloatVectorMember.h"
 #include "IndiTextVector.h"
 #include "IndiTextVectorMember.h"
+#include "IndiSwitchVector.h"
+#include "IndiSwitchVectorMember.h"
 
 class DewHeater : public Scheduled {
     IndiVectorGroup group;
@@ -18,13 +20,12 @@ class DewHeater : public Scheduled {
     IndiTextVector uidVec;
     IndiTextVectorMember uid;
 
-
-    // IndiNumberVector targetPwmVec;
-    // IndiFloatVectorMember targetPwm;
+    IndiSwitchVector powerMode;
+    IndiSwitchVectorMember powerModeOff, powerModeForced;
 
     OneWire oneWire;
     uint8_t status;
-    byte addr[8];
+    uint8_t addr[8];
 
     void scan();
     void startMeasure();

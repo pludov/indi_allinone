@@ -22,10 +22,14 @@ DewHeater::DewHeater(int pin, int suffix)
     uidVec(&group, F("DEW_HEATER_UID"), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 
+	powerMode(&group, F("POWER_MODE"), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
+	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
+	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
 
     oneWire(pin)
 {
     this->priority = 2;
+    this->status = 0;
     
     this->failed();
     this->nextTick = UTime::now();
