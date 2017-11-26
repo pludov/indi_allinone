@@ -63,8 +63,6 @@ void IndiSwitchVector::refreshActiveOne(IndiSwitchVectorMember * lastUpdated)
 	for(IndiVectorMember * cur = first; cur; cur = cur->next)
 	{
 		IndiSwitchVectorMember * curSwitch = (IndiSwitchVectorMember*)cur;
-		bool v = curSwitch->getValue();
-
 		if (curSwitch->getValue()) {
 			if (hasOne) {
 				hasMoreThanOne = true;

@@ -225,7 +225,7 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 
 bool BinSerialReadBuffer::readString(char * buffer, int maxSize)
 {
-	readSymbol(buffer, maxSize);
+	return readSymbol(buffer, maxSize);
 }
 
 void BinSerialReadBuffer::skipString(int maxSize)

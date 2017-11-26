@@ -32,6 +32,17 @@ IndiVector::IndiVector(IndiVectorGroup * group, Symbol name, Symbol label, uint8
 	}
 }
 
+// Assume the vector was unregistered from its device
+IndiVector::~IndiVector()
+{
+	IndiVectorMember * cur = first;
+	while(cur) {
+		IndiVectorMember * next = cur->next;
+		delete cur;
+		cur = next;
+	}
+}
+
 int IndiVector::getMemberCount() const
 {
 	int i = 0;
@@ -203,6 +214,8 @@ bool IndiVector::doUpdate(IndiVectorUpdateRequest & request)
 	if (changeCount) {
 		this->notifyUpdate(VECTOR_VALUE);
 	}
+
+	return changeCount > 0;
 }
 
 // not for Arduino

@@ -795,7 +795,10 @@ void SimpleDevice::backgroundProcessor(int fd)
         }
 
         int result = select(max(fd, pipeFd) + 1, &readset, canWrite ? &writeset : NULL, NULL, NULL);
-
+        if (result == -1) {
+        	perror("select");
+        	break;
+        }
         lock.lock();
 
         if (checkBackgroundProcessorThreadEnd()) break;
@@ -836,6 +839,7 @@ void SimpleDevice::backgroundProcessor(int fd)
         currentIndiProtocol->flushIncomingMessages();
     }
     
+    // FIXME: If close is not in progress, start it now
     backgroundProcessorThreadDone = true;
 	pthread_cond_broadcast(&doneCond);
 }

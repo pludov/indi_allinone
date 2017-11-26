@@ -124,6 +124,7 @@ public:
 	void sendDefinition(WriteBuffer & into);
 public:
 	IndiVector(IndiVectorGroup * parent, Symbol name, Symbol label, uint8_t initialFlag = VECTOR_READABLE, bool autoregister = true);
+	virtual ~IndiVector();
 
 	bool hidden() const {
 		return flag & VECTOR_HIDDEN;

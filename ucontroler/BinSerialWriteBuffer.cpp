@@ -1,7 +1,5 @@
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#define F(a) (a)
 #endif
 
 #include "BinSerialProtocol.h"
@@ -50,7 +48,7 @@ void BinSerialWriteBuffer::appendSymbol(Symbol str, uint8_t suffix)
 		writeStringChar(c);
 	}
 #else
-    for(int u = 0; u < str.length(); ++u)
+    for(unsigned u = 0; u < str.length(); ++u)
     {
         unsigned char c = str[u];
         writeStringChar(c);
