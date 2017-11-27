@@ -27,6 +27,9 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
 	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
 	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
 
+	targetPwmVec(group, Symbol(F("DEW_HEATER_TARGET_PWM"),suffix), F("Power")),
+	targetPwm(&targetPwmVec, F("TARGET_PWM"), F("0-100"), 0, 100, 0.1),
+
     oneWire(pin)
 {
     this->priority = 2;
@@ -36,6 +39,13 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     this->nextTick = UTime::now();
     pinMode(pwmPin, OUTPUT);
     digitalWrite(pwmPin, 0);
+
+    powerMode.onRequested(VectorCallback(&DewHeater::powerModeChanged, this));
+}
+
+void DewHeater::powerModeChanged()
+{
+	DEBUG(F("Power mode changed to"), powerMode.getCurrent()->name);
 }
 
 // void setControlMode(uint8_t value)

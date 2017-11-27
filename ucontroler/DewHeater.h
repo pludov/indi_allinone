@@ -22,10 +22,16 @@ class DewHeater : public Scheduled {
     IndiSwitchVector powerMode;
     IndiSwitchVectorMember powerModeOff, powerModeForced;
 
+    IndiNumberVector targetPwmVec;
+    IndiFloatVectorMember targetPwm;
+
     OneWire oneWire;
     uint8_t pwmPin;
     uint8_t status;
     uint8_t addr[8];
+
+
+    void powerModeChanged();
 
     void scan();
     void startMeasure();

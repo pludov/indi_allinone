@@ -27,6 +27,8 @@ public:
 
     virtual bool doUpdate(IndiVectorUpdateRequest & request);
 
+    IndiSwitchVectorMember * getCurrent() const { return activeOne; };
+
 	static IndiVector * vectorFactory(const Symbol & group, const Symbol & name, const Symbol & label);
 	static IndiVectorMember * memberFactory(IndiVector * vector, const Symbol & name, const Symbol & label, uint8_t subType);
 };

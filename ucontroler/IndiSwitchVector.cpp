@@ -105,9 +105,10 @@ void IndiSwitchVector::refreshActiveOne(IndiSwitchVectorMember * lastUpdated)
 
 bool IndiSwitchVector::doUpdate(IndiVectorUpdateRequest & request)
 {
+	IndiVectorMember * previousActive = this->activeOne;
 	if (IndiVector::doUpdate(request)) {
 		refreshActiveOne((IndiSwitchVectorMember*)request.members[0]);
-		return true;
+		return this->activeOne != previousActive;
 	}
 	return false;
 }

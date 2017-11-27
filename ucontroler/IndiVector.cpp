@@ -19,7 +19,8 @@
 IndiVector::IndiVector(const Symbol & group, const Symbol & name, const Symbol & label, uint8_t initialFlag, bool autoregister)
 	: group(group),
 	  name(name),
-	  label(label)
+	  label(label),
+	  requestCallback()
 {
 	this->first = 0;
 	this->last = 0;
@@ -39,6 +40,11 @@ IndiVector::~IndiVector()
 		delete cur;
 		cur = next;
 	}
+}
+
+void IndiVector::onRequested(const VectorCallback & function)
+{
+	this->requestCallback = function;
 }
 
 int IndiVector::getMemberCount() const

@@ -191,14 +191,19 @@ void BinSerialReadBuffer::internalReadAndApply(IndiDevice & applyTo, IndiProtoco
 			indiVectorUpdateRequest.markEnd();
 
 			// Reply immediately with a pseudo busy and mark the buffer busy
+			// FIXME: this is ok if only one client. Otherwise, others won't receive the busy
 			answer.appendPacketControl(PACKET_UPDATE);
 			answer.appendUid(clientUid);
 			answer.appendUint7(VECTOR_BUSY);
 			answer.appendPacketControl(PACKET_END);
 			DEBUG(F("Doing update"));
-			target->doUpdate(indiVectorUpdateRequest);
+			bool requireCallback = target->doUpdate(indiVectorUpdateRequest);
 			indiVectorUpdateRequest.unseek();
 			// If the vector is not busy, ensure it gets back to non busy on the client side
+			if (requireCallback && target->requestCallback.isSet()) {
+				target->requestCallback.call();
+			}
+
 			if (!(target->flag & VECTOR_BUSY)) {
 				// Make sure the target is dirty
 				if (target->setDirty(proto.getClientId(), VECTOR_VALUE)) {

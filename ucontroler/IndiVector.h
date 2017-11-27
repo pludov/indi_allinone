@@ -34,6 +34,31 @@ class IndiVectorMember;
 class IndiIntVectorMember;
 
 
+class VectorCallback {
+	typedef void (FuncType)(void*);
+	FuncType * func;
+	void *thiz;
+public:
+	VectorCallback() {
+		thiz = nullptr;
+		func = nullptr;
+	}
+
+	template<typename O>
+	VectorCallback(void (O::*func)(), O * thiz) {
+		this->thiz = (void*)thiz;
+		this->func = (FuncType*)func;
+	}
+
+	bool isSet() const {
+		return func;
+	}
+
+	void call() const{
+		(*func)(thiz);
+	}
+};
+
 #define VECTORKIND_NEED_MEMBER_SUBTYPE 1
 
 typedef IndiVector * (*FuncNewVector)(const Symbol & group, const Symbol & name, const Symbol & label);
@@ -106,6 +131,8 @@ public:
 	
 	uint8_t uid;
 
+	VectorCallback requestCallback;
+
 	/** 
 	 * clientId : IndiProtocol id
 	 * commId : VECTOR_ANNOUNCED, VECTOR_UPDATED, ...
@@ -135,6 +162,12 @@ public:
 	void set(uint8_t flagToChange, bool status);
 	
 	int getMemberCount() const;
+
+	// Register a callback for change on this vector
+	// changes initiated on local side don't trigger this.
+	// function must not block too long (notification and
+	// processing of new requests are disabled during execution)
+	void onRequested(const VectorCallback & function);
 
 	virtual const VectorKind & kind() const = 0;
 	
