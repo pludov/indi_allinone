@@ -52,6 +52,7 @@
 #include "debug.h"
 #include "SerialIO.h"
 #include "DewHeater.h"
+#include "WattMeter.h"
 
 
 #define ONE_WIRE_BUS 3                        // DS18B20 DATA wire connected to Digital Pin 6
@@ -342,6 +343,7 @@ void setup() {
 	DewHeater * dw = new DewHeater(11, 9, 1);
 	DewHeater * dw2 = new DewHeater(12, 10, 2);
 
+	new WattMeter(5, 4, 0);
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
 	Serial1.println(F("Welcome!"));
