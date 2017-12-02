@@ -5,13 +5,14 @@
  *      Author: utilisateur
  */
 #include <Arduino.h>
-#include "debug.h"
+#include "CommonUtils.h"
 #include "MeteoTemp.h"
 #include "MainLogic.h"
 #include "Status.h"
 
+
 // Une lecture toutes les 20s devrait suffire largement
-#define READ_INTERVAL 20000000
+#define READ_INTERVAL 5000000
 
 
 // how many timing transitions we need to keep track of. 2 * number bits + extra
@@ -22,10 +23,10 @@
 MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled(F("MeteoTemp")) {
 	_pin = pin;
 	_type = type;
-	_count = 6;
+	_count = 27;
 
 	// set up the pins!
-	pinMode(_pin, INPUT);
+	pinMode(_pin, OUTPUT);
 	digitalWrite(_pin, HIGH);
 
 	prepareStep1(true);
@@ -33,6 +34,7 @@ MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled(F("MeteoTemp")) {
 
 void MeteoTemp::tick()
 {
+	DEBUG(F("MeteoTemp::tick"));
 	switch(nextStep) {
 	case 1:
 		doStep1();
@@ -107,6 +109,7 @@ void MeteoTemp::prepareStep1(bool first)
 
 void MeteoTemp::doStep1()
 {
+	pinMode(_pin, OUTPUT);
 	digitalWrite(_pin, HIGH);
 	prepareStep2();
 }
@@ -146,6 +149,8 @@ void MeteoTemp::doStep3()
 #ifdef DEBUG
 	unsigned long begin = micros();
 #endif
+	pinMode(_pin, OUTPUT);
+
 	noInterrupts();
 	digitalWrite(_pin, HIGH);
 	delayMicroseconds(40);
@@ -181,22 +186,16 @@ void MeteoTemp::doStep3()
 	bool isOk = (j >= 40) &&
 			(data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF));
 	hasData = isOk;
-	if (isOk) {
-		mainLogic.temperatureUpdated();
-	}
-	status.needUpdate();
-#ifdef DEBUG
-	unsigned long duration = micros() - begin;
-	Serial.print(F("DHT="));
-	Serial.print(isOk);
-	Serial.print(F(" took:"));
-	Serial.println(duration);
 
-	Serial.print(lastTemperature());
-	Serial.print(F("� "));
-	Serial.print(lastHumidity());
-	Serial.println(F("%"));
-#endif
+//	status.needUpdate();
+
+	unsigned long duration = micros() - begin;
+	DEBUG(F("DHT="), isOk, F(" took:"), duration);
+	DEBUG(F("j="), j);
+
+	DEBUG(F("Temp="),lastTemperature(), "C");
+	DEBUG(F("Hum="),lastHumidity(), "%");
+
 	prepareStep1(false);
 }
 
