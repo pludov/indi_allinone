@@ -5,8 +5,10 @@
  *      Author: utilisateur
  */
 #include <Arduino.h>
-#include "debug.h"
+#include "CommonUtils.h"
 #include "Scheduler.h"
+
+#undef SCHEDULER_DEBUG
 
 Scheduler::Scheduler()
 {
@@ -33,7 +35,7 @@ void Scheduler::loop()
 {
 	long newMicros = micros();
 	if (newMicros - lastMicros >  2000000) {
-		Serial1.println(F("alive"));
+		DEBUG(F("alive"));
 		lastMicros = newMicros;
 	}
 	yield();
@@ -72,17 +74,17 @@ void Scheduler::loop()
 
 	if (targetForLoop) {
 		if (waitSigEndIfImmediate(targetForLoop->nextTick)) {
-#ifdef DEBUG
+#ifdef SCHEDULER_DEBUG
 			int retard = 0;
 			if (targetForLoop->priority == 0 && now > targetForLoop->nextTick) {
 				retard = (now - targetForLoop->nextTick) >> 7;
 			}
 #endif
 			targetForLoop->tick();
-#ifdef DEBUG
+#ifdef SCHEDULER_DEBUG
 			if (retard) {
-				Serial.print(F("Too Late:"));
-				Serial.println(retard / 8.0);
+				DEBUG(F("Too Late:"));
+				DEBUG(retard / 8.0);
 			}
 #endif
 			UTime now;
@@ -91,7 +93,7 @@ void Scheduler::loop()
 			}
 		}
 	} else {
-		// Serial.println("No task to run");
+		// DEBUG("No task to run");
 	}
 }
 

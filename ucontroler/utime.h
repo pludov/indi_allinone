@@ -8,7 +8,11 @@
 #ifndef UTIME_H_
 #define UTIME_H_
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#include <stdint.h>
+#endif
 
 class ShortDuration
 {
