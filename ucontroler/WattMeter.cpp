@@ -3,6 +3,9 @@
 #include "WattMeter.h"
 #include "Utils.h"
 #include "CommonUtils.h"
+#include "EepromStored.h"
+#include "IndiVectorMemberStorage.h"
+
 #define STATUS_NEED_SCAN 0
 #define STATUS_MEASURE 1
 #define STATUS_IDLE 2
@@ -12,7 +15,7 @@
 #define CONTROL_TARGET_TEMP 2
 #define CONTROL_DEW_POINT_DELTA 2
 
-WattMeter::WattMeter(uint8_t vPin, uint8_t aPin, int suffix)
+WattMeter::WattMeter(uint8_t vPin, uint8_t aPin, int suffix, uint32_t addr)
     :Scheduled(F("WattMeter")),
     group(Symbol(F("Watt Meter"), suffix)),
 	statusVec(group, Symbol(F("WATT_METER_MEASURE"), suffix), F("Measure")),
@@ -45,6 +48,11 @@ WattMeter::WattMeter(uint8_t vPin, uint8_t aPin, int suffix)
     // Default values (will be overwritten during init)
     vMult.setValue(1.0);
     aMult.setValue(1.0);
+
+    IndiVectorMemberStorage::remember(&vBias, EepromStored::Addr(addr, 1));
+    IndiVectorMemberStorage::remember(&vMult, EepromStored::Addr(addr, 2));
+    IndiVectorMemberStorage::remember(&aBias, EepromStored::Addr(addr, 3));
+    IndiVectorMemberStorage::remember(&aMult, EepromStored::Addr(addr, 4));
 
     vBiasVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
     vMultVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
