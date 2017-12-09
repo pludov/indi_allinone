@@ -175,7 +175,7 @@ void BinSerialWriteBuffer::writeBool(bool b)
 void BinSerialWriteBuffer::writeFloat(float value)
 {
 	char buffer[32];
-	snprintf(buffer, 32, "%.2f", value);
+	snprintf(buffer, 32, "%f", value);
 	writeString(buffer);
 }
 
