@@ -1,6 +1,4 @@
-#ifdef ARDUINO
 #include <Arduino.h>
-#endif
 
 #include "WattMeter.h"
 #include "Utils.h"
@@ -17,10 +15,25 @@
 WattMeter::WattMeter(uint8_t vPin, uint8_t aPin, int suffix)
     :Scheduled(F("WattMeter")),
     group(Symbol(F("Watt Meter"), suffix)),
+	statusVec(group, Symbol(F("WATT_METER_MEASURE"), suffix), F("Measure")),
+    v(&statusVec, F("WATT_METER_VOLTAGE"), F("Voltage"),0, 160, 1),
+    a(&statusVec, F("WATT_METER_CURRENT"), F("Current"),0, 10, 1),
 
-	statusVec(group, Symbol(F("WATT_METTER_MEASURE"), suffix), F("Measure")),
-    v(&statusVec, F("WATT_METTER_MEASURE_V"), F("Volt"),0, 160, 1),
-    a(&statusVec, F("WATT_METTER_MEASURE_A"), F("Ampere"),0, 10, 1)
+	vBiasVec(group, Symbol(F("WATT_METER_S_VOLTAGE_BIAS"), suffix), F("Voltage Bias"), VECTOR_READABLE | VECTOR_WRITABLE),
+	vBias(&vBiasVec, F("WATT_METER_VOLTAGE_BIAS"), F("Voltage Bias"),-8192, 8192, 1),
+
+	vMultVec(group, Symbol(F("WATT_METER_S_VOLTAGE_MULT"), suffix), F("Voltage Mult"), VECTOR_READABLE | VECTOR_WRITABLE),
+	vMult(&vMultVec, F("WATT_METER_VOLTAGE_MULT"), F("Voltage Mult"),0, 100, 1),
+
+	aBiasVec(group, Symbol(F("WATT_METER_S_CURRENT_BIAS"), suffix), F("Current Bias"), VECTOR_READABLE | VECTOR_WRITABLE),
+	aBias(&aBiasVec, F("WATT_METER_CURRENT_BIAS"), F("Current Bias"),-8192, 8192, 1),
+
+	aMultVec(group, Symbol(F("WATT_METER_S_CURRENT_MULT"), suffix), F("Current Mult"), VECTOR_READABLE | VECTOR_WRITABLE),
+	aMult(&aMultVec, F("WATT_METER_CURRENT_MULT"), F("Current Mult"),0, 100, 1),
+
+
+	lastAVal(-1),
+	lastVVal(-1)
 {
     this->priority = 2;
     this->aPin = aPin;
@@ -29,30 +42,48 @@ WattMeter::WattMeter(uint8_t vPin, uint8_t aPin, int suffix)
     this->cpt = 0;
     this->aval = 0;
     this->vval = 0;
-//     powerMode.onRequested(VectorCallback(&DewHeater::powerModeChanged, this));
+    // Default values (will be overwritten during init)
+    vMult.setValue(1.0);
+    aMult.setValue(1.0);
+
+    vBiasVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
+    vMultVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
+    aBiasVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
+    aMultVec.onRequested(VectorCallback(&WattMeter::updateValues, this));
 }
 
 void WattMeter::tick()
 {
 	// 50hz = 20ms
-    this->nextTick = UTime::now() + MS(20);
+    this->nextTick = UTime::now() + MS(50);
     long l = micros();
     analogReadResolution(12);
-    int nvaval = analogRead(aPin);
     int nvvval = analogRead(vPin);
+    int nvaval = analogRead(aPin);
     l = micros() - l;
-    DEBUG(F("Read done in "),l);
+
 
     aval += nvaval;
     vval += nvvval;
     cpt++;
     if (cpt == 50) {
+    	DEBUG(F("Read done in "),l);
+
     	aval /= 50;
     	vval /= 50;
-    	a.setValue(aval);
-   	    v.setValue(vval);
+    	lastAVal = aval;
+    	lastVVal = vval;
    	    aval = 0;
    	    vval = 0;
    	    cpt = 0;
+   	    updateValues();
     }
+}
+
+void WattMeter::updateValues()
+{
+	double vf = lastVVal == -1 ? -1 : (lastVVal - vBias.getDoubleValue()) * vMult.getDoubleValue();
+	double af = lastAVal == -1 ? -1 : (lastAVal - aBias.getDoubleValue()) * aMult.getDoubleValue();
+	v.setValue(vf);
+	a.setValue(af);
 }

@@ -15,9 +15,21 @@ class WattMeter : public Scheduled {
     IndiFloatVectorMember v;
     IndiFloatVectorMember a;
 
+    IndiNumberVector vBiasVec;
+    IndiFloatVectorMember vBias;
+    IndiNumberVector vMultVec;
+    IndiFloatVectorMember vMult;
+
+    IndiNumberVector aBiasVec;
+    IndiFloatVectorMember aBias;
+    IndiNumberVector aMultVec;
+    IndiFloatVectorMember aMult;
+
     uint8_t aPin;
     uint8_t vPin;
     uint8_t cpt;
+    int16_t lastAVal;
+    int16_t lastVVal;
     int aval, vval;
 
     void scan();
@@ -27,6 +39,8 @@ class WattMeter : public Scheduled {
     void failed();
 
     void setControlMode(uint8_t value);
+
+    void updateValues();
 
     void setPwmLevel(float level);
 public:
