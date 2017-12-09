@@ -3,9 +3,9 @@
 
 #ifdef ARDUINO
 
-#ifndef Serial1
+/*#ifndef Serial1
 #define Serial1 Serial
-#endif
+#endif*/
 
 template<typename T>
 void debugItem(T t) { Serial1.print(t); };

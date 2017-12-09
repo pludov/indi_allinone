@@ -31,6 +31,8 @@
 #include <DallasTemperature.h>                // DS18B20 temp sensor
 #include <EEPROM.h>                           // EEPROM Library
 
+#include "CommonUtils.h"
+
 #include "IndiProtocol.h"
 #include "ScheduledIndiProtocol.h"
 #include "IndiVector.h"
@@ -49,8 +51,6 @@
 #include "MeteoTemp.h"
 #include "voltmeter.h"
 #include "Config.h"
-#include "debug.h"
-#include "SerialIO.h"
 #include "DewHeater.h"
 #include "WattMeter.h"
 
@@ -142,15 +142,15 @@ Status status;
 //------------------------------------------------------------------
 // ASCOM Serial Commands
 //------------------------------------------------------------------
-void serialCommand(String command) {
-	if (command.length() == 0) {
-		serialIO.sendPacket("ERR");
-		return;
-	}
-	switch (command.charAt(0)) {
-	case 'X':  // Confirm Connection
-		serialIO.sendPacket(command);
-		break;
+//void serialCommand(String command) {
+//	if (command.length() == 0) {
+//		serialIO.sendPacket("ERR");
+//		return;
+//	}
+//	switch (command.charAt(0)) {
+//	case 'X':  // Confirm Connection
+//		serialIO.sendPacket(command);
+//		break;
 // 	case 'T': // Set Target Position
 // 	{
 // 		String targetPosS = command.substring(1);
@@ -276,12 +276,12 @@ void serialCommand(String command) {
 // 		}
 // 		break;
 // 	}
-	default: {
-		serialIO.sendPacket("ERR");
-		break;
-	}
-	}
-}
+//	default: {
+//		serialIO.sendPacket("ERR");
+//		break;
+//	}
+//	}
+//}
 //------------------------------------------------------------------
 
 //------------------------------------------------------------------
@@ -291,53 +291,11 @@ void setup() {
 	// initialize serial for ASCOM
 	Serial.begin(115200);
 	Serial1.begin(115200);
-	Serial1.println(F("Init!"));
+	DEBUG(F("Init!"));
 	
 	delay(500);
-#ifdef DEBUG
-	Serial.println(F("Welcome on board2"));
-	Serial.println(F("Commands are"));
-	Serial.println(F("X - confirm"));
-	Serial.println(F("T? - set focuser pos"));
-	Serial.println(F("F? - set fw pos"));
-	Serial.println(F("Q? - calibrate fw to pos"));
-	Serial.println(F("C - get temp"));
-	Serial.println(F("I? - set focuser pos"));
-	Serial.println(F("P - get focuser pos"));
-	Serial.println(F("f - get fw pos & status"));
-	Serial.println(F("H - halt focuser"));
-	Serial.println(F("M - is focuser moving"));
-	Serial.println(F("V - version"));
-	Serial.println(F("S - query status"));
-	Serial.println(F("Z? - get conf item"));
-	Serial.println(F("Z?=HEX - set conf item"));
 
-
-
-	delay(500);
-#endif
 	// reserve 200 bytes for the ASCOM driver inputString:
-
-
-	//EEPROM.write(EE_LOC_PSTAT, 0); // FOR TESTING - invalidate stored position
-
-	// Use position from EEPROM if it is valid, otherwise use default
-	//config.init();
-#ifdef DEBUG
-	Serial.println(F("done with init conf"));
-#endif
-
-	//motor.loadConfigPosition();
-	//filterWheelMotor.loadConfigPosition();
-#ifdef DEBUG
-	Serial.println(F("now reset search"));
-#endif
-	// OneWire Libary setup
-	oneWire.reset_search();                    // Reset search
-
-#ifdef DEBUG
-	Serial.println(F("Init done"));
-#endif
 
 
 	DewHeater * dw = new DewHeater(11, 9, 1);
@@ -347,7 +305,7 @@ void setup() {
 
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
-	Serial1.println(F("Welcome!"));
+	DEBUG(F("Welcome!"));
 
 	/*uint8_t buffer[4096];
 	XmlWriteBuffer into(buffer, 4096);
@@ -370,12 +328,6 @@ UTime previousTime = UTime::now();
 // Main Loop
 //------------------------------------------------------------------
 void loop() {
-	// process the command string when a hash arrives:
-	if (serialIO.hasReadyInput()) {
-
-		serialCommand(serialIO.getReadyInput());
-	}
-
 	Scheduler::instance().loop();
 }
 

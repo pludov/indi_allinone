@@ -5,7 +5,7 @@
  *      Author: utilisateur
  */
 #include <Arduino.h>
-#include "debug.h"
+#include "CommonUtils.h"
 #include "voltmeter.h"
 #include "MainLogic.h"
 #include "Status.h"
@@ -29,10 +29,9 @@ void Voltmeter::tick()
 
 	// 627 => 11.89
 	unsigned int v = ((unsigned long)rawV * 100 * config.storedVoltmeter().voltmeter_mult) >> 17;
-#ifdef DEBUG
-	Serial.print("V:");
-	Serial.println(v);
-#endif
+
+	DEBUG(F("V:"), v);
+
 	this->nextTick += LongDuration::seconds(2);
 
 	if (this->lastv != v) {

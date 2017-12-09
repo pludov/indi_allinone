@@ -6,9 +6,9 @@
  */
 
 #include <Arduino.h>
+#include "CommonUtils.h"
 #include "FilterWheelMotor.h"
 #include "Status.h"
-#include "debug.h"
 
 #define POS_INVALID ((uint32_t)-1L)
 
@@ -66,9 +66,7 @@ void FilterWheelMotor::targetPositionReached()
 {
 	if (calibrating) {
 		calibrating = false;
-#ifdef DEBUG
-		Serial.println(F("calibration failed"));
-#endif
+		DEBUG(F("calibration failed"));
 
 		this->speedLevel = 0;
 		this->clearOutput();
@@ -94,9 +92,8 @@ void FilterWheelMotor::tick()
 			loadPosition(0);
 			status.needUpdate();
 			setTargetPosition(calibrationTarget);
-#ifdef DEBUG
-			Serial.println(F("calibration succeded"));
-#endif
+			DEBUG(F("calibration succeded"));
+
 			return;
 
 		}

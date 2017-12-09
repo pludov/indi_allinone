@@ -6,8 +6,10 @@
  */
 #include <Arduino.h>
 #include <EEPROM.h>                           // EEPROM Library
-#include "debug.h"
 #include "Config.h"
+#include "CommonUtils.h"
+
+#define DEBUG_FINE(...)
 
 #define STORAGE_SIGNATURE 0x3F8523F1
 
@@ -54,21 +56,13 @@ int getCurrentOffset(int storage)
 
 void setCurrentOffset(int storage, int offset)
 {
-#ifdef DEBUG
-	Serial.print(F("Set conf offset"));
-	Serial.print(storage);
-	Serial.print(F(" to "));
-	Serial.println(offset);
-#endif
+	DEBUG_FINE(F("Set conf offset"), storage, F(" to "), offset);
 	EEPROM.write(STORAGE_PTR_OFFSET + storage, offset);
 }
 
 void relocate(int storage)
 {
-#ifdef DEBUG
-	Serial.print(F("relocate "));
-	Serial.println(storage);
-#endif
+	DEBUG_FINE(F("relocate "), storage);
 
 	int newPos = 0;
 	for(int i = 0; i < STORAGE_COUNT; ++i)
@@ -119,20 +113,16 @@ void Config::init()
 	if (initialised) {
 		return;
 	}
-#ifdef DEBUG
-	Serial.println(F("Check conf"));
-#endif
+
+	DEBUG(F("Check conf"));
 	uint32_t signature;
 	read((uint8_t*)&signature, STORAGE_SIG_OFFSET, sizeof(signature));
-#ifdef DEBUG
-	Serial.print(F("Readed signature"));
-	Serial.println(signature);
-#endif
+	DEBUG_FINE(F("Readed signature"), signature);
+
 	if (signature != STORAGE_SIGNATURE) {
 
-#ifdef DEBUG
-		Serial.println(F("Init default conf"));
-#endif
+		DEBUG(F("Init default conf"));
+
 		for(int i = 0; i < STORAGE_COUNT; ++i) {
 			setCurrentOffset(i, i);
 		}
@@ -172,40 +162,25 @@ void Config::init()
 		signature = STORAGE_SIGNATURE;
 		write((uint8_t*)&signature, STORAGE_SIG_OFFSET, sizeof(signature));
 	} else {
-#ifdef DEBUG
-		Serial.println(F("conf sig ok"));
-#endif
+		DEBUG_FINE(F("conf sig ok"));
 	}
 
 	for(uint8_t i = 0; i < STORAGE_COUNT; ++i) {
 		readStorage(i, getRawStorageData(i));
 	}
 
-#ifdef DEBUG
-	Serial.println(F("config:"));
-	Serial.print(F(" pos:"));
-	Serial.println(storedPosition().position);
-	Serial.print(F(" range:"));
-	Serial.println(storedRange().maxPosition);
-	Serial.print(F(" temp.extTD:"));
-	Serial.println(storedTemperature().extTempDelta);
-	Serial.print(F(" temp.humBias:"));
-	Serial.println(storedTemperature().humBias);
-	Serial.print(F(" temp.humFactor:"));
-	Serial.println(storedTemperature().humFactor);
-	Serial.print(F(" temp.intTD:"));
-	Serial.println(storedTemperature().intTempDelta);
-	Serial.print(F(" volt.minVol:"));
-	Serial.println(storedVoltmeter().minVol);
-	Serial.print(F(" volt.vmul:"));
-	Serial.println(storedVoltmeter().voltmeter_mult);
-	Serial.print(F(" volt.targetTemp:"));
-	Serial.println(storedVoltmeter().targetDewPoint);
-	Serial.print(F(" volt.pwmAgg:"));
-	Serial.println(storedVoltmeter().pwmAggressiveness);
-	Serial.print(F(" filterwheel.pos:"));
-	Serial.println(storedFilterWheelPosition().position);
-#endif
+	DEBUG(F("config:"));
+	DEBUG(F(" pos:"), storedPosition().position);
+	DEBUG(F(" range:") ,storedRange().maxPosition);
+	DEBUG(F(" temp.extTD:"), storedTemperature().extTempDelta);
+	DEBUG(F(" temp.humBias:"), storedTemperature().humBias);
+	DEBUG(F(" temp.humFactor:"), storedTemperature().humFactor);
+	DEBUG(F(" temp.intTD:"), storedTemperature().intTempDelta);
+	DEBUG(F(" volt.minVol:"), storedVoltmeter().minVol);
+	DEBUG(F(" volt.vmul:"), storedVoltmeter().voltmeter_mult);
+	DEBUG(F(" volt.targetTemp:"), storedVoltmeter().targetDewPoint);
+	DEBUG(F(" volt.pwmAgg:"), storedVoltmeter().pwmAggressiveness);
+	DEBUG(F(" filterwheel.pos:"),storedFilterWheelPosition().position);
 	initialised = true;
 }
 

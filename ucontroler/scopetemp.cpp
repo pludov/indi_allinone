@@ -4,8 +4,8 @@
  *  Created on: 4 févr. 2015
  *      Author: utilisateur
  */
-
-#include "debug.h"
+#include <Arduino.h>
+#include "CommonUtils.h"
 #include "scopetemp.h"
 #include "MainLogic.h"
 #include "Status.h"
@@ -33,9 +33,7 @@ ScopeTemp::ScopeTemp(OneWire * oneWire): Scheduled::Scheduled(F("ScopeTemp")), d
 		this->tickExpectedDuration = REQUEST_DURATION;
 		requested = false;
 	} else {
-#ifdef DEBUG
-		Serial.println(F("dallas sensor not found"));
-#endif
+		DEBUG(F("dallas sensor not found"));
 		this->nextTick = UTime::never();
 	}
 	this->lastValue = NAN;
@@ -65,9 +63,9 @@ bool ScopeTemp::searchSensor()
 
 void ScopeTemp::tick()
 {
-#ifdef DEBUG
+
 	long now = micros();
-#endif
+
 	if (!requested) {
 		dallas.requestTemperatures();
 		requested++;
@@ -91,13 +89,8 @@ void ScopeTemp::tick()
 		if (lastValue == DEVICE_DISCONNECTED_C) {
 			lastValue = NAN;
 		}
-#ifdef DEBUG
-		Serial.print(F("Scope temp: "));
-		Serial.print(lastValue);
-		Serial.print(F(" after "));
-		Serial.print(requested - 1);
-		Serial.println(F("retries"));
-#endif
+
+		DEBUG(F("Scope temp: "), lastValue, F(" after "), requested - 1, F("retries"));
 		this->nextTick = UTime::now() + REFRESH_DEFAULT_INTERVAL;
 		this->tickExpectedDuration = REQUEST_DURATION;
 		requested = 0;
@@ -105,9 +98,6 @@ void ScopeTemp::tick()
 		status.needUpdate();
 	}
 
-#ifdef DEBUG
 	now = micros() - now;
-	Serial.print(F("dallas:"));
-	Serial.println(now);
-#endif
+	DEBUG(F("dallas:"), now);
 }

@@ -5,13 +5,13 @@
  *      Author: utilisateur
  */
 #include <Arduino.h>
+#include "CommonUtils.h"
 #include "MainLogic.h"
 #include "MeteoTemp.h"
 #include "scopetemp.h"
 #include "pwmresistor.h"
 #include "Status.h"
 #include "Config.h"
-#include "debug.h"
 
 extern PWMResistor resistor;
 
@@ -60,14 +60,10 @@ void MainLogic::updatePwm()
 	float extTemp = meteoTemp.lastTemperature();
 	float extHum = meteoTemp.lastHumidity();
 	if (isnan(scopeValue)) {
-#ifdef DEBUG
-		Serial.println("No scope value");
-#endif
+		DEBUG(F("No scope value"));
 		return;
 	} else if (isnan(extTemp) || isnan(extHum)) {
-#ifdef DEBUG
-		Serial.println("no ext value");
-#endif
+		DEBUG(F("no ext value"));
 		return;
 	}
 
@@ -77,10 +73,8 @@ void MainLogic::updatePwm()
 	} else {
 		dewPoint = dewPointFast(extTemp, extHum);
 	}
-#ifdef DEBUG
-	Serial.print("dewpoint:");
-	Serial.println(dewPoint);
-#endif
+
+	DEBUG(F("dewpoint:"), dewPoint);
 	int pwm = resistor.pct;
 	float target = config.getTargetDeltaTemp();
 	if (scopeValue < dewPoint + target - 0.5) {
