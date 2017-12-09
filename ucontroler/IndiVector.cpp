@@ -12,6 +12,7 @@
 #include "IndiDevice.h"
 #include "IndiProtocol.h"
 #include "IndiVector.h"
+#include "IndiVectorMemberStorage.h"
 #include "IndiVectorMember.h"
 
 #include "CommonUtils.h"
@@ -214,7 +215,10 @@ bool IndiVector::doUpdate(IndiVectorUpdateRequest & request)
 	int changeCount = 0;
 	for(int i = 0; i < request.updatedMemberCount; ++i) {
 		request.seekAt(i);
-		changeCount += request.members[i]->readValue(*request.readBuffer) ? 1 : 0;
+		if (request.members[i]->readValue(*request.readBuffer)) {
+			request.members[i]->saveToStorage();
+			changeCount ++;
+		}
 	}
 	if (changeCount) {
 		this->notifyUpdate(VECTOR_VALUE);

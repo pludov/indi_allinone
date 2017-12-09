@@ -11,15 +11,22 @@
 #include "Symbol.h"
 #include "ReadBuffer.h"
 
+class IndiVectorMemberStorage;
+
 class IndiVectorMember {
 	friend class IndiVector;
+	friend class IndiVectorMemberStorage;
 public:
 	IndiVectorMember * next;
 	Symbol name;
 	Symbol label;
 	IndiVector * vector;
+	IndiVectorMemberStorage * storage;
 
 	void notifyVectorUpdate(uint8_t commId);
+protected:
+	void setStorage(IndiVectorMemberStorage * storage);
+	void saveToStorage();
 public:
 	IndiVectorMember(IndiVector * vector, 
 			const Symbol & name,

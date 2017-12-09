@@ -12,13 +12,15 @@
 #include "IndiProtocol.h"
 #include "IndiVector.h"
 #include "IndiVectorMember.h"
+#include "IndiVectorMemberStorage.h"
 
 
 IndiVectorMember::IndiVectorMember(IndiVector * vector, 
 	const Symbol & name,
 	const Symbol & label) :
 	name(name),
-	label(label)
+	label(label),
+	storage(nullptr)
 {
 	this->vector = vector;
 	next = 0;
@@ -35,4 +37,16 @@ IndiVectorMember::~IndiVectorMember()
 
 void IndiVectorMember::notifyVectorUpdate(uint8_t commId) {
 	vector->notifyUpdate(commId);
+}
+
+void IndiVectorMember::saveToStorage()
+{
+	if (storage) {
+		storage->save();
+	}
+}
+
+void IndiVectorMember::setStorage(IndiVectorMemberStorage * storage)
+{
+	this->storage = storage;
 }

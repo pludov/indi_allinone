@@ -32,7 +32,7 @@
 #include <EEPROM.h>                           // EEPROM Library
 
 #include "CommonUtils.h"
-
+#include "EepromStored.h"
 #include "IndiProtocol.h"
 #include "ScheduledIndiProtocol.h"
 #include "IndiVector.h"
@@ -301,7 +301,9 @@ void setup() {
 	DewHeater * dw = new DewHeater(11, 9, 1);
 	DewHeater * dw2 = new DewHeater(12, 10, 2);
 	new MeteoTemp(8, DHT22);
-	new WattMeter(5, 4, 0);
+	new WattMeter(5, 4, 0, 1);
+
+	EepromStored::init();
 
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);

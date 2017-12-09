@@ -10,6 +10,7 @@
 
 #include "Scheduler.h"
 #include "EepromStored.h"
+#include "IndiVectorMemberStorage.h"
 #include "CommonUtils.h"
 
 #define DEBUG_FINE(...)
