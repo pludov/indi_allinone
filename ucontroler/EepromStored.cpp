@@ -117,7 +117,7 @@ EepromStored::~EepromStored() {
 
 void EepromStored::eRead(uint16_t pos, void * ptr, int count)
 {
-	uint8_t * v = ptr;
+	uint8_t * v = (uint8_t*)ptr;
 	for(int i = 0; i < count; ++i)
 	{
 		v[i] = EEPROM.read(pos + i);
@@ -143,7 +143,7 @@ uint32_t EepromStored::eRead32(uint16_t pos)
 
 bool EepromStored::eWrite(uint16_t pos, void * ptr, int count)
 {
-	uint8_t * v = ptr;
+	uint8_t * v = (uint8_t*)ptr;
 	bool rslt = false;
 	for(int i = 0; i < count; ++i)
 	{
@@ -383,7 +383,7 @@ void EepromStored::fullRewrite() {
 	int paddingLeft = padding;
 
 	EepromStored * items[itemCount];
-	int i;
+	int i = 0;
 	for(EepromStored * item = first; item; item = item->next)
 	{
 		items[i++] = item;
