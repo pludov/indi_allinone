@@ -29,6 +29,7 @@ set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiProtocol.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVector.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorMemberStorage.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVector.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiSwitchVector.cpp
