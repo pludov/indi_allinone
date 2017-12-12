@@ -12,23 +12,33 @@
 #define CONTROL_TARGET_TEMP 2
 #define CONTROL_DEW_POINT_DELTA 2
 
+// Operating modes:
+//   - Forced (targetPwm 0 -> 100%)
+//   - target temperature (use pid to targetTemp)
+//   - above dew point (use pid to stay a fixed °C above dewpoint
 DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     :Scheduled(F("DewHeater")),
     group(Symbol(F("DEW_HEATER"), suffix)),
 
-	statusVec(group, Symbol(F("DEW_HEATER_TEMP"), suffix), F("HW Temperature")),
+	statusVec(group, Symbol(F("DEW_HEATER_INFO_TEMP"), suffix), F("HW Temperature")),
     temperature(&statusVec, F("DEW_HEATER_TEMP_VALUE"), F("Readen Temperature (°C)"),-273.15, 100, 1),
     pwm(&statusVec, F("DEW_HEATER_PWM_LEVEL"), F("Power applied (%)"),0, 100, 1),
 
-    uidVec(group, Symbol(F("DEW_HEATER_UID"), suffix), F("Unique Identifier")),
+    uidVec(group, Symbol(F("DEW_HEATER_INFO_UID"), suffix), F("Unique Identifier")),
     uid(&uidVec, F("DEW_HEATER_UID_VALUE"), F("Unique Identifier"),12),
 
-	powerMode(group, Symbol(F("POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
+	powerMode(group, Symbol(F("DEW_HEATER_POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
 	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
 	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
 
-	targetPwmVec(group, Symbol(F("DEW_HEATER_TARGET_PWM"),suffix), F("Power")),
+	targetPwmVec(group, Symbol(F("DEW_HEATER_TARGET_PWM"),suffix), F("Fixed Power"), VECTOR_WRITABLE|VECTOR_READABLE),
 	targetPwm(&targetPwmVec, F("TARGET_PWM"), F("0-100"), 0, 100, 0.1),
+
+	targetTempVec(group, Symbol(F("DEW_HEATER_TARGET_TEMP"),suffix), F("Fixed Temperature"), VECTOR_WRITABLE|VECTOR_READABLE),
+	targetTemp(&targetTempVec, F("TARGET_TEMPERATURE"), F("C"), -100, 100, 0.1),
+
+	targetTempAboveVec(group, Symbol(F("DEW_HEATER_TARGET_TEMP_ABOVE_DP"),suffix), F("Above Dew Point"), VECTOR_WRITABLE|VECTOR_READABLE),
+	targetTempAbove(&targetTempAboveVec, F("TARGET_TEMPERATURE_ABOVE_DP"), F("C"), -100, 100, 0.1),
 
     oneWire(pin)
 {
@@ -46,6 +56,14 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
 void DewHeater::powerModeChanged()
 {
 	DEBUG(F("Power mode changed to"), powerMode.getCurrent()->name);
+	double currentPwm = targetPwm.getValue();
+	if (currentPwm > 0.1) {
+		DEBUG(F("********* Power mode ON for "), pwmPin);
+		digitalWrite(pwmPin, 1);
+	} else {
+		digitalWrite(pwmPin, 0);
+		DEBUG(F("********** Power mode OFF for "), pwmPin);
+	}
 }
 
 // void setControlMode(uint8_t value)

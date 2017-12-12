@@ -25,6 +25,12 @@ class DewHeater : public Scheduled {
     IndiNumberVector targetPwmVec;
     IndiFloatVectorMember targetPwm;
 
+    IndiNumberVector targetTempVec;
+    IndiFloatVectorMember targetTemp;
+
+    IndiNumberVector targetTempAboveVec;
+    IndiFloatVectorMember targetTempAbove;
+
     OneWire oneWire;
     uint8_t pwmPin;
     uint8_t status;
