@@ -424,7 +424,6 @@ public:
 
     void announceAll()
     {
-    	std::map<std::string, IndiVectorImage*> propsByName;
     	for (auto it = propsByName.begin() ; it != propsByName.end() ; it ++ ) {
     	    IndiVectorImage * img = it->second;
     	    announceVector(img);
