@@ -386,6 +386,11 @@ public:
     	current->announced = true;
     	propsByName[current->vector->name] = current;
     	propsByUid[current->vector->uid] = current;
+    	announceVector(current);
+    }
+
+    void announceVector(IndiVectorImage* current) {
+    	IndiVector * vector = current->vector;
 
     	switch(vector->kind().uid)
     	{
@@ -414,6 +419,15 @@ public:
     		}
     	default:
     		std::cerr << "Unsupported vector kind for announce: " << ((int)vector->kind().uid) << "\n";
+    	}
+    }
+
+    void announceAll()
+    {
+    	std::map<std::string, IndiVectorImage*> propsByName;
+    	for (auto it = propsByName.begin() ; it != propsByName.end() ; it ++ ) {
+    	    IndiVectorImage * img = it->second;
+    	    announceVector(img);
     	}
     }
 
@@ -593,6 +607,7 @@ public:
     // Handle a request from a client to update a number vector
     bool reqNewNumber(const char *name, double values[], char *names[], int n)
     {
+    	std::cerr << "reqNewNumber:" << name << " <= " << values[0] << "\n";
     	return reqNewSomething(IndiNumberVectorKindUid, name, (void*)values, sizeof(double), names, n);
     }
 
@@ -610,6 +625,18 @@ public:
     	return reqNewSomething(IndiSwitchVectorKindUid, name, (void*)boolValues, sizeof(bool), names, n);
     }
 };
+
+void SimpleDevice::ISGetProperties(const char * dev)
+{
+	INDI::DefaultDevice::ISGetProperties(dev);
+	Lock l(&sharingMutex);
+	l.lock();
+	if (currentIndiProtocol) {
+		currentIndiProtocol->announceAll();
+	}
+}
+
+
 
 void SimpleDevice::beforeDisconnect()
 {

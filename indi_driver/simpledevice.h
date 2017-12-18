@@ -79,5 +79,5 @@ class SimpleDevice : public INDI::DefaultDevice
     virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
     virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n);
-
+    virtual void ISGetProperties(const char * dev);
 };
