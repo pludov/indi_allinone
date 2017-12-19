@@ -20,7 +20,7 @@ class DewHeater : public Scheduled {
     IndiTextVectorMember uid;
 
     IndiSwitchVector powerMode;
-    IndiSwitchVectorMember powerModeOff, powerModeForced;
+    IndiSwitchVectorMember powerModeOff, powerModeForced, powerModeByTemp, powerModeOverDew;
 
     IndiNumberVector targetPwmVec;
     IndiFloatVectorMember targetPwm;

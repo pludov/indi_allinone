@@ -16,6 +16,7 @@
 //   - Forced (targetPwm 0 -> 100%)
 //   - target temperature (use pid to targetTemp)
 //   - above dew point (use pid to stay a fixed °C above dewpoint
+// This misses a "save" button
 DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     :Scheduled(F("DewHeater")),
     group(Symbol(F("DEW_HEATER"), suffix)),
@@ -30,6 +31,9 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
 	powerMode(group, Symbol(F("DEW_HEATER_POWER_MODE"), suffix), F("Power Mode"), VECTOR_WRITABLE|VECTOR_READABLE),
 	powerModeOff(&powerMode, F("POWER_MODE_OFF"), F("Off")),
 	powerModeForced(&powerMode, F("POWER_MODE_FORCED"), F("Forced")),
+	powerModeByTemp(&powerMode, F("POWER_MODE_BY_TEMP"), F("Target temp")),
+	powerModeOverDew(&powerMode, F("POWER_MODE_OVER_DEW"), F("Follow dew point")),
+
 
 	targetPwmVec(group, Symbol(F("DEW_HEATER_TARGET_PWM"),suffix), F("Fixed Power"), VECTOR_WRITABLE|VECTOR_READABLE),
 	targetPwm(&targetPwmVec, F("TARGET_PWM"), F("0-100"), 0, 100, 0.1),
@@ -50,32 +54,41 @@ DewHeater::DewHeater(uint8_t pin, uint8_t pwmPin, int suffix)
     pinMode(pwmPin, OUTPUT);
     digitalWrite(pwmPin, 0);
 
+    // Use 50hz so that AC filtering may help
+    analogWriteFrequency(pwmPin, 50);
+
     powerMode.onRequested(VectorCallback(&DewHeater::powerModeChanged, this));
 }
 
 void DewHeater::powerModeChanged()
 {
 	DEBUG(F("Power mode changed to"), powerMode.getCurrent()->name);
-	double currentPwm = targetPwm.getValue();
-	if (currentPwm > 0.1) {
-		DEBUG(F("********* Power mode ON for "), pwmPin);
-		digitalWrite(pwmPin, 1);
+	// 0 - 255
+	int effectivePwm = 0;
+
+	if (powerModeForced.getValue()) {
+		double d = targetPwm.getDoubleValue();
+		if (d < 0) d = 0;
+		if (d > 100) d = 100;
+		effectivePwm = d * 255 / 100.0;
+	} else if (powerModeByTemp.getValue() || powerModeOverDew.getValue()) {
+		if (!*uid.getTextValue()) {
+			// Pas de connection
+			effectivePwm = 0;
+		} else {
+			// just
+			effectivePwm = 1;
+		}
 	} else {
-		digitalWrite(pwmPin, 0);
-		DEBUG(F("********** Power mode OFF for "), pwmPin);
+		// Check ° connection or set 0
+
+		// Assume off
+		effectivePwm = 0;
 	}
+
+	analogWrite(pwmPin, effectivePwm);
+	pwm.setValue(effectivePwm * 100.0 / 255.0);
 }
-
-// void setControlMode(uint8_t value)
-// {
-//     switch(value) {
-//         case CONTROL_OFF:
-//             setPwmLevel(0);
-//             break;
-//         case CONTROL_PWM_LEVEL:
-
-//     }
-// }
 
 void DewHeater::setPwmLevel(float level)
 {
@@ -85,8 +98,7 @@ void DewHeater::setPwmLevel(float level)
 void DewHeater::failed()
 {
     uid.setValue("");
-    // Shutdown
-    setPwmLevel(0);
+    powerModeChanged();
     this->status = STATUS_NEED_SCAN;
     this->nextTick = UTime::now() + MS(1000);
 }

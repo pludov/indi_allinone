@@ -20,16 +20,40 @@
 
 
 
-MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled(F("MeteoTemp")) {
+MeteoTemp::MeteoTemp(uint8_t pin, uint8_t type) : Scheduled(F("MeteoTemp")),
+	group(Symbol(F("METEO"))),
+	statusVec(group, Symbol(F("Meteo")), F("Measure")),
+	temp(&statusVec, F("METEO_TEMP"), F("Temp"), -100,100,1),
+	hum(&statusVec, F("METEO_HUM"), F("Hum (%)"), 0, 100, 1),
+	dewPoint(&statusVec, F("METEO_DEW_POINT"), F("Dew Point"), -100, 100, 1)
+{
 	_pin = pin;
 	_type = type;
 	_count = 27;
+
+	dewPointValue = NAN;
+	hasData = false;
 
 	// set up the pins!
 	pinMode(_pin, OUTPUT);
 	digitalWrite(_pin, HIGH);
 
+	setInvalid();
 	prepareStep1(true);
+}
+
+void MeteoTemp::setInvalid()
+{
+	temp.setValue(-1000);
+	hum.setValue(-1);
+	dewPoint.setValue(-1000);
+}
+
+void MeteoTemp::setValid()
+{
+	temp.setValue(tempValue);
+	hum.setValue(humValue);
+	dewPoint.setValue(dewPointValue);
 }
 
 void MeteoTemp::tick()
@@ -53,7 +77,7 @@ MeteoTemp::~MeteoTemp() {
 }
 
 
-float MeteoTemp::lastTemperature() {
+float MeteoTemp::extractTemperature() {
 	float f;
 
 	if (hasData) {
@@ -79,7 +103,7 @@ float MeteoTemp::lastTemperature() {
 }
 
 
-float MeteoTemp::lastHumidity(void) {
+float MeteoTemp::extractHumidity(void) {
 	float f;
 	if (hasData) {
 		switch (_type) {
@@ -134,11 +158,33 @@ void MeteoTemp::prepareStep3()
 {
 	nextTick = UTime::now() + 20000;
 	priority = 0;
-	// Jusqu'� 20 ms (pas de chance !)
+	// Jusqu'à 5 ms (pas de chance !)
 	tickExpectedDuration = MS(5);
 	nextStep = 3;
 }
 
+// delta max = 0.6544 wrt dewPoint()
+// 5x faster than dewPoint()
+// reference: http://en.wikipedia.org/wiki/Dew_point
+// Accurate to +-1 degree C as long as the relative humidity is above 50%
+static double dewPointFast(double celsius, double humidity) {
+  double a = 17.271;
+  double b = 237.7;
+  double temp = (a * celsius) / (b + celsius) + log(humidity / 100);
+  double Td = (b * temp) / (a - temp);
+  return Td;
+}
+
+// calculates dew point
+// input:   humidity [%RH], temperature in C
+// output:  dew point in C
+// use this where RH is < 50%
+static float calc_dewpoint(float t, float h) {
+  float logEx, dew_point;
+  logEx = 0.66077 + 7.5 * t / (237.3 + t) + (log10(h) - 2);
+  dew_point = (logEx - 0.66077) * 237.3 / (0.66077 + 7.5 - logEx);
+  return dew_point;
+}
 
 void MeteoTemp::doStep3()
 {
@@ -151,6 +197,7 @@ void MeteoTemp::doStep3()
 #endif
 	pinMode(_pin, OUTPUT);
 
+	// FIXME: noInterrupts for > 2ms = very bad practice
 	noInterrupts();
 	digitalWrite(_pin, HIGH);
 	delayMicroseconds(40);
@@ -193,8 +240,22 @@ void MeteoTemp::doStep3()
 	DEBUG(F("DHT="), isOk, F(" took:"), duration);
 	DEBUG(F("j="), j);
 
-	DEBUG(F("Temp="),lastTemperature(), "C");
-	DEBUG(F("Hum="),lastHumidity(), "%");
+
+	if (isOk) {
+		tempValue = extractTemperature();
+		humValue = extractHumidity();
+		dewPointValue = calc_dewpoint(tempValue, humValue);
+		DEBUG(F("Temp="),tempValue, "C");
+		DEBUG(F("Hum="),humValue, "%");
+		DEBUG(F("DewPoint="),dewPointValue, "C");
+
+		setValid();
+	} else {
+		tempValue = NAN;
+		humValue = NAN;
+		dewPointValue = NAN;
+		setInvalid();
+	}
 
 	prepareStep1(false);
 }
