@@ -3,12 +3,10 @@
 
 #ifdef ARDUINO
 
-/*#ifndef Serial1
-#define Serial1 Serial
-#endif*/
+#define SerialDbg Serial
 
 template<typename T>
-void debugItem(T t) { Serial1.print(t); };
+void debugItem(T t) { SerialDbg.print(t); };
 
 template<>
 void debugItem<const __FlashStringHelper*>(const __FlashStringHelper* t);/* {
@@ -21,12 +19,12 @@ void debugItem<const __FlashStringHelper*>(const __FlashStringHelper* t);/* {
 	}
 };*/
 
-#define DEBUG1(A) { debugItem(A);   Serial1.write('\r');Serial1.write('\n'); }
-#define DEBUG2(A, B) { debugItem(A);debugItem(B);   Serial1.write('\r');Serial1.write('\n'); }
-#define DEBUG3(A, B, C) { debugItem(A);debugItem(B);debugItem(C);   Serial1.write('\r');Serial1.write('\n');}
-#define DEBUG4(A, B, C, D) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);   Serial1.write('\r');Serial1.write('\n');}
-#define DEBUG5(A, B, C, D, E) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);   Serial1.write('\r');Serial1.write('\n');}
-#define DEBUG6(A, B, C, D, E, F) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);debugItem(F);   Serial1.write('\r');Serial1.write('\n');}
+#define DEBUG1(A) { debugItem(A);   SerialDbg.write('\r');SerialDbg.write('\n'); }
+#define DEBUG2(A, B) { debugItem(A);debugItem(B);   SerialDbg.write('\r');SerialDbg.write('\n'); }
+#define DEBUG3(A, B, C) { debugItem(A);debugItem(B);debugItem(C);   SerialDbg.write('\r');SerialDbg.write('\n');}
+#define DEBUG4(A, B, C, D) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);   SerialDbg.write('\r');SerialDbg.write('\n');}
+#define DEBUG5(A, B, C, D, E) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);   SerialDbg.write('\r');SerialDbg.write('\n');}
+#define DEBUG6(A, B, C, D, E, F) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);debugItem(F);   SerialDbg.write('\r');SerialDbg.write('\n');}
 #else
 
 #include <iostream>

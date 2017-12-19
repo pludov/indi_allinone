@@ -92,15 +92,10 @@ void ScheduledIndiProtocol::idle()
 
 	if (m - lastIdleMicros > 10000000) {
 		lastIdleMicros = m;
-		Serial1.println(m);
-		Serial1.print(F("I:"));
-		Serial1.print(incomingPacketSize);
-		Serial1.print(F("=>"));
-		Serial1.println(incomingPacketReady);
-		Serial1.print(F("O:"));
-		Serial1.println(writeBufferLeft);
+		DEBUG(m);
+		DEBUG(F("I:"), incomingPacketSize, F("=>"), incomingPacketReady, F("O:"), writeBufferLeft);
 		if (!welcomed) {
-			Serial1.println(F("Welc"));
+			DEBUG(F("Welcome needed !"));
 		}
 	}
 

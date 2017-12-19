@@ -305,7 +305,7 @@ void setup() {
 
 	EepromStored::init();
 
-	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
+	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial1);
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
 	DEBUG(F("Welcome!"));
 
