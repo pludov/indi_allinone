@@ -69,6 +69,8 @@ public:
 
 	static void init();
 
+	// Addr are in the range 0..127
+	static uint32_t Addr(uint8_t v);
 	static uint32_t Addr(uint32_t v1, uint8_t v2);
 	static uint32_t Addr(uint32_t v1, uint8_t v2, uint8_t v3);
 	static uint32_t Addr(uint32_t v1, uint8_t v2, uint8_t v3, uint8_t v4);

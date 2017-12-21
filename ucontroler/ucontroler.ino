@@ -297,11 +297,11 @@ void setup() {
 
 	// reserve 200 bytes for the ASCOM driver inputString:
 
+	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
 
-	DewHeater * dw = new DewHeater(11, 9, 1);
-	DewHeater * dw2 = new DewHeater(12, 10, 2);
-	new MeteoTemp(8, DHT22);
-	new WattMeter(5, 4, 0, 1);
+	DewHeater * dw = new DewHeater(meteoTemp, 11, 9, 1, EepromStored::Addr(2));
+	DewHeater * dw2 = new DewHeater(meteoTemp, 12, 10, 2, EepromStored::Addr(3));
+	new WattMeter(5, 4, 0, EepromStored::Addr(1));
 
 	EepromStored::init();
 

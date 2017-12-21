@@ -10,11 +10,14 @@
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
 
+
+class MeteoTemp;
 class DewHeater : public Scheduled {
     Symbol group;
     IndiNumberVector statusVec;
     IndiFloatVectorMember temperature;
     IndiFloatVectorMember pwm;
+    IndiFloatVectorMember dynTargetTemp;
 
     IndiTextVector uidVec;
     IndiTextVectorMember uid;
@@ -31,11 +34,25 @@ class DewHeater : public Scheduled {
     IndiNumberVector targetTempAboveVec;
     IndiFloatVectorMember targetTempAbove;
 
+    IndiNumberVector settingKpVec;
+    IndiFloatVectorMember settingKp;
+    IndiNumberVector settingKiVec;
+    IndiFloatVectorMember settingKi;
+    IndiNumberVector settingKdVec;
+    IndiFloatVectorMember settingKd;
+
+    MeteoTemp * meteoTemp;
     OneWire oneWire;
     uint8_t pwmPin;
     uint8_t status;
     uint8_t addr[8];
+    bool tempAvailable;
+    bool pidRunning;
+    bool pidDisabled;
 
+    double lastInput;
+    long lastTime;
+    double ITerm;
 
     void powerModeChanged();
 
@@ -48,8 +65,13 @@ class DewHeater : public Scheduled {
     void setControlMode(uint8_t value);
 
     void setPwmLevel(float level);
+
+    double getPidTarget();
+    void initPid();
+    void stopPid();
+    int updatePid();
 public:
-    DewHeater(uint8_t tempPin, uint8_t pwmPin, int suffix);
+    DewHeater(MeteoTemp * meteo, uint8_t tempPin, uint8_t pwmPin, int suffix, uint32_t eepromAddr);
 
     virtual void tick();
 };

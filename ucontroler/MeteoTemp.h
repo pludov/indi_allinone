@@ -55,6 +55,14 @@ public:
 
 	virtual void tick();
 
+	bool isReady() const {
+		return hasData;
+	}
+
+	float getDewPoint() const {
+		return dewPointValue;
+	}
+
 };
 
 extern MeteoTemp meteoTemp;

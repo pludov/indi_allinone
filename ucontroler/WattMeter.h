@@ -44,7 +44,7 @@ class WattMeter : public Scheduled {
 
     void setPwmLevel(float level);
 public:
-    WattMeter(uint8_t vPin, uint8_t aPin, int suffix, uint32_t addr);
+    WattMeter(uint8_t vPin, uint8_t aPin, int suffix, uint32_t eepromAddr);
 
     virtual void tick();
 };

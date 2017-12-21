@@ -84,6 +84,11 @@ static uint32_t initValue = 0x1F04EAE4;
 static EepromWriteCounter * writeCounter = 0;
 static uint32_t byteWriteCount = 0;
 
+uint32_t EepromStored::Addr(uint8_t v1)
+{
+	return v1;
+}
+
 uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2)
 {
 	int used = 1;
