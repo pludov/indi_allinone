@@ -397,6 +397,7 @@ public:
     	case IndiNumberVectorKindUid:
 			{
 				INumberVectorProperty * newVector = buildFromVector((IndiNumberVector*)vector);
+				current->cleanVectorProperty();
 				current->numberVectorProperty = newVector;
 				IDDefNumber(newVector, 0);
 
@@ -405,6 +406,7 @@ public:
     	case IndiTextVectorKindUid:
     		{
     			ITextVectorProperty * newVector = buildFromVector((IndiTextVector*)vector);
+    			current->cleanVectorProperty();
     			current->textVectorProperty = newVector;
     			IDDefText(newVector, 0);
 
@@ -413,6 +415,7 @@ public:
     	case IndiSwitchVectorKindUid:
     		{
     			ISwitchVectorProperty * newVector = buildFromVector((IndiSwitchVector*)vector);
+    			current->cleanVectorProperty();
     			current->switchVectorProperty = newVector;
     			IDDefSwitch(newVector, 0);
     			break;
