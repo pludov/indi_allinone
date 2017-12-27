@@ -22,6 +22,9 @@ class DewHeater : public Scheduled {
     IndiTextVector uidVec;
     IndiTextVectorMember uid;
 
+    IndiTextVector nameVec;
+	IndiTextVectorMember name;
+
     IndiSwitchVector powerMode;
     IndiSwitchVectorMember powerModeOff, powerModeForced, powerModeByTemp, powerModeOverDew;
 
@@ -41,6 +44,10 @@ class DewHeater : public Scheduled {
     IndiNumberVector settingKdVec;
     IndiFloatVectorMember settingKd;
 
+    IndiSwitchVector configOperationVec;
+    IndiSwitchVectorMember configIdle, configSave, configForget, configReload;
+
+
     MeteoTemp * meteoTemp;
     OneWire oneWire;
     uint8_t pwmPin;
@@ -55,6 +62,7 @@ class DewHeater : public Scheduled {
     double ITerm;
 
     void powerModeChanged();
+    void configOperationChanged();
 
     void scan();
     void startMeasure();
@@ -70,8 +78,13 @@ class DewHeater : public Scheduled {
     void initPid();
     void stopPid();
     int updatePid();
+    uint8_t getPowerModeId() const;
+    void setPowerModeId(uint8_t v);
+
+    void saveToEeprom();
+    void loadFromEeprom();
 public:
-    DewHeater(MeteoTemp * meteo, uint8_t tempPin, uint8_t pwmPin, int suffix, uint32_t eepromAddr);
+    DewHeater(MeteoTemp * meteo, uint8_t tempPin, uint8_t pwmPin, int suffix);
 
     virtual void tick();
 };
