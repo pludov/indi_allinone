@@ -84,17 +84,27 @@ static uint32_t initValue = 0x1F04EAE4;
 static EepromWriteCounter * writeCounter = 0;
 static uint32_t byteWriteCount = 0;
 
+#define check(t, dplay) while(!(t)) {DEBUG(dplay);}
+
+static void checkAddr(uint8_t v)
+{
+	check(v < 64, F("Invalid address"));
+}
+
 uint32_t EepromStored::Addr(uint8_t v1)
 {
+	checkAddr(v1);
 	return v1;
 }
 
 uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2)
 {
+	checkAddr(v2);
 	int used = 1;
 	while(v1 >> (8 * used)) {
 		used ++;
 	}
+	check(used < 4, F("Addr overflow"));
 	return v1 | (((uint32_t)v2) << (8*used));
 }
 
@@ -203,13 +213,18 @@ uint8_t EepromStored::getSizeFromHead(uint32_t head)
 			size |= (1 << i);
 		}
 	}
+	for(int i = 0; i < 4; ++i) {
+		if (head & (((uint32_t)1) << (8 * i + 6))) {
+			size |= (1 << (i + 4));
+		}
+	}
 	size ++;
 	return size;
 }
 
 uint32_t EepromStored::getAddrFromHead(uint32_t head)
 {
-	return head & 0x7f7f7f7f;
+	return head & 0x3f3f3f3f;
 }
 
 uint32_t EepromStored::packHead(uint32_t addr, uint8_t size)
@@ -219,6 +234,9 @@ uint32_t EepromStored::packHead(uint32_t addr, uint8_t size)
 	size--;
 	for(int i = 0; i < 4; ++i) {
 		head |= ((uint32_t)((size >> i)&1)) << (8 * i + 7);
+	}
+	for(int i = 0; i < 4; ++i) {
+		head |= ((uint32_t)((size >> (4 + i))&1)) << (8 * i + 6);
 	}
 	DEBUG_FINE(F("PackHead of"), addr, ',', size);
 	DEBUG_FINE(F("=>"), head);
@@ -280,7 +298,7 @@ uint8_t EepromStored::getEffectiveEepromSize() const
 {
 	int v = getEepromSize();
 	if (v < 1) return 1;
-	if (v > 16) return 16;
+	if (v > 250) return 250;
 	return v;
 }
 
