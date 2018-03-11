@@ -42,7 +42,7 @@ protected:
 public:
 	uint8_t highestCellWriteCount;
 
-	EepromWriteCounter() : EepromStored(Addr(127,1))
+	EepromWriteCounter() : EepromStored(Addr(63,1))
 	{
 		count = 0;
 		highestCellWriteCount = 0;
@@ -121,6 +121,13 @@ uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2, uint8_t v3, uint8_t v4)
 
 
 EepromStored::EepromStored(uint32_t naddr) :addr(naddr), writeCount(0){
+	if (getAddrFromHead(naddr) != naddr) {
+		while(1) {
+			DEBUG(F("Invalid address: #"), naddr);
+			delay(1000);
+		}
+
+	}
 	this->eepromPos = 0;
 	this->next = first;
 	first = this;
@@ -334,8 +341,9 @@ void EepromStored::init()
 	// FIXME: better seed rand !
 	srand(eepromCrc());
 
-	if (eRead32(0) != initValue) {
-		DEBUG(F("EepromStored is new"));
+	uint32_t vInit;
+	if ((vInit = eRead32(0)) != initValue) {
+		DEBUG(F("EepromStored is new"), vInit);
 		needRewrite = true;
 	} else {
 		for(EepromStored * item = first; item; item = item->next)
@@ -348,7 +356,7 @@ void EepromStored::init()
 				// Need
 				needRewrite = true;
 			} else {
-				DEBUG_FINE(F("Reading item "), item->addr, F(" at "), p);
+				DEBUG(F("Found item #"), item->addr, F(" at "), p);
 				item->eepromPos = p;
 				item->readValueFromEeprom(sze);
 				if (sze != item->getEffectiveEepromSize()) {
@@ -434,13 +442,14 @@ void EepromStored::fullRewrite() {
 			eWrite8(pos++, 0);
 		}
 
-		DEBUG(F("EepromStored rewrite : "), item->addr , F(" at "), pos);
+		uint8_t sze = item->getEffectiveEepromSize();
+		DEBUG(F("EepromStored rewrite : #"), item->addr , F(" "), sze, F("b at "), pos);
 
 		// Write item
 		item->eepromPos = pos;
 		item->writeValueToEeprom();
 		pos += 4;
-		pos += item->getEffectiveEepromSize();
+		pos += sze;
 
 		// Pad after
 		for(int pad = getPadding(padding, 2 * itemCount, paddingLeft); pad > 0; --pad)

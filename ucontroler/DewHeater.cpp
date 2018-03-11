@@ -73,6 +73,7 @@ protected:
 
 	virtual void decodeEepromValue(void * buffer, uint8_t sze){
 		if (sze != getEepromSize()) {
+			DEBUG(F("DewHeater EEPROM invalid size"), sze);
 			return;
 		}
 		memcpy(settings, (void*)buffer, sze);
@@ -243,6 +244,9 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
     lastTime = 0;
     lastInput = 0;
     ITerm = 0;
+
+    // Ensure config item is available
+    DewHeatersMemory::getInstance();
 
     pinMode(pwmPin, OUTPUT);
     // Use 50hz so that AC filtering may help
@@ -535,6 +539,7 @@ void DewHeater::saveToEeprom()
 	settings.targetPwm = targetPwm.getValue();
 	settings.targetTemp = targetTemp.getValue();
 	settings.targetTempAbove = targetTempAbove.getValue();
+	settings.opMode = getPowerModeId();
 	memcpy(settings.addr, addr, STORED_ADDR_LENGTH);
 	DewHeatersMemory::getInstance()->save(settings);
 }
