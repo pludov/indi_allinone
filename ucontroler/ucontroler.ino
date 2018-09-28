@@ -42,8 +42,8 @@
 
 #include "utime.h"
 #include "MainLogic.h"
-#include "Motor.h"
-#include "FilterWheelMotor.h"
+#include "Focuser.h"
+// #include "FilterWheelMotor.h"
 #include "Scheduler.h"
 #include "pwmresistor.h"
 #include "scopetemp.h"
@@ -72,8 +72,8 @@ const String programVersion = "2.3.0";
 //#define DHTTYPE DHT11   // DHT 11
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 
-const uint8_t motorPins[4] = { 5, 6, 7, 8 }; // Declare pins to drive motor control board
-const uint8_t filterWheelPins[4] = {A3, A2, A1, A0};
+const uint8_t motorPins[4] = { A6, A7, A8, A9 }; // Declare pins to drive motor control board
+// const uint8_t filterWheelPins[4] = {A3, A2, A1, A0};
 
 // Initialise the temp sensor
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices
@@ -303,6 +303,7 @@ void setup() {
 	DewHeater * dw2 = new DewHeater(meteoTemp, 12, 10, 2);
 	new WattMeter(5, 4, 0, EepromStored::Addr(1));
 
+	new Focuser(motorPins, 0);
 	EepromStored::init();
 
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial1);

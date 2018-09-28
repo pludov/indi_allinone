@@ -10,6 +10,8 @@
 // Pause after a move, before cutting off signal
 #define pauseAfterMove ((unsigned long int)1000000)
 
+#define intervalBetweenProgress ((unsigned long int)500000)
+
 // lookup table to drive motor control board
 const uint8_t stepPattern[8] = { B01000, B01100, B00100, B00110, B00010, B00011, B00001, B01001 };
 
@@ -20,11 +22,10 @@ static inline int8_t sgn(long val) {
 	return 1;
 }
 
-Motor::Motor(const uint8_t * pins, uint8_t positionConfigId, int fastestPerHalfStep)
-	:Scheduled(F("Motor"))
+Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStep)
+	:Scheduled(debug)
 {
 	this->fastestPerHalfStep = fastestPerHalfStep;
-	this->positionConfigId = positionConfigId;
 	// What is the duration ?
 	this->tickExpectedDuration = US(150);
 	// Don't be late please
@@ -66,15 +67,6 @@ void Motor::loadPosition(unsigned long newPosition)
 	this->currentPosition = newPosition;
 }
 
-void Motor::loadConfigPosition()
-{
-	loadPosition(positionConfig().position);
-}
-
-PositionStorage & Motor::positionConfig() {
-	return (*((PositionStorage*)config.getRawStorageData(positionConfigId)));
-}
-
 unsigned long Motor::getCurrentPosition()
 {
 	return this->currentPosition;
@@ -98,9 +90,10 @@ void Motor::setTargetPosition(unsigned long newPosition)
 			this->nextTick = startAt;
 		}
 	}
-
+	this->nextProgress = UTime::now() + intervalBetweenProgress;
 	this->targetPosition = newPosition;
-	status.needUpdate();
+	
+	this->onProgress();
 }
 
 bool Motor::isActive()
@@ -111,10 +104,7 @@ bool Motor::isActive()
 bool Motor::isMoving()
 {
 	return !this->nextTick.isNever() && this->targetPosition != this->currentPosition;
-
 }
-
-void savePosition(unsigned long);
 
 void Motor::tick()
 {
@@ -124,7 +114,7 @@ void Motor::tick()
 		// On est arret�. Plus rien � faire.
 		this->clearOutput();
 		this->nextTick = UTime::never();
-		status.needUpdate();
+		this->onProgress();
 	} else {
 		int8_t dir = sgn(distance);
 		if (this->speedLevel == 0) {
@@ -148,20 +138,20 @@ void Motor::tick()
 
 		// Now compute the tick duration
 		if (distance - dir == 0) {
-			targetPositionReached();
+			this->speedLevel = 0;
+			this->nextTick += pauseAfterMove;
+
+			this->nextProgress = UTime::now() + intervalBetweenProgress;
+
+			this->onTargetPositionReached();
 		} else {
 			this->nextTick += getPulseDuration(abs(this->speedLevel));
+			if (UTime::now() > this->nextProgress) {
+				this->nextProgress = UTime::now() + intervalBetweenProgress;
+				this->onProgress();
+			}
 		}
 	}
-}
-
-void Motor::targetPositionReached()
-{
-	this->speedLevel = 0;
-	this->nextTick += pauseAfterMove;
-	status.needUpdate();
-	positionConfig().position = targetPosition;
-	config.commitStorage(positionConfigId);
 }
 
 long Motor::getPulseDuration(int speedLevel4) {

@@ -9,7 +9,6 @@
 #define MOTOR_H_
 
 #include "Scheduled.h"
-#include "Config.h"
 
 class Motor : public Scheduled
 {
@@ -24,17 +23,12 @@ protected:
 	// Direction & speed
 	int speedLevel;
 
-	uint8_t positionConfigId;
-
-	PositionStorage & positionConfig();
-
+	UTime nextProgress;
 public:
-	Motor(const uint8_t * pins, uint8_t positionConfigId = ID_STORAGE_POSITION, int fastestPerHalfStep = 4 * 2200);
+	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStep = 4 * 2200);
 
 	// Load stored position
 	void loadPosition(unsigned long currentPosition);
-
-	virtual void loadConfigPosition();
 
 	// Start moving to the given position
 	void setTargetPosition(unsigned long newPosition);
@@ -53,13 +47,14 @@ public:
 	virtual void tick();
 
 	// Call when currentPositoin == targetPosition during move (motor still not off)
-	virtual void targetPositionReached();
+	virtual void onTargetPositionReached() = 0;
+
+	// Call during move, every ~500ms
+	virtual void onProgress() = 0;
 protected:
 	void setOutput(int out);
 	void clearOutput();
 	long getPulseDuration(int speedLevel);
 };
-
-extern Motor motor;
 
 #endif /* MOTOR_H_ */

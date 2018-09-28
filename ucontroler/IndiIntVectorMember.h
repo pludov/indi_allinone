@@ -29,6 +29,7 @@ public:
 
 	void setValue(int32_t v);
 
+	int32_t getValue() const { return value; }
 	virtual double getDoubleValue() const { return value; }
 
 	virtual uint8_t getSubtype() const { return subType; }
