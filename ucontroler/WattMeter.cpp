@@ -65,7 +65,15 @@ void WattMeter::tick()
 	// 50hz = 20ms
     this->nextTick = UTime::now() + MS(50);
     long l = micros();
+#ifdef __AVR_ATmega2560__
+    // No analog read resolution for AtMeta2560
+#else
+	#ifndef TEENSYDUINO
+    #error "Unsupported build"
+    #endif
     analogReadResolution(12);
+#endif
+
     int nvvval = analogRead(vPin);
     int nvaval = analogRead(aPin);
     l = micros() - l;

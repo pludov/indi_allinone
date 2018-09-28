@@ -249,8 +249,15 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
     DewHeatersMemory::getInstance();
 
     pinMode(pwmPin, OUTPUT);
+#ifdef __AVR_ATmega2560__
+#else
+	#ifndef TEENSYDUINO
+	#error "unsupported build"
+	#endif
     // Use 50hz so that AC filtering may help
     analogWriteFrequency(pwmPin, 50);
+#endif
+
     digitalWrite(pwmPin, 0);
 
     powerMode.onRequested(VectorCallback(&DewHeater::powerModeChanged, this));

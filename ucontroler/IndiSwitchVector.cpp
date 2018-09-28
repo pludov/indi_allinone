@@ -17,11 +17,24 @@
 #include "BinSerialProtocol.h"
 #include "CommonUtils.h"
 
+static Symbol __defSwitchVector() {
+	return F("defSwitchVector");
+}
+
+static Symbol __newSwitchVector() {
+	return F("newSwitchVector");
+}
+
+static Symbol __oneSwitch() {
+	return F("oneSwitch");
+}
+
+
 
 const VectorKind IndiSwitchVectorKind {
-	.defVectorText = F("defSwitchVector"),
-	.newVectorText = F("newSwitchVector"),
-	.oneMemberText = F("oneSwitch"),
+	.defVectorText = __defSwitchVector(),
+	.newVectorText = __newSwitchVector(),
+	.oneMemberText = __oneSwitch(),
 	.uid = IndiSwitchVectorKindUid,
 	.flag = 0,
 	.vectorFactory = &IndiSwitchVector::vectorFactory,

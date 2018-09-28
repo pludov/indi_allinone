@@ -18,10 +18,21 @@
 #include "BinSerialProtocol.h"
 #include "CommonUtils.h"
 
+static Symbol __defNumberVector() {
+	return F("defNumberVector");
+}
+
+static Symbol __newNumberVector() {
+	return F("newNumberVector");
+}
+static Symbol __oneNumber() {
+	return F("oneNumber");
+}
+
 const VectorKind IndiNumberVectorKind {
-	.defVectorText = F("defNumberVector"),
-	.newVectorText = F("newNumberVector"),
-	.oneMemberText = F("oneNumber"),
+	.defVectorText = __defNumberVector(),
+	.newVectorText = __newNumberVector(),
+	.oneMemberText = __oneNumber(),
 	.uid = IndiNumberVectorKindUid,
 	.flag = VECTORKIND_NEED_MEMBER_SUBTYPE,
 	.vectorFactory = &IndiNumberVector::vectorFactory,

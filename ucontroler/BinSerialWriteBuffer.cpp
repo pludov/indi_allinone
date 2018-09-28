@@ -174,11 +174,16 @@ void BinSerialWriteBuffer::writeBool(bool b)
 
 void BinSerialWriteBuffer::writeFloat(float value)
 {
+#ifdef __AVR_ATmega2560__
+	// snprintf seems to fail under memory pressure
+	String t(value);
+	writeString(t.c_str());
+#else
 	char buffer[32];
 	snprintf(buffer, 32, "%f", value);
 	writeString(buffer);
+#endif
 }
-
 
 void BinSerialWriteBuffer::writeInt(int32_t value)
 {

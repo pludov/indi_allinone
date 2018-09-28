@@ -17,7 +17,11 @@ Voltmeter::Voltmeter(uint8_t pin) : Scheduled::Scheduled(F("Voltmeter")) {
 	this->pin = pin;
 	this->nextTick = UTime::now();
 	this->lastv = -1;
+#ifdef __AVR_ATmega2560__
+	analogReference(INTERNAL1V1);
+#else
 	analogReference(INTERNAL);
+#endif
 }
 
 Voltmeter::~Voltmeter() {

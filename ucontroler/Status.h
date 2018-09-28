@@ -10,6 +10,9 @@
 
 #include "Scheduled.h"
 
+#include "IndiNumberVector.h"
+#include "IndiFloatVectorMember.h"
+
 /*
  * Le protocol serie est :
  * Paquet de statut:
@@ -58,6 +61,11 @@ struct Payload
 
 
 class Status : public Scheduled{
+
+	Symbol statusGroup;
+	IndiNumberVector uptime;
+	IndiFloatVectorMember uptimeValue;
+
 	void sendStatus();
 public:
 	Status();

@@ -12,6 +12,7 @@
 
 #include <inttypes.h>
 
+#include "CommonUtils.h"
 #include "WriteBuffer.h"
 #include "Utils.h"
 #include "IndiVector.h"
@@ -34,6 +35,7 @@ void WriteBuffer::append(char c)
 		this->left--;
 	} else {
 		this->left = -1;
+		FATAL(F("WriteBuffer overflow"));
 	}
 }
 

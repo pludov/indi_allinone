@@ -2,6 +2,16 @@
 #define COMMONUTILS_H 1
 
 #ifdef ARDUINO
+#ifdef __AVR_ATmega2560__
+	void suicide();
+	#define DEBUG(...)
+	#define FATAL(...) suicide()
+	#define MORE_DEBUG
+#else
+	#ifndef TEENSYDUINO
+	#error "unsupported build"
+	#endif
+
 
 #define SerialDbg Serial
 
@@ -25,6 +35,12 @@ void debugItem<const __FlashStringHelper*>(const __FlashStringHelper* t);/* {
 #define DEBUG4(A, B, C, D) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);   SerialDbg.write('\r');SerialDbg.write('\n');}
 #define DEBUG5(A, B, C, D, E) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);   SerialDbg.write('\r');SerialDbg.write('\n');}
 #define DEBUG6(A, B, C, D, E, F) { debugItem(A);debugItem(B);debugItem(C);debugItem(D);debugItem(E);debugItem(F);   SerialDbg.write('\r');SerialDbg.write('\n');}
+
+#define GET_DEBUG_MACRO(_1,_2,_3,_4,_5,_6, NAME,...) NAME
+#define DEBUG(...) GET_DEBUG_MACRO(__VA_ARGS__, DEBUG6, DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1)(__VA_ARGS__)
+
+#define FATAL(...) DEBUG(__VA_ARGS__)
+#endif
 #else
 
 #include <iostream>
@@ -36,9 +52,11 @@ void debugItem<const __FlashStringHelper*>(const __FlashStringHelper* t);/* {
 #define DEBUG6(A, B, C, D, E, F) (std::cerr << A << B << C << D << E << F <<"\n")
 
 #define F(A) (A)
-#endif
 
 #define GET_DEBUG_MACRO(_1,_2,_3,_4,_5,_6, NAME,...) NAME
 #define DEBUG(...) GET_DEBUG_MACRO(__VA_ARGS__, DEBUG6, DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1)(__VA_ARGS__)
+#define FATAL(...) DEBUG(__VA_ARGS__)
+#endif
+
 
 #endif

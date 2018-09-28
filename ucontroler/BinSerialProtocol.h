@@ -29,8 +29,11 @@ extern const VectorKind * kindsByUid[IndiMaxVectorKind + 1];
 #define MIN_PACKET_START PACKET_REQUEST
 #define MAX_PACKET_START PACKET_DELETE
 
-
+#ifdef __AVR_ATmega2560__
+#define NOTIF_PACKET_MAX_SIZE 512
+#else
 #define NOTIF_PACKET_MAX_SIZE 2048
+#endif
 #define REQUEST_PACKET_MAX_SIZE NOTIF_PACKET_MAX_SIZE
 #define ACK_PACKET_MAX_SIZE 256
 

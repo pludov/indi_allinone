@@ -88,7 +88,6 @@ ScopeTemp scopeTemp(&oneWire);
 MeteoTemp meteoTemp(DHTPIN, DHTTYPE);
 Voltmeter voltmeter(7);
 MainLogic mainLogic;*/
-Status status;
 
 //
 ////------------------------------------------------------------------
@@ -304,9 +303,13 @@ void setup() {
 	new WattMeter(5, 4, 0, EepromStored::Addr(1));
 
 	new Focuser(motorPins, 0);
+	new Status();
 	EepromStored::init();
-
+#ifdef __AVR_ATmega2560__
+	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
+#else
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial1);
+#endif
 	//ScheduledIndiProtocol * serialWriter2 = new ScheduledIndiProtocol(&Serial1);
 	DEBUG(F("Welcome!"));
 

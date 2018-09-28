@@ -16,10 +16,20 @@
 #include "BinSerialProtocol.h"
 #include "CommonUtils.h"
 
+static Symbol __defTextVector() {
+	return F("defTextVector");
+}
+static Symbol __newTextVector() {
+	return F("newTextVector");
+}
+static Symbol __oneText() {
+	return F("oneText");
+}
+
 const VectorKind IndiTextVectorKind {
-	.defVectorText = F("defTextVector"),
-	.newVectorText = F("newTextVector"),
-	.oneMemberText = F("oneText"),
+	.defVectorText = __defTextVector(),
+	.newVectorText = __newTextVector(),
+	.oneMemberText = __oneText(),
 	.uid = IndiTextVectorKindUid,
 	.flag = VECTORKIND_NEED_MEMBER_SUBTYPE,
 	.vectorFactory = &IndiTextVector::vectorFactory,
