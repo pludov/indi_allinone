@@ -328,14 +328,8 @@ void BinSerialReadBuffer::skipSymbol(int maxLength)
 
 float BinSerialReadBuffer::readFloat()
 {
-    char buffer[33];
-    readSymbol(buffer, 32);
-    float f;
-    if (sscanf(buffer, "%f", &f) != 1) {
-        DEBUG(F("Failing float: "), buffer);
-        fail(F("Float format error"));
-    }
-    return f;
+    int32_t val = readInt();
+    return *((float*)&val);
 }
 
 int32_t BinSerialReadBuffer::readInt()
