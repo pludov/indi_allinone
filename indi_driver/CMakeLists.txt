@@ -38,6 +38,7 @@ set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiIntVectorMember.cpp
    ${CMAKE_SOURCE_DIR}/../ucontroler/IndiFloatVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../ucontroler/CommonUtils.cpp
    )
 
 add_executable(indi_allinone ${indiallinone_SRCS})

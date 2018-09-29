@@ -34,5 +34,8 @@ void suicide() {
 }
 
 #endif
+#else
+
+std::ostream * debugStream = &std::cerr;
 
 #endif

@@ -6,8 +6,6 @@
  */
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#define F(a) (a)
 #endif
 
 #include <inttypes.h>

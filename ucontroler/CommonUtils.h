@@ -44,12 +44,13 @@ void debugItem<const __FlashStringHelper*>(const __FlashStringHelper* t);/* {
 #else
 
 #include <iostream>
-#define DEBUG1(A) (std::cerr << A << "\n")
-#define DEBUG2(A, B) (std::cerr << A << B << "\n")
-#define DEBUG3(A, B, C) (std::cerr << A << B << C << "\n")
-#define DEBUG4(A, B, C, D) (std::cerr << A << B << C << D <<"\n")
-#define DEBUG5(A, B, C, D, E) (std::cerr << A << B << C << D << E <<"\n")
-#define DEBUG6(A, B, C, D, E, F) (std::cerr << A << B << C << D << E << F <<"\n")
+extern std::ostream * debugStream;
+#define DEBUG1(A) ((*debugStream) << A << "\n")
+#define DEBUG2(A, B) ((*debugStream) << A << B << "\n")
+#define DEBUG3(A, B, C) ((*debugStream) << A << B << C << "\n")
+#define DEBUG4(A, B, C, D) ((*debugStream) << A << B << C << D <<"\n")
+#define DEBUG5(A, B, C, D, E) ((*debugStream) << A << B << C << D << E <<"\n")
+#define DEBUG6(A, B, C, D, E, F) ((*debugStream) << A << B << C << D << E << F <<"\n")
 
 #define F(A) (A)
 

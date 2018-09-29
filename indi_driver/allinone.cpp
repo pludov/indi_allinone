@@ -54,6 +54,8 @@
 
 std::unique_ptr<SimpleDevice> simpleDevice(new SimpleDevice());
 
+void plugIndiDebug(std::string deviceName);
+
 /**************************************************************************************
 ** Return properties of device.
 ***************************************************************************************/
@@ -104,6 +106,7 @@ void ISSnoopDevice(XMLEle *root)
 }
 
 SimpleDevice::SimpleDevice() : INDI::DefaultDevice(), backgroundProcessorThread(){
+	plugIndiDebug(getDriverName());
 	sharingMutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 	doneCond = PTHREAD_COND_INITIALIZER;
 	backgroundProcessorStarted = false;
@@ -885,4 +888,66 @@ void * SimpleDevice::backgroundProcessorStarter(void*rawContext)
 const char *SimpleDevice::getDefaultName()
 {
     return "Simple Device";
+}
+
+class DebugStreamBuffer : public std::streambuf
+{
+	std::string content;
+	std::string deviceName;
+public:
+    DebugStreamBuffer() : content(), deviceName("unnamed")
+	{
+
+	}
+
+	void setDeviceName(const std::string & str) {
+		deviceName = str;
+	}
+
+protected:
+    std::streamsize xsputn(const char_type* s, std::streamsize n) override 
+    {
+		content += std::string(s, n);
+		flushContent();
+		return n;
+    };
+
+    int_type overflow(int_type ch) override 
+    {
+		char str[2];
+		str[0] = ch;
+		str[1] = 0;
+		content += std::string(str);
+		flushContent();
+		return 1;
+    }
+
+	void flushContent()
+	{
+		bool sthDone;
+		do {
+			sthDone = false;
+			for(size_t i = 0; i < content.size(); ++i) {
+				if (content[i] ==  '\n') {
+					content[i] = 0;
+					INDI::Logger::getInstance().print(deviceName.c_str(), INDI::Logger::DBG_DEBUG, "somewhere", 0, "%s",content.c_str());
+					content = content.substr(i + 1);
+					sthDone = true;
+					break;
+				}
+			}
+		} while(sthDone);
+	}
+};
+
+DebugStreamBuffer indiDebugStreamBuffer;
+std::ostream indiDebugStream(&indiDebugStreamBuffer);
+
+#undef DEBUG
+#include "CommonUtils.h"
+
+void plugIndiDebug(std::string deviceName)
+{
+	indiDebugStreamBuffer.setDeviceName(deviceName);
+	debugStream = &indiDebugStream;
 }
