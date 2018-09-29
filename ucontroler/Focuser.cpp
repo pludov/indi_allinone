@@ -19,11 +19,7 @@ void Focuser::onProgress()
 {
     bool busy = this->isActive();
     absolutePositionVec.set(VECTOR_BUSY, busy);
-    if (!busy) {
-        absolutePosition.setValue(this->currentPosition);
-    } else {
-        absolutePosition.setValue(this->targetPosition);
-    }
+    absolutePosition.setValue(this->currentPosition);
 }
 
 void Focuser::onTargetPositionReached() {
