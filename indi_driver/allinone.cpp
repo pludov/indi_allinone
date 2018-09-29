@@ -489,6 +489,7 @@ public:
     virtual void updated(IndiVector * vector)
     {
     	IndiVectorImage * current = getCurrentVectorImage(vector->uid);
+		IPState state = getIPState(vector);
     	switch(vector->kind().uid)
 		{
 		case IndiNumberVectorKindUid:
@@ -500,6 +501,7 @@ public:
 
 					current->numberVectorProperty->np[pos++].value = ((IndiNumberVectorMember*)member)->getDoubleValue();
 				}
+				current->numberVectorProperty->s = state;
 				std::cerr << "setNumber\n";
 				IDSetNumber(current->numberVectorProperty, nullptr);
 				break;
@@ -513,6 +515,7 @@ public:
 
 					IUSaveText(&current->textVectorProperty->tp[pos++], ((IndiTextVectorMember*)member)->getTextValue());
 				}
+				current->textVectorProperty->s = state;
 				std::cerr << "setText\n";
 				IDSetText(current->textVectorProperty, nullptr);
 				break;
@@ -526,6 +529,7 @@ public:
 
 					current->switchVectorProperty->sp[pos++].s = ((IndiSwitchVectorMember*)member)->getValue() ? ISState::ISS_ON : ISState::ISS_OFF;
 				}
+				current->switchVectorProperty->s = state;
 				std::cerr << "setSwitch\n";
 				IDSetSwitch(current->switchVectorProperty, nullptr);
 				break;
