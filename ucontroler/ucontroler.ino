@@ -42,6 +42,7 @@
 
 #include "utime.h"
 #include "MainLogic.h"
+#include "BaseDriver.h"
 #include "Focuser.h"
 // #include "FilterWheelMotor.h"
 #include "Scheduler.h"
@@ -294,6 +295,7 @@ void setup() {
 	
 	delay(500);
 
+	BaseDriver * baseDriver = new BaseDriver();
 	// reserve 200 bytes for the ASCOM driver inputString:
 
 	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
@@ -302,7 +304,7 @@ void setup() {
 	DewHeater * dw2 = new DewHeater(meteoTemp, 12, 10, 2);
 	new WattMeter(5, 4, 0, EepromStored::Addr(1));
 
-	new Focuser(motorPins, 0);
+	new Focuser(baseDriver, motorPins, 0);
 	new Status();
 	EepromStored::init();
 #ifdef __AVR_ATmega2560__

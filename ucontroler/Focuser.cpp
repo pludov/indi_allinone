@@ -1,6 +1,7 @@
 #include "Focuser.h"
+#include "BaseDriver.h"
 
-Focuser::Focuser(const uint8_t* pins, int suffix):
+Focuser::Focuser(BaseDriver * bd, const uint8_t* pins, int suffix):
     Motor(pins, F("Focuser"), 12000, 8800),
     group(Symbol(F("FOCUSER"), suffix)),
     absolutePositionVec(group, Symbol(F("ABS_FOCUS_POSITION"), suffix), F("Absolute Position"), VECTOR_WRITABLE|VECTOR_READABLE),
@@ -9,6 +10,8 @@ Focuser::Focuser(const uint8_t* pins, int suffix):
     loadPosition(50000);
     onProgress();
     absolutePositionVec.onRequested(VectorCallback(&Focuser::absPositionChanged, this));
+
+    bd->addCapability(FOCUSER_INTERFACE);
 }
 
 void Focuser::absPositionChanged() {

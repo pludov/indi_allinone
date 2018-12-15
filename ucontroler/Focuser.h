@@ -11,6 +11,7 @@
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
 
+class BaseDriver;
 
 class Focuser: public Motor {
     Symbol group;
@@ -19,7 +20,7 @@ class Focuser: public Motor {
 
     void absPositionChanged();
 public:
-    Focuser(const uint8_t * pins, int suffix);
+    Focuser(BaseDriver * bd, const uint8_t * pins, int suffix);
     virtual void onProgress();
     virtual void onTargetPositionReached();
 
