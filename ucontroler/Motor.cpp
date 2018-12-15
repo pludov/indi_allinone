@@ -22,10 +22,11 @@ static inline int8_t sgn(long val) {
 	return 1;
 }
 
-Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStep)
+Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepDesc, int fastestPerHalfStepAsc)
 	:Scheduled(debug)
 {
-	this->fastestPerHalfStep = fastestPerHalfStep;
+	this->fastestPerHalfStepDesc = fastestPerHalfStepDesc;
+	this->fastestPerHalfStepAsc = fastestPerHalfStepAsc;
 	// What is the duration ?
 	this->tickExpectedDuration = US(150);
 	// Don't be late please
@@ -145,7 +146,7 @@ void Motor::tick()
 
 			this->onTargetPositionReached();
 		} else {
-			this->nextTick += getPulseDuration(abs(this->speedLevel));
+			this->nextTick += getPulseDuration(this->speedLevel);
 			if (UTime::now() > this->nextProgress) {
 				this->nextProgress = UTime::now() + intervalBetweenProgress;
 				this->onProgress();
@@ -155,11 +156,13 @@ void Motor::tick()
 }
 
 long Motor::getPulseDuration(int speedLevel4) {
+	long mult = speedLevel4 > 0 ? this->fastestPerHalfStepAsc : this->fastestPerHalfStepDesc;
+
 	speedLevel4 = abs(speedLevel4);
 	if (speedLevel4 > maxAccelStep ) {
 		speedLevel4 = maxAccelStep;
 	}
-	long result = ((long) fastestPerHalfStep * (long) maxAccelStep) / (1 + speedLevel4);
+	long result = ((long) mult * (long) maxAccelStep) / (1 + speedLevel4);
 
 	return result;
 }

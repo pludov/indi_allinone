@@ -1,7 +1,7 @@
 #include "Focuser.h"
 
 Focuser::Focuser(const uint8_t* pins, int suffix):
-    Motor(pins, F("Focuser")),
+    Motor(pins, F("Focuser"), 12000, 8800),
     group(Symbol(F("FOCUSER"), suffix)),
     absolutePositionVec(group, Symbol(F("ABS_FOCUS_POSITION"), suffix), F("Absolute Position"), VECTOR_WRITABLE|VECTOR_READABLE),
     absolutePosition(&absolutePositionVec, F("FOCUS_ABSOLUTE_POSITION"), F("Ticks"), 0, 100000, 1)

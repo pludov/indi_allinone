@@ -16,7 +16,7 @@
 // #define PIN_HALL_READ A5
 
 // FilterWheelMotor::FilterWheelMotor(const uint8_t * pins, uint8_t positionConfigId, int fastestPerHalfStep) :
-// 	Motor::Motor(pins, positionConfigId, fastestPerHalfStep)
+// 	Motor::Motor(pins, positionConfigId, fastestPerHalfStep, fastestPerHalfStep)
 // {
 // 	calibrating = false;
 // 	calibrationTarget = -1;

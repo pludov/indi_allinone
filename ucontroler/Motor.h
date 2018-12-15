@@ -18,14 +18,15 @@ protected:
 	unsigned long targetPosition;              // target position
 
 	// At full speed, how short a step is ?
-	int fastestPerHalfStep;
+	int fastestPerHalfStepAsc;
+	int fastestPerHalfStepDesc;
 
 	// Direction & speed
 	int speedLevel;
 
 	UTime nextProgress;
 public:
-	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStep = 4 * 2200);
+	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepAsc = 4 * 2200, int fastestPerHalfStepDesc = 4 * 2200);
 
 	// Load stored position
 	void loadPosition(unsigned long currentPosition);
