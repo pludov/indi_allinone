@@ -17,8 +17,10 @@ class Focuser: public Motor {
     Symbol group;
     IndiNumberVector absolutePositionVec;
     IndiIntVectorMember absolutePosition;
-
+    IndiSwitchVector focusAbortMotionVec;
+    IndiSwitchVectorMember focusAbortMotion;
     void absPositionChanged();
+    void abortChanged();
 public:
     Focuser(BaseDriver * bd, const uint8_t * pins, int suffix);
     virtual void onProgress();
