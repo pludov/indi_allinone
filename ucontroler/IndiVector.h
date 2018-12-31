@@ -18,7 +18,11 @@
 #define VECTOR_READABLE 2
 #define VECTOR_BUSY 4
 #define VECTOR_HIDDEN 8
-
+#define VECTOR_SWITCH_MANY 16
+#define VECTOR_SWITCH_ATMOSTONE 48
+#define VECTOR_SWITCH_MASK 48
+// 7 bit serialization
+#define VECTOR_FLAG_MAX 64
 
 // define/delete property
 #define VECTOR_ANNOUNCED 0

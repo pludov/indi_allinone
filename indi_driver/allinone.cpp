@@ -329,7 +329,16 @@ public:
 			ISState value = ((IndiSwitchVectorMember*)member)->getValue() ? ISState::ISS_ON : ISState::ISS_OFF;
 			IUFillSwitch(switches + (pos++), member->name.c_str(), member->label.c_str(), value);
 		}
-		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, ISRule::ISR_1OFMANY, 60, state);
+
+		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, 
+				vector->flag & VECTOR_SWITCH_MASK 
+						? (
+							vector->flag & VECTOR_SWITCH_MASK == VECTOR_SWITCH_MANY
+								? ISRule::ISR_NOFMANY
+								: ISRule::ISR_ATMOST1
+						)
+						: ISRule::ISR_1OFMANY,
+				60, state);
 
 		return newVector;
     }

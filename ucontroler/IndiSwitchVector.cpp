@@ -68,6 +68,9 @@ IndiSwitchVector::~IndiSwitchVector() {
 // Imply that the vector is already dirty
 void IndiSwitchVector::refreshActiveOne(IndiSwitchVectorMember * lastUpdated)
 {
+	if (independantMembers()) {
+		return;
+	}
 	// ensure only one active.
 	bool hasOne = false;
 	bool hasMoreThanOne = false;
@@ -118,12 +121,36 @@ void IndiSwitchVector::refreshActiveOne(IndiSwitchVectorMember * lastUpdated)
 
 bool IndiSwitchVector::doUpdate(IndiVectorUpdateRequest & request)
 {
-	IndiVectorMember * previousActive = this->activeOne;
-	if (IndiVector::doUpdate(request)) {
-		refreshActiveOne((IndiSwitchVectorMember*)request.members[0]);
-		return this->activeOne != previousActive;
+	if (independantMembers()) {
+		uint32_t previousActive = getValueMask();
+		if (IndiVector::doUpdate(request)) {
+			refreshActiveOne((IndiSwitchVectorMember*)request.members[0]);
+			return getValueMask() != previousActive;
+		}
+		return false;
+	} else {
+		IndiVectorMember * previousActive = this->activeOne;
+		if (IndiVector::doUpdate(request)) {
+			refreshActiveOne((IndiSwitchVectorMember*)request.members[0]);
+			return this->activeOne != previousActive;
+		}
+		return false;
 	}
-	return false;
+}
+
+uint32_t IndiSwitchVector::getValueMask() const
+{
+	uint32_t rslt = 0;
+	uint32_t i = 1;
+	IndiVectorMember * cur = first;
+	while(cur) {
+		if (((IndiSwitchVectorMember*)cur)->getValue()) {
+			rslt |= i;
+		}
+		i = i << 1;
+		cur = cur->next;
+	}
+	return rslt;
 }
 
 
