@@ -44,7 +44,7 @@
 #include "MainLogic.h"
 #include "BaseDriver.h"
 #include "Focuser.h"
-// #include "FilterWheelMotor.h"
+#include "FilterWheel.h"
 #include "Scheduler.h"
 #include "pwmresistor.h"
 #include "scopetemp.h"
@@ -74,7 +74,7 @@ const String programVersion = "2.3.0";
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 
 const uint8_t motorPins[4] = { A6, A7, A8, A9 }; // Declare pins to drive motor control board
-// const uint8_t filterWheelPins[4] = {A3, A2, A1, A0};
+const uint8_t filterWheelPins[5] = {13,14,15,16,17};
 
 // Initialise the temp sensor
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices
@@ -305,6 +305,7 @@ void setup() {
 	new WattMeter(5, 4, 0, EepromStored::Addr(1));
 
 	new Focuser(baseDriver, motorPins, 0);
+	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
 	new Status();
 	EepromStored::init();
 #ifdef __AVR_ATmega2560__

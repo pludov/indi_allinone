@@ -20,6 +20,10 @@ protected:
 	// At full speed, how short a step is ?
 	int fastestPerHalfStepAsc;
 	int fastestPerHalfStepDesc;
+	// Number of steps to gain full speed
+	uint8_t maxAccelStep = 100;
+	// Pause after a move (ms), before cutting off signal and reporting idle
+	uint8_t pauseAfterMove = 1000;
 
 	// Direction & speed
 	int speedLevel;

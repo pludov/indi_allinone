@@ -4,12 +4,6 @@
 #include "Status.h"
 #include "Config.h"
 
-// Number of steps to gain full speed
-#define maxAccelStep 100
-
-// Pause after a move, before cutting off signal
-#define pauseAfterMove ((unsigned long int)1000000)
-
 #define intervalBetweenProgress ((unsigned long int)500000)
 
 // lookup table to drive motor control board
@@ -81,6 +75,7 @@ unsigned long Motor::getTargetPosition()
 void Motor::setTargetPosition(unsigned long newPosition)
 {
 	if (this->targetPosition == this->currentPosition) {
+		this->speedLevel = 0;
 		if (newPosition == this->targetPosition) {
 			// ok, nothing to do then
 			return;
@@ -140,7 +135,7 @@ void Motor::tick()
 		// Now compute the tick duration
 		if (distance - dir == 0) {
 			this->speedLevel = 0;
-			this->nextTick += pauseAfterMove;
+			this->nextTick += 1000*((uint32_t)pauseAfterMove);
 
 			this->nextProgress = UTime::now() + intervalBetweenProgress;
 
