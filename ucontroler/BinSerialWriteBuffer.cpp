@@ -158,11 +158,12 @@ void BinSerialWriteBuffer::writeVectorMemberLabel(const Symbol & name)
 	appendSymbol(name);
 }
 
-void BinSerialWriteBuffer::writeString(const char * str)
+void BinSerialWriteBuffer::writeString(const char * str, int maxSize)
 {
-    while(*str) {
+    while(*str && maxSize > 0) {
         uint8_t c = *(str++);
         writeStringChar(c);
+		maxSize --;
     }
     writeStringChar(0);
 }

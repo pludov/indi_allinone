@@ -285,7 +285,7 @@ void XmlWriteBuffer::writeVectorMemberLabel(const Symbol &  name)
 	append('>');
 }
 
-void XmlWriteBuffer::writeString(const char * str)
+void XmlWriteBuffer::writeString(const char * str, int maxSize)
 {
 	appendXmlEscaped(str);
 }

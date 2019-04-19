@@ -53,7 +53,7 @@ public:
 	virtual void writeVectorMemberLabel(const Symbol & name);
 	virtual void writeFloat(float value);
 	virtual void writeInt(int32_t value);
-	virtual void writeString(const char * c);
+	virtual void writeString(const char * c, int maxSize);
 	virtual void writeBool(bool b);
 };
 

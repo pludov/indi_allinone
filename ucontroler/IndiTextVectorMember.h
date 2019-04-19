@@ -25,8 +25,11 @@ public:
 	virtual ~IndiTextVectorMember();
 
 	void setValue(const char * value);
+	void setValueFrom(const char * value, int maxSize);
 
 	const char * getTextValue() const { return value; };
+
+	int getMaxSize() const { return maxSize; }
 
 	virtual uint8_t getSubtype() const { return maxSize; };
 

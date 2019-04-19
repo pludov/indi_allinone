@@ -45,10 +45,23 @@ void IndiTextVectorMember::setValue(const char * value)
 	notifyVectorUpdate(VECTOR_VALUE);
 }
 
+void IndiTextVectorMember::setValueFrom(const char * value, int sze)
+{
+	int realLen = strnlen(value, sze);
+	if (realLen > maxSize) {
+		realLen = maxSize;
+	}
+	if (!strncmp(this->value, value, realLen)) {
+		return;
+	}
+	strncpy(this->value, value, realLen);
+	this->value[realLen] = 0;
+	notifyVectorUpdate(VECTOR_VALUE);
+}
 
 void IndiTextVectorMember::writeValue(WriteBuffer & into) const
 {
-	into.writeString(this->value);
+	into.writeString(this->value, maxSize);
 }
 
 bool IndiTextVectorMember::readValue(ReadBuffer & from)
@@ -63,8 +76,8 @@ void IndiTextVectorMember::skipUpdateValue(ReadBuffer & from) const
 
 void IndiTextVectorMember::writeUpdateValue(WriteBuffer & into, void * ptr) const
 {
-	// FIXME: size overflow ?
-	into.writeString(*(char**)ptr);
+	const char * write = *(char**)ptr;
+	into.writeString(write, maxSize);
 }
 
 /*
