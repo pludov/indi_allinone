@@ -12,7 +12,7 @@
 
 FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, int suffix)
 :
-    Motor(pins, F("Filterwheel"), 6000, 6000),
+    Motor(pins, F("Filterwheel"), 4000, 4000),
     group(Symbol(F("FILTERWHEEL"), suffix)),
     filterSlotVec(group, Symbol(F("FILTER_SLOT"), suffix), F("Filter Slot"), VECTOR_WRITABLE|VECTOR_READABLE),
     filterSlot(&filterSlotVec, F("FILTER_SLOT_VALUE"), F("Filter"), 0, FILTER_SLOT_COUNT - 1, 1),
@@ -52,6 +52,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     rawPosVec.onRequested(VectorCallback(&FilterWheel::rawPosChanged, this));
     filterSlotVec.onRequested(VectorCallback(&FilterWheel::filterSlotChanged, this));
     abortMotionVec.onRequested(VectorCallback(&FilterWheel::abortChanged, this));
+    calibrateVec.onRequested(VectorCallback(&FilterWheel::calibrateChanged, this));
     bd->addCapability(FILTER_INTERFACE);
 }
 
@@ -124,8 +125,9 @@ void FilterWheel::onProgress()
                 // Calibration done !. Go on to the selected filter
                 currentCalibration = 0;
                 // FIXME: don't erase the low bits
+                clearOutput();
                 loadPosition(100000);
-                filterSlotChanged();
+                setTargetPosition(100000);
                 onProgress();
                 return;
             }
