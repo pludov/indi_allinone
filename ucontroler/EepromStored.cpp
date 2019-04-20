@@ -330,7 +330,7 @@ static uint32_t eepromCrc() {
 	return crc;
 }
 
-
+bool EepromStored::initDone = false;
 
 void EepromStored::init()
 {
@@ -374,6 +374,7 @@ void EepromStored::init()
 	if (needRewrite) {
 		fullRewrite();
 	}
+	initDone = true;
 	DEBUG(F("Write during init:"), byteWriteCount);
 }
 

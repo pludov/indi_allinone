@@ -25,6 +25,7 @@ class EepromWriteCounter;
 class EepromStored {
 	friend class EepromWriteCounter;
 private:
+	static bool initDone;
 	EepromStored * next;
 	static EepromStored * first;
 	const uint32_t addr;
@@ -68,6 +69,10 @@ public:
 	virtual ~EepromStored();
 
 	static void init();
+
+	static bool eepromReady() {
+		return initDone;
+	}
 
 	// Addr are in the range 0..63
 	static uint32_t Addr(uint8_t v);

@@ -2,13 +2,54 @@
 #include <Arduino.h>
 #endif
 
+#include <string.h>
+
 #include "CommonUtils.h"
 #include "FilterWheel.h"
 #include "BaseDriver.h"
 #include "EepromStored.h"
 #include "IndiVectorMemberStorage.h"
 
-#define FILTER_MAX_POS 65535
+#define POS_INVALID ((uint32_t)0x7fffffff)
+
+struct Settings {
+	uint32_t pos;
+};
+
+class FilterWheelMemory : public EepromStored {
+    FilterWheel * fw;
+protected:
+	virtual void decodeEepromValue(void * buffer, uint8_t sze){
+		if (sze != sizeof(Settings)) {
+			DEBUG(F("FilterWheel EEPROM invalid size"), sze);
+			return;
+		}
+		memcpy(&settings, (void*)buffer, sze);
+        fw->loadInitialSettings();
+	}
+
+	virtual void encodeEepromValue(void * buffer, uint8_t sze) {
+		if (sze != sizeof(Settings)) return;
+		memcpy(buffer, (void*)&settings, sze);
+	}
+
+	virtual int getEepromSize() const {
+		return sizeof(Settings);
+	}
+public:
+	// Bit mask of known slots (not saved)
+	Settings settings;
+
+	FilterWheelMemory(FilterWheel * fw, uint32_t addr): EepromStored(addr) {
+		settings.pos = POS_INVALID;
+        this->fw = fw;
+	}
+
+	void save()
+	{
+		write();
+	}
+};
 
 FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, int suffix)
 :
@@ -54,6 +95,22 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     abortMotionVec.onRequested(VectorCallback(&FilterWheel::abortChanged, this));
     calibrateVec.onRequested(VectorCallback(&FilterWheel::calibrateChanged, this));
     bd->addCapability(FILTER_INTERFACE);
+    memory = new FilterWheelMemory(this, EepromStored::Addr(addr, 47));
+}
+
+void FilterWheel::loadInitialSettings()
+{
+    if (memory->settings.pos == POS_INVALID) {
+        // Will stay idle in calibration state
+        this->currentCalibration = 2;
+    } else {
+        this->currentCalibration = CALIBRATION_IDLE;
+        loadPosition(memory->settings.pos);
+        if (this->isMoving()) {
+            setTargetPosition(getCurrentPosition());
+        }
+    }
+    onProgress();
 }
 
 void FilterWheel::rawPosChanged() {
@@ -106,6 +163,18 @@ void FilterWheel::calibrateChanged() {
     onProgress();
 }
 
+void FilterWheel::saveMemoryPos(uint32_t value)
+{
+    if (!EepromStored::eepromReady()) {
+        return;
+    }
+    if (memory->settings.pos != value) {
+        memory->settings.pos = value;
+        memory->save();
+    }
+}
+
+
 void FilterWheel::onProgress()
 {
     bool busy = this->isActive();
@@ -115,6 +184,10 @@ void FilterWheel::onProgress()
 
     rawPosVec.set(VECTOR_BUSY, busy);
     rawPos.setValue(this->currentPosition);
+
+    if (busy) {
+        saveMemoryPos(POS_INVALID);
+    }
 
     if (currentCalibration) {
         if (pin == (currentCalibration == CALIBRATION_WAITING_1)) {
@@ -128,6 +201,7 @@ void FilterWheel::onProgress()
                 clearOutput();
                 loadPosition(100000);
                 setTargetPosition(100000);
+                saveMemoryPos(100000);
                 onProgress();
                 return;
             }
@@ -138,7 +212,7 @@ void FilterWheel::onProgress()
         calibrateVec.set(VECTOR_BUSY, false);
         // Update the vector position. Set to err if no filter is found
         if (!busy) {
-            unsigned long newValue = this->currentPosition;
+            uint32_t newValue = this->currentPosition;
             // Update the filter slot accordingly
             busy = true;
             for(int i = 0; i < FILTER_SLOT_COUNT; ++i) {
@@ -148,7 +222,7 @@ void FilterWheel::onProgress()
                     break;
                 }
             }
-            // FIXME: save pos to EEPROM
+            saveMemoryPos(newValue);
         }
         filterSlotVec.set(VECTOR_BUSY, busy);
     }

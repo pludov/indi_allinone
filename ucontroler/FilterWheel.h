@@ -19,7 +19,10 @@ class BaseDriver;
 #define CALIBRATION_WAITING_0 1
 #define CALIBRATION_WAITING_1 2
 
+class FilterWheelMemory;
+
 class FilterWheel: public Motor {
+    friend class FilterWheelMemory;
     Symbol group;
     IndiNumberVector filterSlotVec;
     IndiIntVectorMember filterSlot;
@@ -48,8 +51,10 @@ class FilterWheel: public Motor {
     void abortChanged();
 
     uint8_t currentCalibration;
-
+    FilterWheelMemory * memory;
     bool readPin();
+    void loadInitialSettings();
+    void saveMemoryPos(uint32_t value);
 public:
     // 4 pins for motor + sensor
     FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t * pins, int suffix);
