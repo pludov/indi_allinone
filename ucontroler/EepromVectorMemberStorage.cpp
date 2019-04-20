@@ -105,10 +105,7 @@ public:
 	}
 
 	virtual void encodeEepromValue(void * buffer, uint8_t sze) {
-		if (sze < member->getMaxSize() + 1) {
-			return;
-		}
-		strncpy((char*)buffer, member->getTextValue(), member->getMaxSize());
+		strncpy((char*)buffer, member->getTextValue(), sze);
 	}
 
 	virtual int getEepromSize() const {
