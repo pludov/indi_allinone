@@ -282,7 +282,7 @@ public:
 		IPState state = getIPState(vector);
 		int count = vector->getMemberCount();
 
-		INumber * numbers = new INumber[count];
+		INumber * numbers = new INumber[count]();
 
 		int pos = 0;
 		for(IndiVectorMember * member = vector->first; member ; member = member->next)
@@ -302,7 +302,7 @@ public:
 		IPState state = getIPState(vector);
 		int count = vector->getMemberCount();
 
-		IText * texts = new IText[count];
+		IText * texts = new IText[count]();
 
 		int pos = 0;
 		for(IndiVectorMember * member = vector->first; member ; member = member->next)
@@ -321,7 +321,7 @@ public:
 		IPState state = getIPState(vector);
 		int count = vector->getMemberCount();
 
-		ISwitch * switches = new ISwitch[count];
+		ISwitch * switches = new ISwitch[count]();
 
 		int pos = 0;
 		for(IndiVectorMember * member = vector->first; member ; member = member->next)
