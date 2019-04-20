@@ -68,6 +68,7 @@ public:
 			{
 				item->writeCount = 0;
 			}
+			highestCellWriteCount = 0;
 		}
 	}
 
@@ -367,7 +368,7 @@ void EepromStored::init()
 		}
 	}
 	DEBUG(F("writeCounter value is "), writeCounter->getCount());
-	if ((!needRewrite) && (writeCounter->count > 16)) {
+	if ((!needRewrite) && (writeCounter->count > 128)) {
 		DEBUG(F("Time for a full rewrite"));
 		needRewrite = true;
 	}
