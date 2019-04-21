@@ -10,6 +10,7 @@
 #include "IndiTextVectorMember.h"
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
+#include "EepromStored.h"
 
 class BaseDriver;
 
@@ -44,6 +45,8 @@ class FilterWheel: public Motor {
 
     IndiNumberVector hallVec;
     IndiIntVectorMember hall;
+
+    EepromReadyListener eepromReadyListener;
 
     void rawPosChanged();
     void filterSlotChanged();

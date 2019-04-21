@@ -81,4 +81,48 @@ public:
 	static uint32_t Addr(uint32_t v1, uint8_t v2, uint8_t v3, uint8_t v4);
 };
 
+class EepromCallback {
+	typedef void (FuncType)(void*);
+	FuncType * func;
+	void *thiz;
+public:
+	EepromCallback() {
+		thiz = nullptr;
+		func = nullptr;
+	}
+
+	EepromCallback(const EepromCallback & copy) {
+		thiz = copy.thiz;
+		func = copy.func;
+	}
+
+	template<typename O>
+	EepromCallback(void (O::*func)(), O * thiz) {
+		this->thiz = (void*)thiz;
+		this->func = (FuncType*)func;
+	}
+
+	bool isSet() const {
+		return func;
+	}
+
+	void call() const{
+		(*func)(thiz);
+	}
+};
+
+class EepromReadyListener {
+	friend class EepromStored;
+private:
+	static EepromReadyListener * first;
+	static void ready();
+	EepromReadyListener * next;
+	EepromCallback callback;
+public:
+	EepromReadyListener(const EepromCallback & cb);
+	~EepromReadyListener();
+
+	void setCallback(const EepromCallback & cb);
+};
+
 #endif /* EEPROMSTORED_H_ */

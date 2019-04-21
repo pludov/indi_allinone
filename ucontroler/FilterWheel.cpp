@@ -17,7 +17,6 @@ struct Settings {
 };
 
 class FilterWheelMemory : public EepromStored {
-    FilterWheel * fw;
 protected:
 	virtual void decodeEepromValue(void * buffer, uint8_t sze){
 		if (sze != sizeof(Settings)) {
@@ -25,7 +24,6 @@ protected:
 			return;
 		}
 		memcpy(&settings, (void*)buffer, sze);
-        fw->loadInitialSettings();
 	}
 
 	virtual void encodeEepromValue(void * buffer, uint8_t sze) {
@@ -40,9 +38,8 @@ public:
 	// Bit mask of known slots (not saved)
 	Settings settings;
 
-	FilterWheelMemory(FilterWheel * fw, uint32_t addr): EepromStored(addr) {
+	FilterWheelMemory(uint32_t addr): EepromStored(addr) {
 		settings.pos = POS_INVALID;
-        this->fw = fw;
 	}
 
 	void save()
@@ -66,7 +63,8 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     filterNamesVec(group, Symbol(F("FILTER_NAME"), suffix), F("Names"), VECTOR_WRITABLE|VECTOR_READABLE),
     filterPositionsVec(group, Symbol(F("FILTER_POS")), F("Positions"), VECTOR_WRITABLE|VECTOR_READABLE),
     hallVec(group, Symbol(F("FILTER_HALL"), suffix), F("Hall sensor"), VECTOR_READABLE),
-    hall(&hallVec, Symbol(F("HALL_VALUE")), F("Value"),0 ,255, 1)
+    hall(&hallVec, Symbol(F("HALL_VALUE")), F("Value"),0 ,255, 1),
+    eepromReadyListener(EepromCallback(&FilterWheel::loadInitialSettings, this))
 {
     pauseAfterMove = 100;
     maxAccelStep = 30;
@@ -87,7 +85,6 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     this->currentCalibration = CALIBRATION_IDLE;
 
     pinMode(this->motorPins[4], INPUT);
-    // FIXME: read position from EEPROM
     loadPosition(50000);
     onProgress();
     rawPosVec.onRequested(VectorCallback(&FilterWheel::rawPosChanged, this));
@@ -95,7 +92,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     abortMotionVec.onRequested(VectorCallback(&FilterWheel::abortChanged, this));
     calibrateVec.onRequested(VectorCallback(&FilterWheel::calibrateChanged, this));
     bd->addCapability(FILTER_INTERFACE);
-    memory = new FilterWheelMemory(this, EepromStored::Addr(addr, 47));
+    memory = new FilterWheelMemory(EepromStored::Addr(addr, 47));
 }
 
 void FilterWheel::loadInitialSettings()

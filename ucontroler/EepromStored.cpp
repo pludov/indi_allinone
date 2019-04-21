@@ -336,7 +336,6 @@ bool EepromStored::initDone = false;
 void EepromStored::init()
 {
 	bool needRewrite = false;
-	int requiredSize = 0;
 	writeCounter = new EepromWriteCounter();
 
 	// FIXME: better seed rand !
@@ -375,8 +374,9 @@ void EepromStored::init()
 	if (needRewrite) {
 		fullRewrite();
 	}
-	initDone = true;
 	DEBUG(F("Write during init:"), byteWriteCount);
+	initDone = true;
+	EepromReadyListener::ready();
 }
 
 static int getPadding(int padding, int itemCount, int & paddingLeft)
@@ -469,3 +469,43 @@ void EepromStored::fullRewrite() {
 	eWrite32(0, initValue);
 }
 
+
+EepromReadyListener * EepromReadyListener::first = nullptr;
+
+EepromReadyListener::EepromReadyListener(const EepromCallback & cb)
+	: callback(cb)
+{
+	next = first;
+	first = this;
+}
+
+EepromReadyListener::~EepromReadyListener()
+{
+	EepromReadyListener ** ref = &first;
+	while(true) {
+		EepromReadyListener *next = (*ref);
+		if (next == this) {
+			(*ref) = this->next;
+			return;
+		}
+		if (!next) {
+			// Not found ???
+			return;
+		}
+		ref = &next->next;
+	}
+}
+
+void EepromReadyListener::setCallback(const EepromCallback & cb) {
+	this->callback = cb;
+};
+
+void EepromReadyListener::ready() {
+	EepromReadyListener * t = first;
+	while(t) {
+		if (t->callback.isSet()) {
+			t->callback.call();
+		}
+		t = t->next;
+	}
+}
