@@ -4,14 +4,10 @@
  *  Created on: 5 févr. 2015
  *      Author: utilisateur
  */
-#define TIMER_BASED
-
 #include <Arduino.h>
 #include "pwmresistor.h"
 
-#ifdef TIMER_BASED
 #include "TimerOne.h"
-#endif
 
 // On travaille en ~50Hz. Il faut un multiple de 255 de préférence
 # define BASE_TIME 20400
@@ -19,10 +15,9 @@
 
 PWMResistor::PWMResistor(uint8_t pin) {
 	this->pin = pin;
-	//FIXME: changer pour la prod
 	this->pct = 0;
 
-	// Periode de 1s.
+	// Periode de 0.1s.
 	Timer1.initialize(100000);
 	Timer1.start();
 	Timer1.pwm(this->pin, 0);

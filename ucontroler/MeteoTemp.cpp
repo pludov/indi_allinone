@@ -7,11 +7,10 @@
 #include <Arduino.h>
 #include "CommonUtils.h"
 #include "MeteoTemp.h"
-#include "MainLogic.h"
 #include "Status.h"
 
 
-// Une lecture toutes les 20s devrait suffire largement
+// Interval between read attempts (usec)
 #define READ_INTERVAL 5000000
 
 

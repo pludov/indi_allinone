@@ -13,6 +13,7 @@
 #include "utime.h"
 #include "Symbol.h"
 
+/** Responsible for event delivery */
 class Scheduled
 {
 	friend class Scheduler;

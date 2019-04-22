@@ -13,6 +13,9 @@
 
 class BaseDriver;
 
+/**
+ * Drive a focus motor using 4 digital PINS (ex: unipolar BYJ48) and expose the corresponding INDI interface
+ */
 class Focuser: public Motor {
     Symbol group;
     IndiNumberVector absolutePositionVec;
@@ -22,6 +25,7 @@ class Focuser: public Motor {
     void absPositionChanged();
     void abortChanged();
 public:
+    /** pins needs to contains 4 digital pins */
     Focuser(BaseDriver * bd, const uint8_t * pins, int suffix);
     virtual void onProgress();
     virtual void onTargetPositionReached();

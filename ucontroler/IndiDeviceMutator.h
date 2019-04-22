@@ -6,6 +6,9 @@
 class IndiVector;
 class IndiProtocol;
 
+/**
+ * Provides notification to the indi driver. Not used in micro controler
+ */
 class IndiDeviceMutator {
 
 public:

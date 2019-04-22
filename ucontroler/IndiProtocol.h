@@ -1,10 +1,3 @@
-/*
- * status.h
- *
- *  Created on: 27 févr. 2015
- *      Author: utilisateur
- */
-
 #ifndef INDIPROTOCOL_H_
 #define INDIPROTOCOL_H_
 

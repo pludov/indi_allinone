@@ -6,7 +6,6 @@
 	void suicide();
 	#define DEBUG(...)
 	#define FATAL(...) suicide()
-	#define MORE_DEBUG
 #else
 	#ifndef TEENSYDUINO
 	#error "unsupported build"

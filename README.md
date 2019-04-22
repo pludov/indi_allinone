@@ -26,6 +26,8 @@ The setup includes:
 * Watt/Current metter to monitor power consumption
 * A clock to report uptime (& detect reset/crash)
 
+You can tweak motor acceleration/speed for focuser and filterwheel. The default is conservative, with lower speed for focuser retractation (usefull if you have a refractor)
+
 If you want to adapt for an unsupported hardware, you'll need to write an event driven class (ie avoid blocking for more than about 1 ms, to keep filterwheel/focuser happy). A good starting point is Status.h/Status.cpp that just reports a numeric value.
 
 Focuser.cpp also has a simple example of how to control something from INDI property.
