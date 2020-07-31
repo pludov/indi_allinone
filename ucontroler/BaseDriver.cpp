@@ -14,6 +14,9 @@ void BaseDriver::addCapability(uint8_t v)
 {
     uint16_t i = 1;
     i = i << v;
+    ival |= i;
+
+    i = ival;
 
     char output[9];
     char* p = &output[8];
