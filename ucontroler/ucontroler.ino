@@ -28,10 +28,8 @@
 #include "FilterWheel.h"
 #include "Scheduler.h"
 #include "pwmresistor.h"
-#include "scopetemp.h"
 #include "Status.h"
 #include "MeteoTemp.h"
-#include "voltmeter.h"
 #include "DewHeater.h"
 #include "WattMeter.h"
 

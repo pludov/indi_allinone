@@ -2,7 +2,6 @@
 
 #include "Motor.h"
 #include "Status.h"
-#include "Config.h"
 
 #define intervalBetweenProgress ((unsigned long int)500000)
 

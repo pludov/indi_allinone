@@ -23,7 +23,7 @@ protected:
 	// Number of steps to gain full speed
 	uint8_t maxAccelStep = 100;
 	// Pause after a move (ms), before cutting off signal and reporting idle
-	uint8_t pauseAfterMove = 1000;
+	uint16_t pauseAfterMove = 250;
 
 	// Direction & speed
 	int speedLevel;
