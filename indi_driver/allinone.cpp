@@ -52,6 +52,11 @@
 #include <cstring>
 #include <memory>
 
+
+extern std::ostream indiDebugStream;
+extern std::ostream indiInfoStream;
+extern std::ostream indiErrorStream;
+
 std::unique_ptr<SimpleDevice> simpleDevice(new SimpleDevice());
 
 void plugIndiDebug(std::string deviceName);
@@ -106,6 +111,8 @@ void ISSnoopDevice(XMLEle *root)
 }
 
 SimpleDevice::SimpleDevice() : INDI::DefaultDevice(), backgroundProcessorThread(){
+	setDriverInterface(0);
+
 	plugIndiDebug(getDriverName());
 	sharingMutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 	doneCond = PTHREAD_COND_INITIALIZER;
@@ -374,6 +381,10 @@ public:
 
     // Called by indiProtocol after a vector has been announced
     virtual void announced(IndiVector * vector) {
+	if (handleInterfaceVector(vector)) {
+		return;
+	}
+
     	// If a vector with same name/uid/type exists, keep it
 
     	// Check that no vector with the same uid exists (or drop it)
@@ -399,6 +410,43 @@ public:
     	propsByName[current->vector->name] = current;
     	propsByUid[current->vector->uid] = current;
     	announceVector(current);
+    }
+
+    bool handleInterfaceVector(IndiVector * vector)
+    {
+	if (vector->name == "DRIVER_INFO") {
+		if (vector->kind().uid == IndiTextVectorKindUid) {
+			for(const IndiVectorMember * member = vector->first; member; member = member->next) {
+				if (member->name == "DRIVER_INTERFACE") {
+					std::string ifaceValue = ((IndiTextVectorMember*)member)->getTextValue();
+
+					try {
+						int v = std::stoi(ifaceValue);
+						indiInfoStream << "Received interface version " << v << '\n';
+					        target->setDriverInterface(v);
+					        auto prop = target->getText("DRIVER_INFO");
+					        if (prop)
+					        {
+				                        IDSetText(prop, nullptr);
+						}
+
+					} catch(const std::invalid_argument & e) {
+						indiErrorStream << "Ignoring invalid driver interface value " << ifaceValue << ": " << e.what() << '\n';
+					} catch(const std::out_of_range & e) {
+						indiErrorStream << "Ignoring overflow driver interface value " << ifaceValue << ": " << e.what() << '\n';
+					}
+
+				}
+			}
+		} else {
+			indiErrorStream << "Ignoring wrong type for driver interface value\n";
+		}
+
+		return true;
+	}
+	indiInfoStream << "Not the interface driver: " << vector->name << "\n";
+
+	return false;
     }
 
     void announceVector(IndiVectorImage* current) {
@@ -448,6 +496,10 @@ public:
     // Called by indiProtocol after a vector has been mutated (any change except type/name)
     virtual void mutated(IndiVector * vector)
     {
+	if (handleInterfaceVector(vector)) {
+		return;
+	}
+
     	// Check that the vector exists and still has the same name
     	IndiVectorImage * current = getCurrentVectorImage(vector->uid);
     	if (current == nullptr || current->vector->name != vector->name) {
@@ -907,8 +959,9 @@ class DebugStreamBuffer : public std::streambuf
 {
 	std::string content;
 	std::string deviceName;
+	INDI::Logger::VerbosityLevel level;
 public:
-    DebugStreamBuffer() : content(), deviceName("unnamed")
+    DebugStreamBuffer(INDI::Logger::VerbosityLevel l) : content(), deviceName("unnamed"), level(l)
 	{
 
 	}
@@ -943,7 +996,7 @@ protected:
 			for(size_t i = 0; i < content.size(); ++i) {
 				if (content[i] ==  '\n') {
 					content[i] = 0;
-					INDI::Logger::getInstance().print(deviceName.c_str(), INDI::Logger::DBG_DEBUG, "somewhere", 0, "%s",content.c_str());
+					INDI::Logger::getInstance().print(deviceName.c_str(), level, "somewhere", 0, "%s",content.c_str());
 					content = content.substr(i + 1);
 					sthDone = true;
 					break;
@@ -953,8 +1006,14 @@ protected:
 	}
 };
 
-DebugStreamBuffer indiDebugStreamBuffer;
+DebugStreamBuffer indiDebugStreamBuffer(INDI::Logger::DBG_DEBUG);
 std::ostream indiDebugStream(&indiDebugStreamBuffer);
+
+DebugStreamBuffer indiInfoStreamBuffer(INDI::Logger::DBG_SESSION);
+std::ostream indiInfoStream(&indiInfoStreamBuffer);
+
+DebugStreamBuffer indiErrorStreamBuffer(INDI::Logger::DBG_ERROR);
+std::ostream indiErrorStream(&indiErrorStreamBuffer);
 
 #undef DEBUG
 #include "CommonUtils.h"
@@ -962,5 +1021,7 @@ std::ostream indiDebugStream(&indiDebugStreamBuffer);
 void plugIndiDebug(std::string deviceName)
 {
 	indiDebugStreamBuffer.setDeviceName(deviceName);
+	indiInfoStreamBuffer.setDeviceName(deviceName);
+	indiErrorStreamBuffer.setDeviceName(deviceName);
 	debugStream = &indiDebugStream;
 }
