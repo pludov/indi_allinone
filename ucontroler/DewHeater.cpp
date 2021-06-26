@@ -586,7 +586,8 @@ void DewHeater::endMeasure()
         return;
     }
 
-    temperature.setValue(((data[1] << 8) | data[0]) * 0.0625);
+	int16_t rawVal = ((data[1] << 8) | data[0]);
+    temperature.setValue(rawVal * 0.0625);
     tempAvailable = true;
     if (pidRunning) powerModeChanged();
 
