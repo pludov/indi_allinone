@@ -16,6 +16,7 @@ protected:
 	const uint8_t * motorPins;
 	unsigned long currentPosition;             // current position
 	unsigned long targetPosition;              // target position
+	unsigned long intermediateTargetPosition;  // Will pass there before reaching targetPosition (backlash)
 
 	// At full speed, how short a step is ?
 	int fastestPerHalfStepAsc;
@@ -32,11 +33,18 @@ protected:
 public:
 	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepAsc = 4 * 2200, int fastestPerHalfStepDesc = 4 * 2200);
 
+	void updatePulse(int fastestPerHalfStepAsc, int fastestPerHalfStepDesc) {
+		this->fastestPerHalfStepAsc = fastestPerHalfStepAsc;
+		this->fastestPerHalfStepDesc = fastestPerHalfStepDesc;
+	}
+
 	// Load stored position
 	void loadPosition(unsigned long currentPosition);
 
 	// Start moving to the given position
 	void setTargetPosition(unsigned long newPosition);
+	// Start moving to the given position, with an intermediate step (for backlash)
+	void setTargetPosition(unsigned long newPosition, unsigned long newIntermediatePosition);
 
 	unsigned long getTargetPosition();
 

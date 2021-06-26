@@ -14,7 +14,7 @@
 
 class BaseDriver;
 
-#define FILTER_SLOT_COUNT 5
+#define FILTER_SLOT_COUNT 7
 
 #define CALIBRATION_IDLE 0
 #define CALIBRATION_WAITING_0 1
@@ -30,6 +30,9 @@ class FilterWheel: public Motor {
 
     IndiNumberVector rawPosVec;
     IndiIntVectorMember rawPos;
+
+    IndiNumberVector motorPulseVec;
+    IndiIntVectorMember motorPulse;
 
     IndiSwitchVector calibrateVec;
     IndiSwitchVectorMember calibrate;
@@ -49,6 +52,7 @@ class FilterWheel: public Motor {
     EepromReadyListener eepromReadyListener;
 
     void rawPosChanged();
+    void motorPulseChanged();
     void filterSlotChanged();
     void calibrateChanged();
     void abortChanged();

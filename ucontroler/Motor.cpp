@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "CommonUtils.h"
+
 #include "Motor.h"
 #include "Status.h"
 
@@ -26,6 +28,7 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 	this->priority = 0;
 	this->currentPosition = 1000;
 	this->targetPosition = 1000;
+	this->intermediateTargetPosition = this->targetPosition;
 	this->motorPins = pins;
 	this->nextTick = UTime::never();
 	this->speedLevel = 0;
@@ -58,6 +61,7 @@ void Motor::clearOutput() {
 void Motor::loadPosition(unsigned long newPosition)
 {
 	this->targetPosition = newPosition;
+	this->intermediateTargetPosition = newPosition;
 	this->currentPosition = newPosition;
 }
 
@@ -71,11 +75,20 @@ unsigned long Motor::getTargetPosition()
 	return this->targetPosition;
 }
 
-void Motor::setTargetPosition(unsigned long newPosition)
+void Motor::setTargetPosition(unsigned long newPosition) {
+	this->setTargetPosition(newPosition, newPosition);
+}
+
+void Motor::setTargetPosition(unsigned long newPosition, unsigned long newIntermediateTargetPosition)
 {
-	if (this->targetPosition == this->currentPosition) {
+	if (newIntermediateTargetPosition == this->currentPosition) {
+		newIntermediateTargetPosition = newPosition;
+	}
+
+	if (this->targetPosition == this->currentPosition && this->targetPosition == this->intermediateTargetPosition) {
+		// We are idle.
 		this->speedLevel = 0;
-		if (newPosition == this->targetPosition) {
+		if (newPosition == this->targetPosition && newIntermediateTargetPosition == this->targetPosition) {
 			// ok, nothing to do then
 			return;
 		}
@@ -87,7 +100,8 @@ void Motor::setTargetPosition(unsigned long newPosition)
 	}
 	this->nextProgress = UTime::now() + intervalBetweenProgress;
 	this->targetPosition = newPosition;
-	
+	this->intermediateTargetPosition = newIntermediateTargetPosition;
+
 	this->onProgress();
 }
 
@@ -98,20 +112,26 @@ bool Motor::isActive()
 
 bool Motor::isMoving()
 {
-	return !this->nextTick.isNever() && this->targetPosition != this->currentPosition;
+	return !this->nextTick.isNever() && (this->targetPosition != this->currentPosition || this->intermediateTargetPosition != this->targetPosition);
 }
 
 void Motor::tick()
 {
 	// On est arriv� � destination.
-	long distance = targetPosition - currentPosition;
+	long distance = abs((long)(intermediateTargetPosition - currentPosition)) + abs((long)(intermediateTargetPosition - targetPosition));
+	int8_t dir = sgn(intermediateTargetPosition - currentPosition);
+	if (dir == 0) {
+		this->intermediateTargetPosition = this->targetPosition;
+		dir = sgn(intermediateTargetPosition - currentPosition);
+	}
+	distance *= dir;
+
 	if (distance == 0) {
 		// On est arret�. Plus rien � faire.
 		this->clearOutput();
 		this->nextTick = UTime::never();
 		this->onProgress();
 	} else {
-		int8_t dir = sgn(distance);
 		if (this->speedLevel == 0) {
 			// Commencer � 1...
 			this->speedLevel = dir;
@@ -129,6 +149,9 @@ void Motor::tick()
 			}
 		}
 		this->currentPosition += sgn(this->speedLevel);
+		if (this->currentPosition == this->intermediateTargetPosition) {
+			this->intermediateTargetPosition = this->targetPosition;
+		}
 		this->setOutput(this->currentPosition & 7);
 
 		// Now compute the tick duration
