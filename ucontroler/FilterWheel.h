@@ -31,8 +31,9 @@ class FilterWheel: public Motor {
     IndiNumberVector rawPosVec;
     IndiIntVectorMember rawPos;
 
-    IndiNumberVector motorPulseVec;
+    IndiNumberVector motorSettingsVec;
     IndiIntVectorMember motorPulse;
+    IndiIntVectorMember motorBacklash;
 
     IndiSwitchVector calibrateVec;
     IndiSwitchVectorMember calibrate;
@@ -52,7 +53,7 @@ class FilterWheel: public Motor {
     EepromReadyListener eepromReadyListener;
 
     void rawPosChanged();
-    void motorPulseChanged();
+    void motorSettingsChanged();
     void filterSlotChanged();
     void calibrateChanged();
     void abortChanged();

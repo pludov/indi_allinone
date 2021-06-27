@@ -58,8 +58,9 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     filterSlot(&filterSlotVec, F("FILTER_SLOT_VALUE"), F("Filter"), 0, FILTER_SLOT_COUNT - 1, 1),
     rawPosVec(group, Symbol(F("FILTER_RAW_POSITION"), suffix), F("Raw Position"), VECTOR_WRITABLE|VECTOR_READABLE),
     rawPos(&rawPosVec, F("FILTER_RAW_POSITION"), F("Ticks"), 0, 100000, 1),
-    motorPulseVec(group, Symbol(F("FILTER_MOTOR_PULSE"), suffix), F("Motor pulse (ms)"), VECTOR_WRITABLE|VECTOR_READABLE),
-    motorPulse(&motorPulseVec, F("FILTER_MOTOR_PULSE"), F("ms"), 100,100000, DEFAULT_MOTOR_PULSE),
+    motorSettingsVec(group, Symbol(F("FILTER_MOTOR_SETTINGS"), suffix), F("Motor settings"), VECTOR_WRITABLE|VECTOR_READABLE),
+    motorPulse(&motorSettingsVec, F("FILTER_MOTOR_PULSE"), F("pulse (ms)"), 100,100000, DEFAULT_MOTOR_PULSE),
+    motorBacklash(&motorSettingsVec, F("FILTER_MOTOR_BACKLASH"), F("backlash"), -10000,10000, 0),
     calibrateVec(group, Symbol(F("FILTER_CALIB"), suffix), F("Calibration"), VECTOR_WRITABLE|VECTOR_READABLE|VECTOR_SWITCH_ATMOSTONE),
     calibrate(&calibrateVec, F("CALIB"), F("Calibrate")),
     abortMotionVec(group, Symbol(F("FILTER_ABORT_MOTION"), suffix), F("Abort Motion"), VECTOR_WRITABLE|VECTOR_READABLE|VECTOR_SWITCH_ATMOSTONE),
@@ -87,6 +88,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
         IndiVectorMemberStorage::remember(filterPositions[i], EepromStored::Addr(addr, 48+i));
     }
     IndiVectorMemberStorage::remember(&motorPulse, EepromStored::Addr(addr, 46));
+    IndiVectorMemberStorage::remember(&motorBacklash, EepromStored::Addr(addr, 45));
     this->currentCalibration = CALIBRATION_IDLE;
 
     pinMode(this->motorPins[4], INPUT);
@@ -94,7 +96,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     onProgress();
     rawPosVec.onRequested(VectorCallback(&FilterWheel::rawPosChanged, this));
     filterSlotVec.onRequested(VectorCallback(&FilterWheel::filterSlotChanged, this));
-    motorPulseVec.onRequested(VectorCallback(&FilterWheel::motorPulseChanged, this));
+    motorSettingsVec.onRequested(VectorCallback(&FilterWheel::motorSettingsChanged, this));
     abortMotionVec.onRequested(VectorCallback(&FilterWheel::abortChanged, this));
     calibrateVec.onRequested(VectorCallback(&FilterWheel::calibrateChanged, this));
     bd->addCapability(FILTER_INTERFACE);
@@ -113,7 +115,7 @@ void FilterWheel::loadInitialSettings()
             setTargetPosition(getCurrentPosition());
         }
     }
-    this->motorPulseChanged();
+    this->motorSettingsChanged();
     onProgress();
 }
 
@@ -125,7 +127,7 @@ void FilterWheel::rawPosChanged() {
     this->setTargetPosition(rawPos.getValue());
 }
 
-void FilterWheel::motorPulseChanged() {
+void FilterWheel::motorSettingsChanged() {
     this->updatePulse(motorPulse.getValue(), motorPulse.getValue());
 }
 
@@ -139,7 +141,26 @@ void FilterWheel::filterSlotChanged() {
         newValue = 1;
         filterSlot.setValue(1);
     }
-    this->setTargetPosition(filterPositions[newValue - 1]->getValue());
+
+    int32_t backlash = motorBacklash.getValue();
+    int32_t target = filterPositions[newValue - 1]->getValue();
+    int32_t intermediate = target;
+    int32_t current = getCurrentPosition();
+    if (backlash != 0) {
+        if (backlash > 0) {
+            if (target < current) {
+                intermediate = target - backlash;
+                if (intermediate < 0) {
+                    intermediate = 0;
+                }
+            }
+        } else {
+            if (target > current) {
+                intermediate = target - backlash;
+            }
+        }
+    }
+    this->setTargetPosition(target, intermediate);
 }
 
 void FilterWheel::abortChanged() {
