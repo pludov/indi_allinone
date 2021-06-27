@@ -26,6 +26,7 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 	this->tickExpectedDuration = US(150);
 	// Don't be late please
 	this->priority = 0;
+	this->positionBase = 0;
 	this->currentPosition = 1000;
 	this->targetPosition = 1000;
 	this->intermediateTargetPosition = this->targetPosition;
@@ -42,6 +43,7 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 // Set output pins for stepper
 //------------------------------------------------------------------
 void Motor::setOutput(int out) {
+	out += positionBase;
 	for (int i = 0; i < 4; i++) {
 		digitalWrite(motorPins[i], bitRead(stepPattern[out], i));
 	}
@@ -60,9 +62,15 @@ void Motor::clearOutput() {
 
 void Motor::loadPosition(unsigned long newPosition)
 {
+	this->loadPosition(newPosition, positionBase);
+}
+
+void Motor::loadPosition(unsigned long newPosition, uint8_t newPositionBase)
+{
 	this->targetPosition = newPosition;
 	this->intermediateTargetPosition = newPosition;
 	this->currentPosition = newPosition;
+	this->positionBase = newPositionBase;
 }
 
 unsigned long Motor::getCurrentPosition()

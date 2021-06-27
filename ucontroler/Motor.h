@@ -14,6 +14,7 @@ class Motor : public Scheduled
 {
 protected:
 	const uint8_t * motorPins;
+	uint8_t positionBase;							   // Gets added to every position (for calibration support)
 	unsigned long currentPosition;             // current position
 	unsigned long targetPosition;              // target position
 	unsigned long intermediateTargetPosition;  // Will pass there before reaching targetPosition (backlash)
@@ -40,6 +41,7 @@ public:
 
 	// Load stored position
 	void loadPosition(unsigned long currentPosition);
+	void loadPosition(unsigned long currentPosition, uint8_t positionBase);
 
 	// Start moving to the given position
 	void setTargetPosition(unsigned long newPosition);

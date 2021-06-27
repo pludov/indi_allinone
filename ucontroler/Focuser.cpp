@@ -9,7 +9,7 @@ Focuser::Focuser(BaseDriver * bd, const uint8_t* pins, int suffix):
     focusAbortMotionVec(group, Symbol(F("FOCUS_ABORT_MOTION"), suffix), F("Abort Motion"), VECTOR_WRITABLE|VECTOR_READABLE|VECTOR_SWITCH_ATMOSTONE),
     focusAbortMotion(&focusAbortMotionVec, F("ABORT"), F("Abort"))
 {
-    loadPosition(50000);
+    loadPosition(50000, 0);
     onProgress();
     absolutePositionVec.onRequested(VectorCallback(&Focuser::absPositionChanged, this));
     focusAbortMotionVec.onRequested(VectorCallback(&Focuser::abortChanged, this));

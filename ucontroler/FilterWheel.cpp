@@ -16,6 +16,8 @@
 
 struct Settings {
 	uint32_t pos;
+    // Base of the last calibration
+    uint8_t base;
 };
 
 class FilterWheelMemory : public EepromStored {
@@ -42,6 +44,7 @@ public:
 
 	FilterWheelMemory(uint32_t addr): EepromStored(addr) {
 		settings.pos = POS_INVALID;
+        settings.base = 0;
 	}
 
 	void save()
@@ -92,7 +95,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     this->currentCalibration = CALIBRATION_IDLE;
 
     pinMode(this->motorPins[4], INPUT);
-    loadPosition(50000);
+    loadPosition(50000, 0);
     onProgress();
     rawPosVec.onRequested(VectorCallback(&FilterWheel::rawPosChanged, this));
     filterSlotVec.onRequested(VectorCallback(&FilterWheel::filterSlotChanged, this));
@@ -110,7 +113,7 @@ void FilterWheel::loadInitialSettings()
         this->currentCalibration = 2;
     } else {
         this->currentCalibration = CALIBRATION_IDLE;
-        loadPosition(memory->settings.pos);
+        loadPosition(memory->settings.pos, memory->settings.base);
         if (this->isMoving()) {
             setTargetPosition(getCurrentPosition());
         }
@@ -187,18 +190,19 @@ void FilterWheel::calibrateChanged() {
     } else {
         currentCalibration = CALIBRATION_WAITING_1;
     }
-    loadPosition(1000000);
+    loadPosition(1000000 + ((currentPosition + positionBase) & 7), 0);
     setTargetPosition(1100000);
     onProgress();
 }
 
-void FilterWheel::saveMemoryPos(uint32_t value)
+void FilterWheel::saveMemoryPos(uint32_t value, uint8_t positionBaseValue)
 {
     if (!EepromStored::eepromReady()) {
         return;
     }
-    if (memory->settings.pos != value) {
+    if (memory->settings.pos != value || memory->settings.base != positionBaseValue) {
         memory->settings.pos = value;
+        memory->settings.base = positionBaseValue;
         memory->save();
     }
 }
@@ -215,7 +219,7 @@ void FilterWheel::onProgress()
     rawPos.setValue(this->currentPosition);
 
     if (busy) {
-        saveMemoryPos(POS_INVALID);
+        saveMemoryPos(POS_INVALID, 0);
     }
 
     if (currentCalibration) {
@@ -226,11 +230,11 @@ void FilterWheel::onProgress()
             } else {
                 // Calibration done !. Go on to the selected filter
                 currentCalibration = 0;
-                // FIXME: don't erase the low bits
                 clearOutput();
-                loadPosition(100000);
+                // Keep the low bits for precision
+                loadPosition(100000, (currentPosition + positionBase) & 7);
                 setTargetPosition(100000);
-                saveMemoryPos(100000);
+                saveMemoryPos(100000, positionBase);
                 onProgress();
                 return;
             }
@@ -251,7 +255,7 @@ void FilterWheel::onProgress()
                     break;
                 }
             }
-            saveMemoryPos(newValue);
+            saveMemoryPos(newValue, positionBase);
         }
         filterSlotVec.set(VECTOR_BUSY, busy);
     }
