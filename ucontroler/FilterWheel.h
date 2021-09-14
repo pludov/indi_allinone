@@ -63,6 +63,8 @@ class FilterWheel: public Motor {
     bool readPin();
     void loadInitialSettings();
     void saveMemoryPos(uint32_t value, uint8_t base);
+
+    void gotoRawPos(int32_t target);
 public:
     // 4 pins for motor + sensor
     FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t * pins, int suffix);

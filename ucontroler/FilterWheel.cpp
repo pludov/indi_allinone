@@ -127,26 +127,11 @@ void FilterWheel::rawPosChanged() {
         // Busy - Ignore for now
         return;
     }
-    this->setTargetPosition(rawPos.getValue());
+    gotoRawPos(rawPos.getValue());
 }
 
-void FilterWheel::motorSettingsChanged() {
-    this->updatePulse(motorPulse.getValue(), motorPulse.getValue());
-}
-
-void FilterWheel::filterSlotChanged() {
-    if (this->currentCalibration) {
-        // Busy - ignore for now
-        return;
-    }
-    int32_t newValue = filterSlot.getValue();
-    if (newValue < 1 || newValue > FILTER_SLOT_COUNT) {
-        newValue = 1;
-        filterSlot.setValue(1);
-    }
-
+void FilterWheel::gotoRawPos(int32_t target) {
     int32_t backlash = motorBacklash.getValue();
-    int32_t target = filterPositions[newValue - 1]->getValue();
     int32_t intermediate = target;
     int32_t current = getCurrentPosition();
     if (backlash != 0) {
@@ -163,7 +148,31 @@ void FilterWheel::filterSlotChanged() {
             }
         }
     }
+    if (target < 0) {
+        target = 0;
+    }
+    if (intermediate < 0) {
+        intermediate = 0;
+    }
     this->setTargetPosition(target, intermediate);
+}
+
+void FilterWheel::motorSettingsChanged() {
+    this->updatePulse(motorPulse.getValue(), motorPulse.getValue());
+}
+
+void FilterWheel::filterSlotChanged() {
+    if (this->currentCalibration) {
+        // Busy - ignore for now
+        return;
+    }
+    int32_t newValue = filterSlot.getValue();
+    if (newValue < 1 || newValue > FILTER_SLOT_COUNT) {
+        newValue = 1;
+        filterSlot.setValue(1);
+    }
+    int32_t target = filterPositions[newValue - 1]->getValue();
+    gotoRawPos(target);
 }
 
 void FilterWheel::abortChanged() {
