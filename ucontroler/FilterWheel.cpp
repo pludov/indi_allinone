@@ -74,6 +74,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     hall(&hallVec, Symbol(F("HALL_VALUE")), F("Value"),0 ,255, 1),
     eepromReadyListener(EepromCallback(&FilterWheel::loadInitialSettings, this))
 {
+    memory = new FilterWheelMemory(EepromStored::Addr(addr, 47));
     pauseAfterMove = 100;
     maxAccelStep = 30;
     for(int i = 0; i < FILTER_SLOT_COUNT; ++i) {
@@ -103,7 +104,6 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     abortMotionVec.onRequested(VectorCallback(&FilterWheel::abortChanged, this));
     calibrateVec.onRequested(VectorCallback(&FilterWheel::calibrateChanged, this));
     bd->addCapability(FILTER_INTERFACE);
-    memory = new FilterWheelMemory(EepromStored::Addr(addr, 47));
 }
 
 void FilterWheel::loadInitialSettings()

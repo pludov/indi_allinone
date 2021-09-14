@@ -55,14 +55,13 @@ Focuser::Focuser(BaseDriver * bd, uint32_t addr, const uint8_t* pins, int suffix
     focusResetPosition(&focusResetPositionVec, F("RESET"), F("Reset")),
     eepromReadyListener(EepromCallback(&Focuser::loadInitialSettings, this))
 {
+    memory = new FocuserMemory(EepromStored::Addr(addr, 44));
     loadPosition(50000, 0);
     onProgress();
     absolutePositionVec.onRequested(VectorCallback(&Focuser::absPositionChanged, this));
     focusAbortMotionVec.onRequested(VectorCallback(&Focuser::abortChanged, this));
     focusResetPositionVec.onRequested(VectorCallback(&Focuser::resetPositionChanged, this));
     bd->addCapability(FOCUSER_INTERFACE);
-
-    memory = new FocuserMemory(EepromStored::Addr(addr, 44));
 }
 
 void Focuser::loadInitialSettings()
