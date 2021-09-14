@@ -10,8 +10,10 @@
 #include "IndiTextVectorMember.h"
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
+#include "EepromStored.h"
 
 class BaseDriver;
+class FocuserMemory;
 
 /**
  * Drive a focus motor using 4 digital PINS (ex: unipolar BYJ48) and expose the corresponding INDI interface
@@ -22,11 +24,20 @@ class Focuser: public Motor {
     IndiIntVectorMember absolutePosition;
     IndiSwitchVector focusAbortMotionVec;
     IndiSwitchVectorMember focusAbortMotion;
+    IndiSwitchVector focusResetPositionVec;
+    IndiSwitchVectorMember focusResetPosition;
+
+    EepromReadyListener eepromReadyListener;
+
     void absPositionChanged();
     void abortChanged();
+    void resetPositionChanged();
+    void loadInitialSettings();
+
+    FocuserMemory * memory;
 public:
     /** pins needs to contains 4 digital pins */
-    Focuser(BaseDriver * bd, const uint8_t * pins, int suffix);
+    Focuser(BaseDriver * bd, uint32_t addr, const uint8_t * pins, int suffix);
     virtual void onProgress();
     virtual void onTargetPositionReached();
 

@@ -52,7 +52,7 @@ void declareHardware(BaseDriver * baseDriver) {
 
 	// Focuser motor - 4 pins for motor control
 	static const uint8_t focuserMotorPins[4] = { A6, A7, A8, A9 };
-	new Focuser(baseDriver, focuserMotorPins, 0);
+	new Focuser(baseDriver, EepromStored::Addr(4), focuserMotorPins, 0);
 
 	// Focuser motor - 4 pins for motor control + 1 for hall sensor
 	static const uint8_t filterWheelPins[5] = { 13, 14, 15, 16, 17};
