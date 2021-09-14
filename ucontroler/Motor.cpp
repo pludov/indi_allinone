@@ -43,7 +43,6 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 // Set output pins for stepper
 //------------------------------------------------------------------
 void Motor::setOutput(int out) {
-	out += positionBase;
 	for (int i = 0; i < 4; i++) {
 		digitalWrite(motorPins[i], bitRead(stepPattern[out], i));
 	}
@@ -160,7 +159,7 @@ void Motor::tick()
 		if (this->currentPosition == this->intermediateTargetPosition) {
 			this->intermediateTargetPosition = this->targetPosition;
 		}
-		this->setOutput(this->currentPosition & 7);
+		this->setOutput((this->currentPosition + this->positionBase) & 7);
 
 		// Now compute the tick duration
 		if (distance - dir == 0) {
