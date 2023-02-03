@@ -406,10 +406,15 @@ void DewHeater::stopPid()
 	pidRunning = false;
 }
 
-
 void DewHeater::powerModeChanged()
 {
 	DEBUG(F("Power mode changed to"), powerMode.getCurrent()->name);
+
+	updatePwm();
+}
+
+void DewHeater::updatePwm() {
+
 	// 0 - 255
 	int effectivePwm = 0;
 
@@ -461,7 +466,7 @@ void DewHeater::failed()
     name.setValue("");
     memset(addr, 0, 8);
     // FIXME: mark no temp available
-    powerModeChanged();
+    updatePwm();
     this->status = STATUS_NEED_SCAN;
     this->nextTick = UTime::now() + MS(1000);
 }
@@ -589,7 +594,7 @@ void DewHeater::endMeasure()
 	int16_t rawVal = ((data[1] << 8) | data[0]);
     temperature.setValue(rawVal * 0.0625);
     tempAvailable = true;
-    if (pidRunning) powerModeChanged();
+    if (pidRunning) updatePwm();
 
     this->status = STATUS_IDLE;
     this->nextTick = UTime::now() + MS(5000);

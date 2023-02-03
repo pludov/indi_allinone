@@ -61,6 +61,7 @@ class DewHeater : public Scheduled {
     long lastTime;
     double ITerm;
 
+    void updatePwm();
     void powerModeChanged();
     void configOperationChanged();
 
