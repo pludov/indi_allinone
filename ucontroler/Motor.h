@@ -19,6 +19,9 @@ protected:
 	unsigned long targetPosition;              // target position
 	unsigned long intermediateTargetPosition;  // Will pass there before reaching targetPosition (backlash)
 
+	// Invert the rotation on the motor side.
+	bool invert;
+
 	// At full speed, how short a step is ?
 	int fastestPerHalfStepAsc;
 	int fastestPerHalfStepDesc;
@@ -32,12 +35,18 @@ protected:
 
 	UTime nextProgress;
 public:
-	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepAsc = 4 * 2200, int fastestPerHalfStepDesc = 4 * 2200);
+	Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepDesc = 4 * 2200, int fastestPerHalfStepAsc = 4 * 2200);
+
+	bool getInvert() const { return invert; }
+	void setInvert(bool b) { this->invert = b; }
 
 	void updatePulse(int fastestPerHalfStepAsc, int fastestPerHalfStepDesc) {
 		this->fastestPerHalfStepAsc = fastestPerHalfStepAsc;
 		this->fastestPerHalfStepDesc = fastestPerHalfStepDesc;
 	}
+
+	int getFastestPerHalfStepAsc() const { return this->fastestPerHalfStepAsc; }
+	int getFastestPerHalfStepDesc() const { return this->fastestPerHalfStepDesc; }
 
 	// Load stored position
 	void loadPosition(unsigned long currentPosition);
@@ -67,6 +76,8 @@ public:
 	// Call during move, every ~500ms
 	virtual void onProgress() = 0;
 protected:
+	void setMaxAccelStep(int m) { this->maxAccelStep = m; }
+	uint8_t getMaxAccelStep() const { return this->maxAccelStep; }
 	void setOutput(int out);
 	void clearOutput();
 	long getPulseDuration(int speedLevel);

@@ -26,13 +26,21 @@ class Focuser: public Motor {
     IndiSwitchVectorMember focusAbortMotion;
     IndiSwitchVector focusResetPositionVec;
     IndiSwitchVectorMember focusResetPosition;
+    IndiNumberVector motorSettingsVec;
+    IndiIntVectorMember incMotorPulse;
+    IndiIntVectorMember decMotorPulse;
+    IndiIntVectorMember motorMaxAccelStep;
+    IndiIntVectorMember motorInvert;
 
     EepromReadyListener eepromReadyListener;
 
     void absPositionChanged();
     void abortChanged();
     void resetPositionChanged();
+    void motorSettingsChanged();
     void loadInitialSettings();
+
+    void loadMotorSettings(const struct Settings & settings);
 
     FocuserMemory * memory;
 public:

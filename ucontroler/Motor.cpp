@@ -22,6 +22,7 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 {
 	this->fastestPerHalfStepDesc = fastestPerHalfStepDesc;
 	this->fastestPerHalfStepAsc = fastestPerHalfStepAsc;
+	this->invert = false;
 	// What is the duration ?
 	this->tickExpectedDuration = US(150);
 	// Don't be late please
@@ -43,6 +44,10 @@ Motor::Motor(const uint8_t * pins, const Symbol & debug, int fastestPerHalfStepD
 // Set output pins for stepper
 //------------------------------------------------------------------
 void Motor::setOutput(int out) {
+	if (invert) {
+		// Invert but keep event number on one pin exactly
+		out = (8 - out) & 7;
+	}
 	for (int i = 0; i < 4; i++) {
 		digitalWrite(motorPins[i], bitRead(stepPattern[out], i));
 	}
