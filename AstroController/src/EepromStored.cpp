@@ -338,6 +338,11 @@ void EepromStored::init()
 	bool needRewrite = false;
 	writeCounter = new EepromWriteCounter();
 
+#ifdef EEPROM_EMULATED
+	EEPROM.begin(2048);
+	// FIXME: commit & co...
+#endif
+
 	// FIXME: better seed rand !
 	srand(eepromCrc());
 

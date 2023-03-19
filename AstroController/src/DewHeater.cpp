@@ -251,11 +251,12 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
     pinMode(pwmPin, OUTPUT);
 #ifdef __AVR_ATmega2560__
 #else
-	#ifndef TEENSYDUINO
-	#error "unsupported build"
-	#endif
     // Use 50hz so that AC filtering may help
+	#ifdef TEENSYDUINO
     analogWriteFrequency(pwmPin, 50);
+	#else
+		analogWriteFreq(100);
+	#endif
 #endif
 
     digitalWrite(pwmPin, 0);
@@ -490,19 +491,23 @@ void DewHeater::scan()
     // FIXME: duration for search ?
     oneWire.reset_search();
     if (!oneWire.search(addr)) {
+		DEBUG(F("OW failed"));
         failed();
         return;
     }
     if (OneWire::crc8(addr, 7) != addr[7]) {
+		DEBUG(F("OW crc"));
         failed();
         return;
     }
     if (addr[0] != 0x28) {
         // Mauvais type de capteur
+		DEBUG(F("OW unk"));
         failed();
         return;
     }
     
+	DEBUG(F("OW found"));
     oneWire.select(addr);
 
     char strAddr[32];

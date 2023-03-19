@@ -69,7 +69,7 @@ void WattMeter::tick()
     // No analog read resolution for AtMeta2560
 #else
 	#ifndef TEENSYDUINO
-    #error "Unsupported build"
+    // #error "Unsupported build"
     #endif
     analogReadResolution(12);
 #endif

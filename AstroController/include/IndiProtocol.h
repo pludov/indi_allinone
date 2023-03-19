@@ -6,7 +6,6 @@
 
 class IndiVector;
 struct DirtyVector;
-class Stream;
 class IndiDeviceMutator;
 
 class IndiProtocol

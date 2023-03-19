@@ -7,9 +7,9 @@
 	#define DEBUG(...)
 	#define FATAL(...) suicide()
 #else
-	#ifndef TEENSYDUINO
-	#error "unsupported build"
-	#endif
+	// #ifndef TEENSYDUINO
+	// #error "unsupported build"
+	// #endif
 
 
 #define SerialDbg Serial

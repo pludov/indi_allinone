@@ -10,7 +10,6 @@
 
 // Include necessary libraries
 #include <OneWire.h>                          // DS18B20 temp sensor
-#include <DallasTemperature.h>                // DS18B20 temp sensor
 #include <EEPROM.h>                           // EEPROM Library
 
 #include "CommonUtils.h"
@@ -27,7 +26,6 @@
 #include "Focuser.h"
 #include "FilterWheel.h"
 #include "Scheduler.h"
-#include "pwmresistor.h"
 #include "Status.h"
 #include "MeteoTemp.h"
 #include "DewHeater.h"
@@ -39,6 +37,7 @@
 // --------------------------------------------------------------
 void declareHardware(BaseDriver * baseDriver) {
 
+#ifdef TEENSYDUINO
 	// DHT22 sensor on pin8
 	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
 
@@ -57,6 +56,20 @@ void declareHardware(BaseDriver * baseDriver) {
 	// Focuser motor - 4 pins for motor control + 1 for hall sensor
 	static const uint8_t filterWheelPins[5] = { 13, 14, 15, 16, 17};
 	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
+
+#else
+	// DHT22 sensor on pin8
+	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
+
+	// DewHeater with sensor on pin GP13 & pwm on pin 21
+	DewHeater * dw = new DewHeater(meteoTemp, 13, 21, 1);
+
+	// Focuser motor - 4 pins for motor control + 1 for hall sensor
+	static const uint8_t filterWheelPins[5] = { 11, 12, 14, 15, 21};
+	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
+
+#endif
+
 
 	// Report uptime
 	new Status();

@@ -7,9 +7,9 @@
 class ScheduledIndiProtocol : public IndiProtocol, public Scheduled
 {
 protected:
-    Stream * serial;
+    ::Stream * serial;
 public:
-    ScheduledIndiProtocol(Stream * target);
+    ScheduledIndiProtocol(::Stream * target);
     
     virtual void onIncomingPacketReady();
     virtual void onAckPacketBufferEmpty();
