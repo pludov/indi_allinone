@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<driversList>
+<devGroup group="Others">
+        <device label="Generic u-controller" manufacturer="none">
+                <driver name="Generic u-controller">indi_allinone</driver>
+                <version>1.0</version>
+        </device>
+</devGroup>
+</driversList>
