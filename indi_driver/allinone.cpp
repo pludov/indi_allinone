@@ -51,6 +51,7 @@
 #include <cerrno>
 #include <cstring>
 #include <memory>
+#include <vector>
 
 
 extern std::ostream indiDebugStream;
@@ -444,7 +445,6 @@ public:
 
 		return true;
 	}
-	indiInfoStream << "Not the interface driver: " << vector->name << "\n";
 
 	return false;
     }
@@ -727,9 +727,15 @@ void SimpleDevice::killBackgroundProcessor(Lock & held)
 		write(protocolPipe[1], (char*)&protocolPipe, 1);
 		pthread_cond_wait(&doneCond, &sharingMutex);
 	}
+
+	std::vector<IndiVector*> vectorsToRemove;
 	for(auto it = currentIndiProtocol->propsByUid.begin(); it !=currentIndiProtocol->propsByUid.end(); ++it)
 	{
-		currentIndiProtocol->deleted(it->second->vector);
+		vectorsToRemove.push_back(it->second->vector);
+	}
+
+	for(auto vector : vectorsToRemove) {
+		currentIndiProtocol->deleted(vector);
 	}
 
 	delete currentIndiProtocol;
@@ -910,10 +916,18 @@ void SimpleDevice::backgroundProcessor(int fd)
 
             	currentIndiProtocol->received(packet[0]);
             } else if (rd == 0) {
+
+				backgroundProcessorThreadDone = true;
+				Disconnect();
+				setConnected(false, IPS_ALERT, "Port closed");
                 break;
             } else {
                 if (errno != EAGAIN) {
                     perror("read");
+
+					backgroundProcessorThreadDone = true;
+					Disconnect();
+					setConnected(false, IPS_ALERT, "Serial port read error");
                     break;
                 }
             }
@@ -927,6 +941,11 @@ void SimpleDevice::backgroundProcessor(int fd)
             } else {
                 if (errno != EAGAIN) {
                     perror("write");
+
+					backgroundProcessorThreadDone = true;
+					Disconnect();
+					setConnected(false, IPS_ALERT, "Serial port write error");
+
                     break;
                 }
             }
