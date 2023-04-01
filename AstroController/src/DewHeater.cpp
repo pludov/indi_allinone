@@ -255,7 +255,9 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
 	#ifdef TEENSYDUINO
     analogWriteFrequency(pwmPin, 50);
 	#else
+		// 100Hz is the minimum for PICO
 		analogWriteFreq(100);
+		analogWriteRange(255);
 	#endif
 #endif
 
@@ -591,7 +593,7 @@ void DewHeater::endMeasure()
     DEBUG(F("measure done in "), t2 - t1);
 
     if (OneWire::crc8(data, 8) != data[8]) {
-        DEBUG(F("Invalid data"));
+        DEBUG(F("!!! Invalid data !!!"));
         failed();
         return;
     }
