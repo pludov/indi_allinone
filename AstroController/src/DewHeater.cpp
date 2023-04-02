@@ -7,9 +7,9 @@
 #include "EepromStored.h"
 #include "IndiVectorMemberStorage.h"
 
-#define STATUS_NEED_SCAN 0
+#define STATUS_NEED_SCAN 255
+#define STATUS_IDLE 254
 #define STATUS_MEASURE 1
-#define STATUS_IDLE 2
 
 #define CONTROL_OFF 0
 #define CONTROL_PWM_LEVEL 1
@@ -176,6 +176,31 @@ public:
 
 DewHeatersMemory * DewHeatersMemory::instance = nullptr;
 
+typedef bool (DewHeater::*MeasureStep)();
+
+struct MeasureSequence {
+	MeasureStep func;
+	uint16_t msWait;
+};
+
+MeasureSequence* DewHeater::measureSequence() {
+	static MeasureSequence seq[] = {
+		{&DewHeater::startMeasure, 780},
+		{&DewHeater::endMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 0},
+		{&DewHeater::readMeasure, 5000}, // Last readmeasure (9 bytes)
+		{nullptr, 0}
+	};
+
+	return seq;
+};
 
 
 // Operating modes:
@@ -233,7 +258,7 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
 {
 	this->meteoTemp = meteoTemp;
     this->priority = 2;
-    this->status = 0;
+    this->status = STATUS_NEED_SCAN;
     this->pwmPin = pwmPin;
     this->failed();
     this->nextTick = UTime::now();
@@ -491,9 +516,12 @@ void DewHeater::scan()
     DEBUG(F("scan"));
     
     // FIXME: duration for search ?
+    long t1 = micros();
+
     oneWire.reset_search();
     if (!oneWire.search(addr)) {
-		DEBUG(F("OW failed"));
+        long t2 = micros();
+		DEBUG(F("OW failed in "), t2 - t1, F("us"));
         failed();
         return;
     }
@@ -511,6 +539,9 @@ void DewHeater::scan()
     
 	DEBUG(F("OW found"));
     oneWire.select(addr);
+
+    long t2 = micros();
+    DEBUG(F("scan took"), t2 - t1, F("us"));
 
     char strAddr[32];
     formatAddr(addr, strAddr);
@@ -563,48 +594,43 @@ void DewHeater::saveToEeprom()
 	DewHeatersMemory::getInstance()->save(settings);
 }
 
-void DewHeater::startMeasure()
+bool DewHeater::startMeasure()
 {
-    long t1 = micros();
-    DEBUG(F("startMeasure"));
-    oneWire.reset();
+    if (!oneWire.reset()) {
+		return false;
+	}
     oneWire.skip();
     oneWire.write(0x44, 1);
-    long t2 = micros();
-    this->status = STATUS_MEASURE;
-    this->nextTick = UTime::now() + MS(800);
-    DEBUG(F("startmeasure done in "), t2 - t1);
+	return true;
 }
 
-void DewHeater::endMeasure()
+bool DewHeater::endMeasure()
 {
-    DEBUG(F("endMeasure"));
-    long t1 = micros();
-    oneWire.reset();
+    if (!oneWire.reset()) {
+		return false;
+	}
     oneWire.skip();
     //oneWire.select(addr);
     oneWire.write(0xBE);
-    
-    byte data[9];
-    for (byte i = 0; i < 9; i++) {
-        data[i] = oneWire.read();
-    }
-    long t2 = micros();
-    DEBUG(F("measure done in "), t2 - t1);
+	readBufferPos = 0;
+	return true;
+}
 
-    if (OneWire::crc8(data, 8) != data[8]) {
+bool DewHeater::readMeasure()
+{
+	readBuffer[readBufferPos++] = oneWire.read();
+	if (readBufferPos < 9) return true;
+
+    if (OneWire::crc8(readBuffer, 8) != readBuffer[8]) {
         DEBUG(F("!!! Invalid data !!!"));
-        failed();
-        return;
+		return false;
     }
 
-	int16_t rawVal = ((data[1] << 8) | data[0]);
+	int16_t rawVal = ((readBuffer[1] << 8) | readBuffer[0]);
     temperature.setValue(rawVal * 0.0625);
     tempAvailable = true;
     if (pidRunning) updatePwm();
-
-    this->status = STATUS_IDLE;
-    this->nextTick = UTime::now() + MS(5000);
+	return true;
 }
 
 void DewHeater::tick()
@@ -613,10 +639,24 @@ void DewHeater::tick()
         scan();
     } else {
         if (this->status == STATUS_IDLE) {
-            startMeasure();
-        } else {
-            endMeasure();
+			this->status = 0;
+		}
+		auto step = measureSequence()[this->status];
+		auto func = step.func;
+		auto msWait = step.msWait;
 
+    	long t1 = micros();
+		bool success = ((*this).*func)();
+		long t2 = micros();
+		DEBUG(F("step "), this->status, F(" yield "), success, F(" in "), t2 - t1, F("us"));
+		if (success) {
+			this->nextTick = UTime::now() + MS(msWait);
+			this->status++;
+			if (measureSequence()[this->status].func == nullptr) {
+				this->status = STATUS_IDLE;
+			}
+        } else {
+			failed();
         }
     }
 }

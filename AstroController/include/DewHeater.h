@@ -11,6 +11,8 @@
 #include "IndiSwitchVectorMember.h"
 
 
+struct MeasureSequence;
+
 class MeteoTemp;
 class DewHeater : public Scheduled {
     Symbol group;
@@ -53,6 +55,8 @@ class DewHeater : public Scheduled {
     uint8_t pwmPin;
     uint8_t status;
     uint8_t addr[8];
+    uint8_t readBuffer[9];
+    uint8_t readBufferPos;
     bool tempAvailable;
     bool pidRunning;
     bool pidDisabled;
@@ -61,13 +65,16 @@ class DewHeater : public Scheduled {
     long lastTime;
     double ITerm;
 
+    static MeasureSequence * measureSequence();
+
     void updatePwm();
     void powerModeChanged();
     void configOperationChanged();
 
     void scan();
-    void startMeasure();
-    void endMeasure();
+    bool startMeasure();
+    bool endMeasure();
+    bool readMeasure();
 
     void failed();
 
