@@ -9,7 +9,7 @@
 // a 115200, on transmet un caractère (9 bits), en: 1000000 / (115200 / 9) us
 #define CHAR_XMIT_DELAY 79
 
-ScheduledIndiProtocol::ScheduledIndiProtocol(Stream * target)
+ScheduledIndiProtocol::ScheduledIndiProtocol(arduino::Stream * target)
 		: IndiProtocol::IndiProtocol(),
 			Scheduled::Scheduled(F("IndiProto"))
 {

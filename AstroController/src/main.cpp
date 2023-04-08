@@ -7,6 +7,10 @@
 
 #include <Arduino.h>
 
+#ifdef USE_TINYUSB
+#include <Adafruit_TinyUSB.h>
+#endif
+
 
 // Include necessary libraries
 #include <OneWire.h>                          // DS18B20 temp sensor
@@ -31,6 +35,10 @@
 #include "DewHeater.h"
 #include "WattMeter.h"
 
+
+#ifdef USE_TINYUSB
+Adafruit_USBD_CDC communicationSerial;
+#endif
 
 // --------------------------------------------------------------
 // Declaration of hardware interfaces
@@ -81,7 +89,12 @@ void declareHardware(BaseDriver * baseDriver) {
 void setup() {
 	// initialize serial for ASCOM
 	Serial.begin(115200);
+#ifdef USE_TINYUSB
+	communicationSerial.begin(115200);
+#else
 	Serial1.begin(115200);
+#endif
+
 	DEBUG(F("Init!"));
 
 	delay(500);
@@ -95,6 +108,8 @@ void setup() {
 	// Let's talk packed indi over a serial link
 #ifdef __AVR_ATmega2560__
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
+#elif USE_TINYUSB
+	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&communicationSerial);
 #else
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial1);
 #endif
