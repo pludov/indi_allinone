@@ -57,7 +57,7 @@ void MeteoTemp::setValid()
 
 void MeteoTemp::tick()
 {
-	DEBUG(F("MeteoTemp::tick"));
+	DEBUG(F("MeteoTemp::tick"), nextStep);
 	switch(nextStep) {
 	case 1:
 		doStep1();
@@ -185,6 +185,14 @@ static float calc_dewpoint(float t, float h) {
   return dew_point;
 }
 
+static void delay_us(int v) {
+#ifdef ARDUINO_ARCH_RP2040
+	busy_wait_us(v);
+#else
+	delayMicroseconds(v);
+#endif
+}
+
 void MeteoTemp::doStep3()
 {
 	int i, j = 0, counter = 0;
@@ -199,7 +207,7 @@ void MeteoTemp::doStep3()
 	// FIXME: noInterrupts for > 2ms = very bad practice
 	noInterrupts();
 	digitalWrite(_pin, HIGH);
-	delayMicroseconds(40);
+	delay_us(40);
 	pinMode(_pin, INPUT);
 
 	// read in timings
@@ -207,7 +215,7 @@ void MeteoTemp::doStep3()
 		counter = 0;
 		while (digitalRead(_pin) == laststate) {
 			counter++;
-			delayMicroseconds(1);
+			delay_us(1);
 			if (counter == 255) {
 				break;
 			}
