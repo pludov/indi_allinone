@@ -16,6 +16,9 @@
 #include <OneWire.h>                          // DS18B20 temp sensor
 #include <EEPROM.h>                           // EEPROM Library
 
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
 #include "CommonUtils.h"
 #include "EepromStored.h"
 #include "IndiProtocol.h"
@@ -32,6 +35,8 @@
 #include "Scheduler.h"
 #include "Status.h"
 #include "MeteoTemp.h"
+#include "MeteoTempDHT.h"
+#include "MeteoTempBME.h"
 #include "DewHeater.h"
 #include "WattMeter.h"
 
@@ -47,7 +52,7 @@ void declareHardware(BaseDriver * baseDriver) {
 
 #ifdef TEENSYDUINO
 	// DHT22 sensor on pin8
-	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
+	MeteoTemp * meteoTemp = new MeteoTempDHT(8, DHT22);
 
 	// DewHeater with sensor on pin 11 & pwm on pin 9
 	DewHeater * dw = new DewHeater(meteoTemp, 11, 9, 1);
@@ -67,7 +72,7 @@ void declareHardware(BaseDriver * baseDriver) {
 
 #else
 	// DHT22 sensor on pin8
-	MeteoTemp * meteoTemp = new MeteoTemp(8, DHT22);
+	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire1, 18, 19);
 
 	// DewHeater with sensor on pin GP13 & pwm on pin 21
 	DewHeater * dw = new DewHeater(meteoTemp, 13, 21, 1);
