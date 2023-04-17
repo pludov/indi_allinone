@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+#include "CommonUtils.h"
 #include "Scheduled.h"
 #include "Scheduler.h"
 
@@ -25,3 +26,12 @@ Scheduled::~Scheduled()
 	// FIXME: remove from scheduler not implemented
 }
 
+void Scheduled::debugPerf() const
+{
+	DEBUG(F("Schedule for "), debugName);
+	auto levelCount = perf.getLevelCount();
+	for(int i = 0; i < levelCount - 1; i++) {
+		DEBUG(F("  "), perf.getUsecLevel(i), F(" usec  "), perf.getSampleCount(i));
+	}
+	DEBUG(F("  > "), perf.getUsecLevel(levelCount - 1), F(" usec  "), perf.getSampleCount(levelCount - 1));
+}

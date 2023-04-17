@@ -31,6 +31,9 @@ boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 
 static long lastMicros = 0;
 
+static unsigned long lastDebugMicros = 0;
+static int nextDebugId = 0;
+
 void Scheduler::loop()
 {
 	long newMicros = micros();
@@ -72,6 +75,7 @@ void Scheduler::loop()
 
 	if (targetP1) targetForLoop = targetP1;
 
+	bool freeTime = false;
 	if (targetForLoop) {
 		if (waitSigEndIfImmediate(targetForLoop->nextTick)) {
 #ifdef SCHEDULER_DEBUG
@@ -80,7 +84,10 @@ void Scheduler::loop()
 				retard = (now - targetForLoop->nextTick) >> 7;
 			}
 #endif
+			auto start = micros();
 			targetForLoop->tick();
+			auto end = micros();
+			targetForLoop->perf.addSample(end - start);
 #ifdef SCHEDULER_DEBUG
 			if (retard) {
 				DEBUG(F("Too Late:"));
@@ -91,9 +98,38 @@ void Scheduler::loop()
 			if ((!targetForLoop->nextTick.isNever()) && targetForLoop->nextTick < (now  = UTime::now())) {
 				targetForLoop->nextTick = now;
 			}
+		} else {
+			freeTime = true;
 		}
 	} else {
 		// DEBUG("No task to run");
+		// Is this the right place for yield?
+		freeTime = true;
+	}
+
+	if (freeTime) {
+		unsigned long m = micros();
+		if (m - lastDebugMicros > 2000000) {
+			lastDebugMicros = m;
+
+			bool displayed = false;
+			int id = 0;
+			DEBUG(F("Dumping latency sample"), nextDebugId);
+			for(Scheduled * sch = first; sch; sch = sch->nextScheduled) {
+				if (id == nextDebugId) {
+					sch->debugPerf();
+					displayed = true;
+					break;
+				}
+				id++;
+			}
+
+			if (displayed) {
+				nextDebugId++;
+			} else {
+				nextDebugId = 0;
+			}
+		}
 	}
 }
 

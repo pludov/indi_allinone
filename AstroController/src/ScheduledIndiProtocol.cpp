@@ -99,8 +99,7 @@ void ScheduledIndiProtocol::idle()
 		}
 	}
 
-
-	// Read if available
+	// Read if available - actual processing will be scheduled
 	while ((!incomingPacketReady) && serial->available()) {
 		uint8_t v = serial->read();
 		received(v);

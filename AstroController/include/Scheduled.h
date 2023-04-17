@@ -12,6 +12,7 @@
 
 #include "utime.h"
 #include "Symbol.h"
+#include "PerfHistogram.h"
 
 /** Responsible for event delivery */
 class Scheduled
@@ -19,7 +20,8 @@ class Scheduled
 	friend class Scheduler;
 	Scheduled * nextScheduled;
 	Symbol debugName;
-		
+	PerfHistogram perf;
+	void debugPerf() const;
 protected:
 	// When is the next tick scheduled
 	UTime nextTick;
