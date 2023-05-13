@@ -81,6 +81,10 @@ void declareHardware(BaseDriver * baseDriver) {
 	static const uint8_t filterWheelPins[5] = { 11, 12, 14, 15, 21};
 	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
 
+	// Focuser motor - 4 pins for motor control
+	static const uint8_t focuserMotorPins[4] = { 6, 7, 8, 9 };
+	new Focuser(baseDriver, EepromStored::Addr(4), focuserMotorPins, 0);
+
 #endif
 
 
@@ -97,6 +101,9 @@ void setup() {
 #ifdef USE_TINYUSB
 	communicationSerial.begin(115200);
 #else
+	// Larger fifo size.
+	// Debug should never block the main thread
+	Serial1.setFIFOSize(128);
 	Serial1.begin(115200);
 #endif
 
@@ -115,8 +122,10 @@ void setup() {
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 #elif USE_TINYUSB
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&communicationSerial);
-#else
+#elif TEENSYDUINO
 	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial1);
+#else
+	ScheduledIndiProtocol * serialWriter = new ScheduledIndiProtocol(&Serial);
 #endif
 	DEBUG(F("Welcome!"));
 }
