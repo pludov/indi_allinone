@@ -7,11 +7,32 @@ module cube_rounded(sze, ray) {
           cylinder(r = ray, h=sze[2]);
     }
 }
+
+// RJ45:
+//          w
+//
+//       xxxxxxxx
+//    h  x      x
+//       xxx  xxx
+//
 rj45_w=15.3;
 rj45_l=15.8;
 rj45_h=15;
 rj45_l_butee=3.2;
 rj45_h_butee=3.9;
+
+// RJ12
+rj12_w=13.5;
+rj12_l=16;
+rj12_h=16;
+rj12_b_w = 15.7;
+rj12_b_l = 1.6;
+// pos in z from start
+rj12_b_lp = 3;
+
+rj12_bump_lp = 8.8;
+rj12_bump_h = 16.6;
+
 
 bme_y = 19.10;
 bme_z = 26.10;
@@ -26,7 +47,7 @@ fix_m25_head_diam=4.6;
 fix_m25_nut_diam=5.6;
 fix_m25_nut_length=2;
 
-
+rounding = 1.5;
 function wall_length(id)=(
     id == 0 || id == 2 ? outer_sze[0] : outer_sze[1]
 );
@@ -74,17 +95,6 @@ module from_case_to_fixation(fixation) {
   }
 }
 
-color("yellow")
-for(fixation = cover_fixations)
-{
-    wall_id=fixation[0];
-    from_case_to_fixation(fixation)
-          translate([0,0,20])
-          rotate([-90,0,0])
-            translate([0,0,-1])
-              cylinder(d=5, h = wall_depth(wall_id) + 2);
- 
-}
 
 
 // Connector for RJxxx adaptation
@@ -129,10 +139,10 @@ heater_connections = [
 
 cover_fixations = [
   // Wall id, position
-  [0, 90],
+  [0, 67],
   [1, wall_length(1) - 52],
   [2, 50],
-  [3, 51]
+  [3, 51.5]
 ];
 
 module from_root_to_case() {
@@ -144,6 +154,27 @@ module from_case_to_bme() {
     children();
 }
 
+
+
+module bme_cover() {
+  from_case_to_bme() {
+    translate([-4,-3,outer_z - wall_z])
+      cube_rounded([bme_x + 6, bme_y + 6, wall_z], 1.5, $fn=16);
+  }
+  
+  from_case_to_bme() {
+    translate([0,0,outer_z - wall_z -2]) {
+      translate([-3.1,1,0])
+        translate([0.15,0.15, 0])
+          cube([3.1-0.3, bme_y -2 - 0.3, 2]);
+    }
+    /*translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
+      rotate([0,-90,0])
+        translate([0,0,-0.1])
+          scale([1,(bme_y + 4)/bme_z,1])
+            cylinder(r =bme_z /2 - 1.5, h = 1.2, $fn=32);*/
+  }
+}
 
 module bme_plus() {
   from_case_to_bme() {
@@ -248,7 +279,7 @@ module low_part_fixation_plus() {
 
 fixation_cover_length = 2.5;
 fixation_z = outer_z - wall_z - 6;
-module low_part_fixation_minus() {
+module fixation_minus() {
   color("yellow")
   for(fixation = cover_fixations)
   {
@@ -295,8 +326,35 @@ module cover_fixation_plus() {
   }
 }
 
-low_part_fixation_minus();
-cover_fixation_plus();
+
+
+module cover_clips() {
+    clip_z = 2;
+    clip_w = 3;
+    delta=0.15;
+    difference() {
+      from_case_to_inner() 
+        difference() {
+          translate([delta,delta,outer_z - 2 * wall_z - clip_z])
+              cube_rounded(sze = [inner_sze[0] - 2 * delta, inner_sze[1] - 2 *delta, clip_z], ray = rounding, $fn=32);
+          translate([clip_w, clip_w, outer_z - 2 * wall_z - clip_z - 0.1])
+              cube_rounded(sze = [inner_sze[0] - 2 * clip_w, inner_sze[1] - 2 *clip_w, clip_z+0.2], ray = rounding, $fn=32);
+          
+        }
+      from_case_to_rj_window() {
+        translate([0,-4,0])
+        cube([16,8 + rj_window_y,45]);
+      }
+    }
+}
+
+module cover() {
+  translate([0,0,outer_z - wall_z])
+    cube_rounded(sze = [inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, wall_z], ray=rounding, $fn=32);
+
+}
+
+
 
 // Rotate so x+ gets inside the box
 module from_case_to_rj_window() {
@@ -320,7 +378,6 @@ module from_case_to_inner() {
 module low_part() {
 
   from_root_to_case() {
-    rounding = 1.5;
     difference () {
 
       cube_rounded(sze = [inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, outer_z - wall_z], ray=rounding, $fn=32);
@@ -335,65 +392,151 @@ difference() {
   union() {
     low_part();
     bme_plus();
+    
+    from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          for(hole = pcb_holes)
+            translate(hole) 
+              cylinder(d=5.8,h=1,$fn=16);
+
   }
   bme_minus();
+  
+  fixation_minus();
+  connections_minus();
 }
 
 
 
-color("green") 
-  from_root_to_case()
-    from_case_to_inner()
-      from_inner_to_pcb()
-        translate([0,0,1.1])
-          cube([pcb_sze[0], pcb_sze[1], 2.5]);
- 
-from_root_to_case()
-  from_case_to_inner()
-    from_inner_to_pcb()
-      for(hole = pcb_holes)
-        translate(hole) 
-          cylinder(d=5.8,h=1,$fn=16);
+module pcb() {
+  color("green") 
+    from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          translate([0,0,1.1])
+            cube([pcb_sze[0], pcb_sze[1], 2.5]);
+} 
 
 
 jacks= [ 
-          [ 0, 75, -7.5],
-          [ 3, wall_length(3) - wall_x1 - 7.5, -7.5 ], 
+          [ 0, 80, -8],
+          [ 3, wall_length(3) - wall_x1 - 7.5, -8 ], 
           [ 3, wall_length(3) - wall_x1 - 14, -18.5 ],
-          [ 3, wall_length(3) - wall_x1 - 19, -7.5 ],  
+          [ 3, wall_length(3) - wall_x1 - 19, -8 ],  
       ];
-color("red")
-from_root_to_case() {
-  for(heater = heater_connections) {
-    translate([heater[0], -1, heater[1]])
-      rotate([-90,0,0]) {
-        cylinder(d=hole_heater, $fn=64, h = 6);
-        translate([0,0, 1 + wall_depth(0)+0.2])
-          cylinder(d=15, $fn=64, h = 0.1);
-      }
-    
-  }
-  
-  from_case_to_rj_window() {
-    translate([-0.1,0,0])
-      cube([5,rj_window_y, rj_window_z + 0.05]);
-  }
-  
-  // DC jacks
-  for(jack = jacks) {
-    wall_id = jack[0];
-    p = jack[1];
-    z = outer_z - wall_z + jack[2];
-    wall(wall_id)
-      translate([p,0,z])
+module connections_minus() {
+  color("red")
+  from_root_to_case() {
+    for(heater = heater_connections) {
+      translate([heater[0], -1, heater[1]])
         rotate([-90,0,0]) {
-          translate([0,0,-1])
-            cylinder(d=hole_dc, h = wall_depth(wall_id) + 2, $fn=64);
-          translate([0,0,wall_depth(wall_id)])
-            cylinder(d=11.2, $fn=64, h=0.1);
+          cylinder(d=hole_heater, $fn=64, h = 6);
+          translate([0,0, 1 + wall_depth(0)+0.2])
+            cylinder(d=15, $fn=64, h = 0.1);
         }
+      
+    }
+    
+    from_case_to_rj_window() {
+      translate([-0.1,0,0])
+        cube([5,rj_window_y, rj_window_z + 0.05]);
+    }
+    
+    // DC jacks
+    for(jack = jacks) {
+      wall_id = jack[0];
+      p = jack[1];
+      z = outer_z - wall_z + jack[2];
+      wall(wall_id)
+        translate([p,0,z])
+          rotate([-90,0,0]) {
+            translate([0,0,-1])
+              cylinder(d=hole_dc, h = wall_depth(wall_id) + 2, $fn=64);
+            translate([0,0,wall_depth(wall_id)+0.05])
+              cylinder(d=11.2, $fn=64, h=0.1);
+          }
+    }
   }
 }
 
+module cover_rj() {
+  wire_space = 3.5;
+  advance = 6;
+  overflow = 1.2;
+  from_case_to_rj_window() {
+    difference() {
+      translate([-advance+ 0.05, -overflow, rj_window_z])
+        cube([19-0.05,rj_window_y + 2 * overflow, wall_z]);
+    }  
+  }
+}
 
+module rj_window() {
 
+  from_case_to_rj_window() {
+    wire_space = 3.5;
+    advance = 6;
+    overflow = 1.2;
+    
+    difference() {
+      translate([-advance+ 0.05, -overflow, - overflow])
+        cube([19-0.05,rj_window_y + 2 * overflow, rj_window_z + overflow - 0.05]);
+      
+      // Clip into wall
+      color("red") {
+        translate([0,-10, -5])
+          cube([wall_y+0.2, 10, rj_window_z+5]);
+        translate([0, rj_window_y, -5])
+          cube([wall_y+0.2, 10, rj_window_z+5]);
+        translate([0, -10, -10])
+          cube([wall_y+0.2, rj_window_y+20, 10]);
+      }
+      
+      // RJ45 shadow
+      color("blue")  
+      translate([-advance, 3, rj_window_z - rj45_h])
+        difference() {
+          union() {
+            cube([rj45_l, rj45_w, rj45_h]);
+            translate([rj45_l-0.01, 2, 1])
+              cube([wire_space, rj45_w - 4, rj45_h - 1]);
+            translate([rj45_l-0.01, 0, 6])
+              cube([wire_space, rj45_w, rj45_h - 6]);
+          }
+          // Butee
+          translate([-0.1,-0.1,-0.1])
+          cube([rj45_l_butee+ 0.1, rj45_w + 0.2, rj45_h_butee + 0.1]);
+        }
+      // RJ12 shadow
+      color("blue")
+      translate([-advance, 22, rj_window_z - rj12_h]) {
+        cube([rj12_l, rj12_w, rj12_h]);
+        translate([rj12_b_lp, -(rj12_b_w - rj12_w) / 2, 0])
+          cube([rj12_b_l, rj12_b_w, rj12_h]);
+        translate([rj12_bump_lp, 0, -(rj12_bump_h - rj12_h)])
+          cube([rj12_l - rj12_bump_lp, rj12_w, rj12_bump_h]);
+        
+        translate([rj12_l-0.01, 0, -(rj12_bump_h - rj12_h)])
+          translate([0,2,1])
+            cube([wire_space,rj12_w - 4, rj12_bump_h - 1]);
+         
+      }
+    }
+  }
+}
+
+translate([0,0,29])
+rj_window();
+
+translate([0,0,55])
+difference() {
+  union() {
+    cover();
+    cover_rj();
+    bme_cover();
+    cover_clips();
+    cover_fixation_plus();
+  }
+  fixation_minus();
+}
