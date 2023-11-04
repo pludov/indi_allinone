@@ -16,19 +16,19 @@ module cube_rounded(sze, ray) {
 //       xxx  xxx
 //
 rj45_w=15.3;
-rj45_l=15.8;
+rj45_l=15.9;
 rj45_h=15;
-rj45_l_butee=3.2;
+rj45_l_butee=3.1;
 rj45_h_butee=3.9;
 
 // RJ12
 rj12_w=13.5;
-rj12_l=16;
+rj12_l=16.2;
 rj12_h=16;
 rj12_b_w = 15.7;
 rj12_b_l = 1.6;
 // pos in z from start
-rj12_b_lp = 3;
+rj12_b_lp = 2.6;
 
 rj12_bump_lp = 8.8;
 rj12_bump_h = 16.6;
@@ -388,24 +388,6 @@ module low_part() {
   }
 }
 
-difference() {
-  union() {
-    low_part();
-    bme_plus();
-    
-    from_root_to_case()
-      from_case_to_inner()
-        from_inner_to_pcb()
-          for(hole = pcb_holes)
-            translate(hole) 
-              cylinder(d=5.8,h=1,$fn=16);
-
-  }
-  bme_minus();
-  
-  fixation_minus();
-  connections_minus();
-}
 
 
 
@@ -499,8 +481,8 @@ module rj_window() {
         difference() {
           union() {
             cube([rj45_l, rj45_w, rj45_h]);
-            translate([rj45_l-0.01, 2, 1])
-              cube([wire_space, rj45_w - 4, rj45_h - 1]);
+            translate([rj45_l-0.01, 2, 0.7])
+              cube([wire_space, rj45_w - 4, rj45_h - 0.7]);
             translate([rj45_l-0.01, 0, 6])
               cube([wire_space, rj45_w, rj45_h - 6]);
           }
@@ -517,13 +499,36 @@ module rj_window() {
         translate([rj12_bump_lp, 0, -(rj12_bump_h - rj12_h)])
           cube([rj12_l - rj12_bump_lp, rj12_w, rj12_bump_h]);
         
-        translate([rj12_l-0.01, 0, -(rj12_bump_h - rj12_h)])
-          translate([0,2,1])
-            cube([wire_space,rj12_w - 4, rj12_bump_h - 1]);
+        translate([rj12_l-0.01, 0, -(rj12_bump_h - rj12_h)]) {
+          translate([0,2,0.8])
+            cube([wire_space,rj12_w - 4, rj12_bump_h - 0.8]);
+          translate([0,0,6])
+            cube([wire_space,rj12_w, rj12_bump_h - 6]);
+        }
          
       }
     }
   }
+}
+
+
+difference() {
+  union() {
+    low_part();
+    bme_plus();
+    
+    from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          for(hole = pcb_holes)
+            translate(hole) 
+              cylinder(d=5.8,h=1,$fn=16);
+
+  }
+  bme_minus();
+  
+  fixation_minus();
+  connections_minus();
 }
 
 translate([0,0,29])
