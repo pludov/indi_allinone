@@ -47,6 +47,11 @@ fix_m25_head_diam=4.6;
 fix_m25_nut_diam=5.6;
 fix_m25_nut_length=2;
 
+vix_base_nut_length = 9.2;
+vix_base_nut_diam = 6.3; 
+m3_nut_diam = vix_base_nut_diam;
+m3_nut_length = 2.3;
+
 rounding = 1.5;
 function wall_length(id)=(
     id == 0 || id == 2 ? outer_sze[0] : outer_sze[1]
@@ -111,6 +116,8 @@ pcb_sze = [ 110, 76 ];
 pcb_size = [ 110, 76];
 pcb_ref = [ 1.16, -0.40 ];
 inch = 25.4;
+pcb_pad_z = 1.8;
+
 pcb_holes =
  [ [ (3.1 - pcb_ref[0]) * inch, pcb_size[1] - (-0.1 - pcb_ref[1]) * inch],
    [ (5.2 - pcb_ref[0]) * inch, pcb_size[1] - (-0.1 - pcb_ref[1]) * inch],
@@ -132,18 +139,66 @@ inner_sze = [ pcb_sze[0] + 2, pcb_sze[1] + 2, outer_z -  2 * wall_z];
 // Outer sizing, including cover
 outer_sze = [ inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, outer_z ];
 heater_connections = [
-  [16 + 18 * 0,outer_z *0.66],
-  [16 + 18 * 1,outer_z *0.66],
-  [16 + 18 * 2,outer_z *0.66],
+  [31 + 17.5 * 0,outer_z -12],
+  [31 + 17.5 * 1,outer_z -12],
+  [31 + 17.5 * 2,outer_z -12],
 ];
 
 cover_fixations = [
   // Wall id, position
-  [0, 67],
+  [0, 17],
+  [0, wall_length(0) - 22],
   [1, wall_length(1) - 52],
-  [2, 50],
+  
   [3, 51.5]
 ];
+
+// Vixation vixen
+vix_height_max = 16;
+
+// keep 4 mm for M3 nut
+vix_height = 12;        
+
+vix_angle = 15;
+
+// Width of the base when connected
+vix_spacing = 43;
+
+vix_length = 30;
+// We need at least this len free to be able to unplug
+vix_spacing_play = sin(15) * 2 * vix_height + 1;
+echo("vix_spacing_play: ", vix_spacing_play );
+
+// The pad is fixed.
+vix_fixed_pad_length = 12;
+vix_mobile_pad_length = 13;
+
+
+vix_leg_length = 20;
+
+// Distance between M3 bolt connected to cover
+vix_connection_spacing = vix_length -16;
+
+
+tige_fixation_length = 4.7;
+tige_fixation_diam = 9.0;
+tige_diam = 3;
+fixed_pad_y = -(vix_spacing - 2 * sin(vix_angle) * vix_height);
+
+vix_base_length = 20;
+
+vix_base_y = vix_mobile_pad_length + vix_spacing_play;
+// Keep the bolt far from the wall (inside). This is distance from inner wall
+vix_base_fixation_y = 6;
+vix_base_nut_wall = 3;
+
+
+jacks= [ 
+          [ 0, 81, -10],
+          [ 3, wall_length(3) - wall_x1 - 7.5, -8 ], 
+          [ 3, wall_length(3) - wall_x1 - 18.5, -11],
+          [ 3, wall_length(3) - wall_x1 - 29.5, -8 ],  
+      ];
 
 module from_root_to_case() {
   children();
@@ -273,10 +328,8 @@ module bme_facade() {
 
 translate([-45,0,0]) bme_facade();
 
-module low_part_fixation_plus() {
-}
 
-
+/*
 fixation_cover_length = 2.5;
 fixation_z = outer_z - wall_z - 6;
 module fixation_minus() {
@@ -326,7 +379,7 @@ module cover_fixation_plus() {
   }
 }
 
-
+*/
 
 module cover_clips() {
     clip_z = 2;
@@ -396,17 +449,11 @@ module pcb() {
     from_root_to_case()
       from_case_to_inner()
         from_inner_to_pcb()
-          translate([0,0,1.1])
+          translate([0,0,pcb_pad_z + 0.2])
             cube([pcb_sze[0], pcb_sze[1], 2.5]);
 } 
 
-
-jacks= [ 
-          [ 0, 80, -8],
-          [ 3, wall_length(3) - wall_x1 - 7.5, -8 ], 
-          [ 3, wall_length(3) - wall_x1 - 14, -18.5 ],
-          [ 3, wall_length(3) - wall_x1 - 19, -8 ],  
-      ];
+connections_minus();
 module connections_minus() {
   color("red")
   from_root_to_case() {
@@ -511,48 +558,6 @@ module rj_window() {
   }
 }
 
-// Vixation vixen
-vix_height_max = 16;
-
-// keep 4 mm for M3 nut
-vix_height = 12;        
-
-vix_angle = 15;
-
-// Width of the base when connected
-vix_spacing = 43;
-
-vix_length = 30;
-// We need at least this len free to be able to unplug
-vix_spacing_play = sin(15) * 2 * vix_height + 1;
-echo("vix_spacing_play: ", vix_spacing_play );
-
-// The pad is fixed.
-vix_fixed_pad_length = 12;
-vix_mobile_pad_length = 13;
-
-
-vix_leg_length = 20;
-
-// Distance between M3 bolt connected to cover
-vix_connection_spacing = vix_length -16;
-
-
-tige_fixation_length = 4.7;
-tige_fixation_diam = 9.0;
-tige_diam = 3;
-fixed_pad_y = -(vix_spacing - 2 * sin(vix_angle) * vix_height);
-
-vix_base_length = 20;
-
-vix_base_y = vix_mobile_pad_length + vix_spacing_play;
-// Keep the bolt far from the wall (inside). This is distance from inner wall
-vix_base_fixation_y = 6;
-vix_base_nut_length = 9.2;
-vix_base_nut_diam = 6.3; 
-vix_base_nut_wall = 3;
-
-
 module vix_pad_fixation_minus() {
   color("red")
   for(Xi = [-1, 1]) {
@@ -561,8 +566,15 @@ module vix_pad_fixation_minus() {
       // Fixed pad
       translate([0,fixed_pad_y + (vix_fixed_pad_length - sin(vix_angle) * vix_height) / 2, 0])
         translate([0, -vix_fixed_pad_length, 0])
-          translate([0,0,-wall_z - 5])
-            cylinder(d=3.2, h=100, $fn=64);
+          translate([0,0,-outer_z - 1]) {
+            cylinder(d=3.2, h=outer_z + vix_height + 10, $fn=64);
+            hull() {
+              for(I =[0, 10])
+                translate([0,I,1 + 10])
+                  cylinder(d=m3_nut_diam, h= m3_nut_length, $fn= 6);
+            }
+            
+          }
 
       
       // Base
@@ -585,6 +597,7 @@ module vix_pad_fixation_minus() {
     }
   }
 }
+
 
 module vix_main_screw() {
   
@@ -615,16 +628,15 @@ module vix_main_screw() {
 }
 
 module from_root_to_vix() {
-  // FIXME: not correct
-  translate([0,vix_base_y + vix_base_length, 0])
+  translate([vix_length / 2 + outer_sze[0] / 2,vix_base_y + vix_base_length, 0])
     rotate([0,0,180])
-      translate([0,0,100])
+      translate([0,0,outer_z])
         children();
 }
 
-!union() {
+
 // Sol d'essai
-translate([0,0,40])
+/*translate([0,0,40])
 from_root_to_vix() {
   difference() {
     translate([0,vix_base_y + vix_base_length,0])
@@ -637,10 +649,11 @@ from_root_to_vix() {
     color("red")
       vix_pad_fixation_minus();
   }
-}
+}*/
 
+// Vixen connector parts
+translate([0,0, 40])
 from_root_to_vix()
-  
 difference() {
   union() {
     
@@ -676,14 +689,62 @@ difference() {
     }
   }
   color("red")
-  vix_main_screw();
+    vix_main_screw();
   color("red")
-  vix_pad_fixation_minus();
+      vix_pad_fixation_minus();
   
 }
+
+
+// cover screws
+cover_screws_x_spc = 10;
+cover_screw_fix_diam = 8;
+
+module from_case_to_screws() {
+  for(W = [0,2])
+    wall(W)
+      for(Xi = [0, 1]) {
+            X = Xi == 0 ? 0 + cover_screws_x_spc : wall_length(W) - cover_screws_x_spc;
+            translate([X, wall_depth(W) - cover_screw_fix_diam / 2, 0]) 
+              children();
+        }
 }
 
+module cover_screw_low_plus() {
+  from_case_to_screws() {
+    hull() {
+      cylinder(d=cover_screw_fix_diam, h = outer_z - wall_z, $fn=64);
+      translate([-cover_screw_fix_diam/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_fix_diam,0.1,outer_z-wall_z]); 
+    }
+  }
+}
 
+module cover_screw_cover_plus() {
+  from_case_to_screws() {
+      translate([0,0,outer_z - wall_z]) {
+        hull() {
+          cylinder(d=cover_screw_fix_diam, h = wall_z, $fn=64);
+          translate([-cover_screw_fix_diam/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_fix_diam,0.1,wall_z]); 
+        }
+      }
+  }
+}
+
+module cover_screw_minus() {
+  from_case_to_screws() {
+    translate([0,0,-1])
+      cylinder(d=3.2, h= outer_z + 2, $fn=64);
+    
+    translate([0,0, 10]) {
+      hull() {
+        cylinder(d=m3_nut_diam, h = m3_nut_length, $fn=6);
+        translate([0,10,0]) cylinder(d=m3_nut_diam, h = m3_nut_length, $fn=6);
+      }
+    }
+  }
+}
 
 difference() {
   union() {
@@ -695,26 +756,49 @@ difference() {
         from_inner_to_pcb()
           for(hole = pcb_holes)
             translate(hole) 
-              cylinder(d=5.8,h=1,$fn=16);
-
+              cylinder(d=5.8,h=pcb_pad_z,$fn=16);
+    from_root_to_case() 
+      cover_screw_low_plus();
   }
   bme_minus();
   
-  fixation_minus();
   connections_minus();
+  from_root_to_case() 
+    cover_screw_minus();
+  from_root_to_vix()
+    vix_pad_fixation_minus();
+  
+  from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          for(hole = pcb_holes)
+            translate(hole)
+              translate([0,0, -wall_z + 0.4])
+                cylinder(d=1.8, h= wall_z - 0.4 + pcb_pad_z + 0.1, $fn=32);
 }
+// cover_fixation_plus();
 
-translate([0,0,29])
+  from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          pcb();
+translate([25,0,15])
 rj_window();
 
-translate([0,0,55])
+// Cover
+translate([0,0,25])
 difference() {
   union() {
     cover();
     cover_rj();
     bme_cover();
     cover_clips();
-    cover_fixation_plus();
+    from_root_to_case() 
+      cover_screw_cover_plus();
   }
-  fixation_minus();
+  from_root_to_vix()
+    vix_pad_fixation_minus();
+  
+  from_root_to_case() 
+    cover_screw_minus();
 }
