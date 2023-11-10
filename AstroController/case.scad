@@ -558,6 +558,17 @@ module rj_window() {
   }
 }
 
+// Hardening the cover under the vixen clamp
+module vix_pad_fixation_plus() {
+  struct_height = 3;
+  struct_width = vix_connection_spacing - 9;
+  translate([vix_length / 2 - struct_width / 2,
+        fixed_pad_y - vix_fixed_pad_length + wall_x1 + 0.1, 
+        -wall_z - struct_height])
+    cube([struct_width,inner_sze[1] - 0.2,struct_height]);
+
+}
+
 module vix_pad_fixation_minus() {
   color("red")
   for(Xi = [-1, 1]) {
@@ -579,8 +590,13 @@ module vix_pad_fixation_minus() {
       
       // Base
       translate([0,vix_base_y + vix_base_fixation_y, 0])
-        translate([0,0,-wall_z - 5])
+        translate([0,0,-wall_z - 5]) {
             cylinder(d=3.2, h=100, $fn=64);
+            translate([0,0,0.001])
+            cylinder(d=6, h=5, $fn=64);
+          
+        }
+        
     }
     
     X2 = vix_length / 2  + Xi * (vix_length /2 - 5);
@@ -699,6 +715,8 @@ difference() {
 // cover screws
 cover_screws_x_spc = 10;
 cover_screw_fix_diam = 8;
+cover_screw_base = cover_screw_fix_diam + 6;
+
 
 module from_case_to_screws() {
   for(W = [0,2])
@@ -714,8 +732,8 @@ module cover_screw_low_plus() {
   from_case_to_screws() {
     hull() {
       cylinder(d=cover_screw_fix_diam, h = outer_z - wall_z, $fn=64);
-      translate([-cover_screw_fix_diam/2,cover_screw_fix_diam/2 - 0.15,0])
-            cube([cover_screw_fix_diam,0.1,outer_z-wall_z]); 
+      translate([-cover_screw_base/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_base,0.1,outer_z-wall_z]); 
     }
   }
 }
@@ -725,8 +743,8 @@ module cover_screw_cover_plus() {
       translate([0,0,outer_z - wall_z]) {
         hull() {
           cylinder(d=cover_screw_fix_diam, h = wall_z, $fn=64);
-          translate([-cover_screw_fix_diam/2,cover_screw_fix_diam/2 - 0.15,0])
-            cube([cover_screw_fix_diam,0.1,wall_z]); 
+          translate([-cover_screw_base/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_base,0.1,wall_z]); 
         }
       }
   }
@@ -778,9 +796,6 @@ difference() {
 }
 // cover_fixation_plus();
 
-  from_root_to_case()
-      from_case_to_inner()
-        from_inner_to_pcb()
           pcb();
 translate([25,0,15])
 rj_window();
@@ -795,6 +810,8 @@ difference() {
     cover_clips();
     from_root_to_case() 
       cover_screw_cover_plus();
+    from_root_to_vix()
+      vix_pad_fixation_plus();
   }
   from_root_to_vix()
     vix_pad_fixation_minus();
