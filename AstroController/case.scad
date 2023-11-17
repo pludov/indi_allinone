@@ -56,6 +56,7 @@ rounding = 1.5;
 function wall_length(id)=(
     id == 0 || id == 2 ? outer_sze[0] : outer_sze[1]
 );
+
   
 //Translate to the given wall (outer)
 module wall(id) {
@@ -205,7 +206,12 @@ module from_root_to_case() {
 }
 
 module from_case_to_bme() {
-  translate([-4.2,58,0])  
+  translate([-4.2,56,0])  
+    children();
+}
+
+module from_bme_to_case_surface() {
+  translate([4.2,0,0])
     children();
 }
 
@@ -231,10 +237,67 @@ module bme_cover() {
   }
 }
 
+module bme_split() {
+  diam = 0.1;
+  points = [ 
+      [wall_y + diam / 2,    0],
+      [wall_y + diam / 2,    (bme_y + 6) / 2 + 0.6],
+      [wall_y + diam / 2-0.5,    (bme_y + 6) / 2 + 0.6],
+      [wall_y + diam / 2 - 2.5,(bme_y + 6) / 2 - 0.5],
+      [wall_y + diam / 2 - 2.5 - 5,(bme_y + 6) / 2 - 0.5 + 5],
+      [wall_y + diam / 2 - 2.5 - 15,(bme_y + 6) / 2 - 0.5 + 5],
+  ];
+  split_h = outer_z - wall_z;
+  color("red")
+  from_case_to_bme() from_bme_to_case_surface()
+    translate([0,-3 + (bme_y + 6) / 2, wall_z + 0.02]) {
+      for(sens = [-1, 1])
+        scale([1,sens, 1])
+          for(i = [0:len(points) - 2]) {
+            src = points[i];
+            dst = points[i + 1];
+            hull() {
+              translate(src)
+                cylinder(d=diam, h=split_h, $fn=64);
+              translate(dst)
+                cylinder(d=diam, h=split_h, $fn=64);
+            }
+      for(i = [0:len(points) - 2]) {
+        src = points[i];
+        dst = points[i + 1];
+        hull() {
+          for(sens = [-1, 1])
+            scale([1,sens, 1]) {
+              translate(src)
+                cylinder(d=diam, h=diam, $fn=64);
+              translate(dst)
+                cylinder(d=diam, h=diam, $fn=64);
+            }
+        }
+      }
+    }
+  }
+}
+
+
 module bme_plus() {
   from_case_to_bme() {
-    translate([-4,-3,0])
-      cube_rounded([bme_x + 6, bme_y + 6, outer_z - wall_z], 1.5, $fn=16);
+    translate([-4,-3,0]) {
+      ray=1.5;
+      cube_rounded([bme_x + 6, bme_y + 6, outer_z - wall_z], ray, $fn=16);
+      sides = 6;
+      
+      difference() {
+        translate([ray, -sides, 0])
+          cube([bme_x + 6 - ray, 2 * sides + bme_y + 6, outer_z - wall_z]);
+      
+        translate([0, (bme_y + 6) / 2, 0])
+          for(I = [-1, 1])
+            translate([ray, I * ((bme_y + 6) /2 + sides), -1])
+              scale([(sides + 0.75) / sides,1,1])
+                cylinder(r=sides, h = outer_z - wall_z + 2, $fn=32);
+      }
+    }
     
     translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
     scale([0.6,(bme_y + 4)/bme_z,1])
@@ -764,7 +827,12 @@ module cover_screw_minus() {
   }
 }
 
-difference() {
+// !intersection() {
+// color("yellow")
+// translate([36,61,-1])
+// cube([80,22,10]);
+
+!difference() {
   union() {
     low_part();
     bme_plus();
@@ -778,6 +846,10 @@ difference() {
     from_root_to_case() 
       cover_screw_low_plus();
   }
+
+
+  bme_split();
+
   bme_minus();
   
   connections_minus();
@@ -819,3 +891,4 @@ difference() {
   from_root_to_case() 
     cover_screw_minus();
 }
+
