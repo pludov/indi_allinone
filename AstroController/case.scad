@@ -1,3 +1,11 @@
+// Probleme en suspens:
+//  - vérifier les cnx jack (2.5 vs 2.1 vs 1x GX16)
+// Historique des problemes
+// emplacement ecrous pas assez hauts 0.2/profonds 0.1 => ok, +0.2 et +0.1
+// Aggrandir légerement les passage M3: 3.2 => 3.25
+// Passe cable USB: on décalle de 16 le meteo temp, et on met un passe cable fin en face les fw_drv => ok
+// Impossible de dévisser le capot sans dévisser la saddle => trou de 6.2 et supprimer l'écrou => ok
+
 module cube_rounded(sze, ray) {
   function dir(d) = (d == 0 ? 1 : -1);
   hull() {
@@ -49,8 +57,9 @@ fix_m25_nut_length=2;
 
 vix_base_nut_length = 9.2;
 vix_base_nut_diam = 6.3; 
-m3_nut_diam = vix_base_nut_diam;
-m3_nut_length = 2.3;
+m3_nut_diam = vix_base_nut_diam + 0.1;
+m3_nut_length = 2.3 + 0.2;
+m3_extrude_diam = 3.25;
 
 rounding = 1.5;
 function wall_length(id)=(
@@ -206,7 +215,7 @@ module from_root_to_case() {
 }
 
 module from_case_to_bme() {
-  translate([-4.2,56,0])  
+  translate([-4.2,40,0])  
     children();
 }
 
@@ -215,12 +224,70 @@ module from_bme_to_case_surface() {
     children();
 }
 
+module from_case_to_usb_hole() {
+  translate([0,wall_x0 + 66,0])  
+    children();
+  
+}
+
+
+usb_cable_width = 1.4+0.1;
+usb_cable_height= 5.0+0.1;
+
+module usb_hole_contour(h) {
+  debord_minus = 0.4;
+  from_case_to_usb_hole() {
+    translate([debord_minus,0,0])
+      scale([1,2,1])
+        cylinder(r=wall_y - debord_minus, h=h,$fn=32);
+  }
+}
+
+module usb_hole_plus() {
+  usb_hole_contour(outer_z - wall_z);
+}
+
+module usb_hole_cover() {
+  translate([0,0,outer_z - wall_z])
+  usb_hole_contour(wall_z);
+}
+
+module usb_hole_hole() {
+  from_case_to_usb_hole() {
+    hull() {
+      for(D=[[-5,2],[5,-2]])
+        translate(D)
+          translate([0,0,outer_z - wall_z - usb_cable_height])
+            cylinder(d=usb_cable_width, h = usb_cable_height + 0.01, $fn=32);
+    }
+  }
+}
+
+
+module bme_contour(h) {
+  translate([-4,-3,0]) {
+      ray=1.5;
+      cube_rounded([bme_x + 6, bme_y + 6, h], ray, $fn=16);
+      sides = 6;
+      
+      difference() {
+        translate([ray, -sides, 0])
+          cube([bme_x + 6 - ray, 2 * sides + bme_y + 6, h]);
+      
+        translate([0, (bme_y + 6) / 2, 0])
+          for(I = [-1, 1])
+            translate([ray, I * ((bme_y + 6) /2 + sides), -1])
+              scale([(sides + 0.75) / sides,1,1])
+                cylinder(r=sides, h = h + 2, $fn=32);
+      }
+    }
+}
 
 
 module bme_cover() {
   from_case_to_bme() {
-    translate([-4,-3,outer_z - wall_z])
-      cube_rounded([bme_x + 6, bme_y + 6, wall_z], 1.5, $fn=16);
+    translate([0,0,outer_z - wall_z])
+      bme_contour(wall_z);
   }
   
   from_case_to_bme() {
@@ -282,22 +349,7 @@ module bme_split() {
 
 module bme_plus() {
   from_case_to_bme() {
-    translate([-4,-3,0]) {
-      ray=1.5;
-      cube_rounded([bme_x + 6, bme_y + 6, outer_z - wall_z], ray, $fn=16);
-      sides = 6;
-      
-      difference() {
-        translate([ray, -sides, 0])
-          cube([bme_x + 6 - ray, 2 * sides + bme_y + 6, outer_z - wall_z]);
-      
-        translate([0, (bme_y + 6) / 2, 0])
-          for(I = [-1, 1])
-            translate([ray, I * ((bme_y + 6) /2 + sides), -1])
-              scale([(sides + 0.75) / sides,1,1])
-                cylinder(r=sides, h = outer_z - wall_z + 2, $fn=32);
-      }
-    }
+    bme_contour(outer_z - wall_z);
     
     translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
     scale([0.6,(bme_y + 4)/bme_z,1])
@@ -639,22 +691,22 @@ module vix_pad_fixation_minus() {
     translate([X, 0, 0]) {
       // Fixed pad
       translate([0,fixed_pad_y + (vix_fixed_pad_length - sin(vix_angle) * vix_height) / 2, 0])
-        translate([0, -vix_fixed_pad_length, 0])
+        translate([0, -vix_fixed_pad_length, 0]) {
           translate([0,0,-outer_z - 1]) {
-            cylinder(d=3.2, h=outer_z + vix_height + 10, $fn=64);
-            hull() {
-              for(I =[0, 10])
-                translate([0,I,1 + 10])
-                  cylinder(d=m3_nut_diam, h= m3_nut_length, $fn= 6);
-            }
-            
+            cylinder(d=m3_extrude_diam, h=outer_z + vix_height + 10, $fn=64);
           }
-
+          nut_height = 4;
+          nut_diam = 6.2;
+          translate([0,0,-wall_z- nut_height]) {
+            // 6.2 x 4
+            cylinder(d=nut_diam, h = nut_height + 0.01, $fn=32);
+          }
+        }
       
       // Base
       translate([0,vix_base_y + vix_base_fixation_y, 0])
         translate([0,0,-wall_z - 5]) {
-            cylinder(d=3.2, h=100, $fn=64);
+            cylinder(d=m3_extrude_diam, h=100, $fn=64);
             translate([0,0,0.001])
             cylinder(d=6, h=5, $fn=64);
           
@@ -665,13 +717,13 @@ module vix_pad_fixation_minus() {
     X2 = vix_length / 2  + Xi * (vix_length /2 - 5);
     // Guides (mobile pad)
     translate([X2,(vix_mobile_pad_length - sin(vix_angle) * vix_height)/ 2 +sin(vix_angle) * vix_height,-wall_z - 5]) {
-      cylinder(d=3.2, h=100, $fn=64);
+      cylinder(d=m3_extrude_diam, h=100, $fn=64);
       
       hull() {
         translate([0, -2, 0])
-          cylinder(d=3.2, h = wall_z + 5+0.01,$fn=64);
+          cylinder(d=m3_extrude_diam, h = wall_z + 5+0.01,$fn=64);
         translate([0, vix_spacing_play + 2, 0])
-        cylinder(d=3.2, h = wall_z + 5+0.01,$fn=64);
+        cylinder(d=m3_extrude_diam, h = wall_z + 5+0.01,$fn=64);
       }
     }
   }
@@ -816,7 +868,7 @@ module cover_screw_cover_plus() {
 module cover_screw_minus() {
   from_case_to_screws() {
     translate([0,0,-1])
-      cylinder(d=3.2, h= outer_z + 2, $fn=64);
+      cylinder(d=m3_extrude_diam, h= outer_z + 2, $fn=64);
     
     translate([0,0, 10]) {
       hull() {
@@ -836,7 +888,7 @@ module cover_screw_minus() {
   union() {
     low_part();
     bme_plus();
-    
+    usb_hole_plus();
     from_root_to_case()
       from_case_to_inner()
         from_inner_to_pcb()
@@ -851,7 +903,7 @@ module cover_screw_minus() {
   bme_split();
 
   bme_minus();
-  
+  usb_hole_hole();
   connections_minus();
   from_root_to_case() 
     cover_screw_minus();
@@ -879,6 +931,7 @@ difference() {
     cover();
     cover_rj();
     bme_cover();
+    usb_hole_cover();
     cover_clips();
     from_root_to_case() 
       cover_screw_cover_plus();
