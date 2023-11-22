@@ -71,18 +71,20 @@ void declareHardware(BaseDriver * baseDriver) {
 	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
 
 #else
-	// DHT22 sensor on pin8
-	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire1, 18, 19);
+	// BME Sensor
+	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire1, 16, 17);
 
-	// DewHeater with sensor on pin GP13 & pwm on pin 21
-	DewHeater * dw = new DewHeater(meteoTemp, 13, 21, 1);
+	// DewHeater : sensor, resistor
+	new DewHeater(meteoTemp, 21, 18, 1);
+	new DewHeater(meteoTemp, 22, 19, 2);
+	new DewHeater(meteoTemp, 26, 20, 3);
 
 	// Focuser motor - 4 pins for motor control + 1 for hall sensor
-	static const uint8_t filterWheelPins[5] = { 11, 12, 14, 15, 21};
+	static const uint8_t filterWheelPins[5] = { 6, 7, 8, 9, 15};
 	new FilterWheel(baseDriver, EepromStored::Addr(3), filterWheelPins, 0);
 
 	// Focuser motor - 4 pins for motor control
-	static const uint8_t focuserMotorPins[4] = { 6, 7, 8, 9 };
+	static const uint8_t focuserMotorPins[4] = { 2, 3, 4, 5 };
 	new Focuser(baseDriver, EepromStored::Addr(4), focuserMotorPins, 0);
 
 #endif
