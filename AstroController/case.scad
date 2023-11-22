@@ -1,5 +1,7 @@
 // Probleme en suspens:
 //  - vérifier les cnx jack (2.5 vs 2.1 vs 1x GX16)
+//  - hauteur des plots pour les soudure: 1.8 - 2 min
+//  - erreur 3V3 vs 3V3_enable
 // Historique des problemes
 // emplacement ecrous pas assez hauts 0.2/profonds 0.1 => ok, +0.2 et +0.1
 // Aggrandir légerement les passage M3: 3.2 => 3.25
@@ -225,7 +227,7 @@ module from_bme_to_case_surface() {
 }
 
 module from_case_to_usb_hole() {
-  translate([0,wall_x0 + 66,0])  
+  translate([0,wall_x0 + 76,0])  
     children();
   
 }
@@ -234,12 +236,15 @@ module from_case_to_usb_hole() {
 usb_cable_width = 1.4+0.1;
 usb_cable_height= 5.0+0.1;
 
-module usb_hole_contour(h) {
+module usb_hole_contour(h, plus=0) {
   debord_minus = 0.4;
   from_case_to_usb_hole() {
-    translate([debord_minus,0,0])
-      scale([1,2,1])
-        cylinder(r=wall_y - debord_minus, h=h,$fn=32);
+    translate([debord_minus,0,0]) {
+      ray_x = (wall_y - debord_minus) + plus;
+      ray_y = (wall_y - debord_minus) * 2  + plus;
+      scale([ray_x/ray_y, 1, 1])
+        cylinder(r=ray_y, h=h,$fn=32);
+    }
   }
 }
 
@@ -249,16 +254,29 @@ module usb_hole_plus() {
 
 module usb_hole_cover() {
   translate([0,0,outer_z - wall_z])
-  usb_hole_contour(wall_z);
+  usb_hole_contour(wall_z, 1.5);
 }
-
+//!usb_hole_hole();
 module usb_hole_hole() {
+  positions = [
+    [wall_x0,- 2],[-5,2]
+  ];
+  
+  function rot(VEC, agl) =
+    [ VEC[0] * cos(agl) + VEC[1] * sin(agl), VEC[1] * cos(agl) - VEC[0] * sin(agl) ];
+  
+  inc = 0.1;
   from_case_to_usb_hole() {
-    hull() {
-      for(D=[[-5,2],[5,-2]])
-        translate(D)
-          translate([0,0,outer_z - wall_z - usb_cable_height])
-            cylinder(d=usb_cable_width, h = usb_cable_height + 0.01, $fn=32);
+    for(I=[0:inc:1 - inc])
+      hull() {
+        for(J=[I,I+inc]) {
+          D = positions[0] + rot((positions[1] - positions[0]) * J, J*30);
+          
+        //for(D=[[wall_x0,- 2],[-5,2]])
+          translate(D)
+            translate([0,0,outer_z - wall_z - usb_cable_height])
+              cylinder(d=usb_cable_width, h = usb_cable_height + 0.01, $fn=32);
+        }
     }
   }
 }
