@@ -17,6 +17,7 @@
 class ShortDuration
 {
 	friend class UTime;
+	friend class LongDuration;
 	unsigned int duration16us;
 public:
 	ShortDuration()
@@ -42,6 +43,10 @@ public:
 	LongDuration(unsigned long int durationUs)
 	{
 		this->durationUs = durationUs;
+	}
+	LongDuration(const ShortDuration & duration)
+	{
+		this->durationUs = ((unsigned long)duration.duration16us) << 4;
 	}
 
 	static LongDuration seconds(int i)
@@ -221,7 +226,7 @@ public:
 	}
 };
 
-#define MS(x) ShortDuration((125 * (long)(x)) / 2);
-#define US(x) ShortDuration((x) / 16);
+#define MS(x) ShortDuration((125 * (long)(x)) / 2)
+#define US(x) ShortDuration((x) / 16)
 
 #endif /* UTIME_H_ */
