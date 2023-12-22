@@ -100,7 +100,14 @@ JournalEntry * FlashStore::lookupEntry(uint32_t addr) {
             return e;
         }
     }
+
+    this->flashErrorCount.setValue(this->flashErrorCount.getValue() + 1);
     return nullptr;
+}
+
+void FlashStore::onCorruptedSector(int sectorNumber) {
+    DEBUG("Corrupted sector: ", sectorNumber);
+    this->flashErrorCount.setValue(this->flashErrorCount.getValue() + 1);
 }
 
 void FlashStore::markAllDirty() {

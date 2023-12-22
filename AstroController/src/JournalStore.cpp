@@ -118,6 +118,8 @@ void JournalStore::findExistingEntriesFromCurrentSector() {
         if (offset + 4 + len > this->sectorSize) {
             // bug in storage :-(
             // Stop for that sector
+            DEBUG("Invalid sector content");
+            onCorruptedSector(flashWritePtr / this->sectorSize);
             break;
         }
         // Get the address
@@ -130,7 +132,7 @@ void JournalStore::findExistingEntriesFromCurrentSector() {
         if (entry != nullptr) {
             entry->lastFlashPos = this->flashWritePtr;
         } else {
-            DEBUG("Foudn unknown entry: %#x\n", addr);
+            DEBUG("Found unknown entry: %#x\n", addr);
         }
 
         offset += 4 + len;

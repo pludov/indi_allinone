@@ -77,7 +77,9 @@ protected:
     virtual void writePage(int sectorNumber, int pageStart, int pageEnd, const uint8_t * sectorData) = 0;
     // Reset from sectorStart to sectorEnd (inclusive). Can be asynchronous
     virtual void resetSectors(int sectorStart, int sectorEnd) = 0;
-    
+
+    virtual void onCorruptedSector(int sectorNumber) = 0;
+
     // Used when an entry is discovered at startup
     virtual JournalEntry * lookupEntry(uint32_t addr) = 0;
 

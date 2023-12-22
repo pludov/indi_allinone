@@ -24,13 +24,21 @@
 
 #include "JournalStore.h"
 #include "Scheduled.h"
+#include "IndiNumberVector.h"
+#include "IndiIntVectorMember.h"
 
 class EepromStored;
 
 // This is a singleton class to address the store
 class FlashStore: protected JournalStore, protected Scheduled {
 	friend class EepromStored;
-	
+
+	Symbol group;
+	IndiNumberVector flashStatusVec;
+	IndiIntVectorMember flashSize;
+	IndiIntVectorMember flashErrorCount;
+
+
 	int firstSector;
 
 
@@ -62,9 +70,11 @@ protected:
     virtual void writePage(int sectorNumber, int pageStart, int pageEnd, const uint8_t * sectorData);
     // Reset from sectorStart to sectorEnd (inclusive). Can be asynchronous
     virtual void resetSectors(int sectorStart, int sectorEnd);
-    
+
     // Used when an entry is discovered at startup
     virtual JournalEntry * lookupEntry(uint32_t addr);
+	// Used when sector an invalid sector is found at startup
+    virtual void onCorruptedSector(int sectorNumber);
 
     // Mark all entries as dirty
     virtual void markAllDirty();
