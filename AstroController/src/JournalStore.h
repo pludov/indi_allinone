@@ -62,6 +62,9 @@ protected:
     inline uint32_t flashLength() const {
         return sectorCount * sectorSize;
     }
+    inline uint32_t usedLength() const {
+        return (flashLength() + flashWritePtr - flashStartPtr) % flashLength();
+    }
 
     // When renewing, all sectors are marked as to be erased.
     // This is prioritarized over new writes.
