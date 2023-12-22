@@ -8,36 +8,25 @@
 // Interval between read attempts (msec)
 #define READ_INTERVAL 5000
 
-
-typedef bool (MeteoTempBME::*MeasureStep)();
-
-struct MeasureSequence {
-	MeasureStep func;
-	uint16_t msWait;
-};
-
-MeasureSequence* MeteoTempBME::measureSequence() {
-	static MeasureSequence seq[] = {
-		{&MeteoTempBME::readTemperature, 10},
-		{&MeteoTempBME::readHumidity, 10},
-		{&MeteoTempBME::readPressure, 10},
-		{&MeteoTempBME::publish, READ_INTERVAL},
-		{nullptr, 0}
+TaskSequence<MeteoTempBME>* MeteoTempBME::measureSequence() {
+	static TaskSequence<MeteoTempBME> seq[] = {
+        {&MeteoTempBME::init, 5, nullptr, 10},
+		{&MeteoTempBME::readTemperature, 2, nullptr, 10, SEQUENCE_LOOP_HERE},
+		{&MeteoTempBME::readHumidity, 2, nullptr, 10},
+		{&MeteoTempBME::readPressure, 2, &MeteoTempBME::publish, READ_INTERVAL},
+		{nullptr, 0, nullptr, 0}
 	};
 
 	return seq;
 };
 
-
 MeteoTempBME::MeteoTempBME(TwoWire * wire, uint8_t pinSda, uint8_t pinScl, int addr) : MeteoTemp(),
-    pressure(&statusVec, F("METEO_PRESSURE"), F("Pressure"), 900, 1100, 0.1)
+    pressure(&statusVec, F("METEO_PRESSURE"), F("Pressure"), 900, 1100, 0.1),
+    measureScheduler(this, measureSequence(), &MeteoTempBME::onMeasureFailure)
 {
     wire->setSDA(pinSda);
 	wire->setSCL(pinScl);
     setInvalid();
-
-
-    started = false;
 
     this->addr = addr == -1 ? BME280_ADDRESS : addr;
     this->wire = wire;
@@ -57,67 +46,43 @@ void MeteoTempBME::setValid() {
 
 void MeteoTempBME::scheduleReset(bool immediate)
 {
-    started = false;
     nextTick = UTime::now() + MS(immediate ? 0 : READ_INTERVAL);
     tickExpectedDuration = MS(200);
     priority = 3;
-    nextStep = -1;
 }
 
-void MeteoTempBME::scheduleNextStep(uint8_t stepid, int msWait)
+void MeteoTempBME::onMeasureFailure()
 {
-    auto stepDef = measureSequence()[stepid];
-    if (stepDef.func == nullptr) {
-        stepid = 0;
-        stepDef = measureSequence()[stepid];
-    }
-
-    this->nextTick = UTime::now() + MS(msWait);
-    this->nextStep = stepid;
-    // Reading humidity & pressure re-read temperature so takes longer
-    this->tickExpectedDuration = US(1300);
-    this->priority = 2;
+    measureScheduler.stop();
+    setInvalid();
+    scheduleReset(false);
 }
 
 void MeteoTempBME::tick()
 {
-	DEBUG(F("MeteoTempBME::tick"), nextStep);
-    if (!started) {
-        long t1 = micros();
-        started = bme.begin(addr, wire);
-        long t2 = micros();
-        DEBUG(F("MeteoTempBME::begin"), started, F(" in "), t2 - t1, F("us"));
-        if (!started) {
-            DEBUG(F("MeteoTempBME failed to start"));
-            scheduleReset(false);
-            return;
-        }
-        DEBUG(F("MeteoTempBME started successfully"));
-        nextStep = 0;
-        scheduleNextStep(0, 0);
+    if (measureScheduler.handleTick()) {
         return;
     }
 
-    auto stepId = this->nextStep;
-    auto step = measureSequence()[stepId];
-    auto func = step.func;
-    auto msWait = step.msWait;
-
-    long t1 = micros();
-    bool success = ((*this).*func)();
-    long t2 = micros();
-    DEBUG(F("step "), stepId, F(" yield "), success, F(" in "), t2 - t1, F("us"));
-    if (success) {
-        scheduleNextStep(stepId + 1, msWait);
-    } else {
-        started = false;
-        scheduleReset(false);
-    }
+    measureScheduler.start(MS(2000));
 }
 
 MeteoTempBME::~MeteoTempBME() {
 }
 
+bool MeteoTempBME::init()
+{
+    long t1 = micros();
+    bool started = bme.begin(addr, wire);
+    long t2 = micros();
+    DEBUG(F("MeteoTempBME::begin"), started, F(" in "), t2 - t1, F("us"));
+    if (!started) {
+        DEBUG(F("MeteoTempBME failed to start"));
+    } else {
+        DEBUG(F("MeteoTempBME started successfully"));
+    }
+    return started;
+}
 
 bool MeteoTempBME::readTemperature()
 {
@@ -143,7 +108,6 @@ bool MeteoTempBME::readPressure()
     return true;
 }
 
-bool MeteoTempBME::publish() {
+void MeteoTempBME::publish() {
     setValid();
-    return true;
 }
