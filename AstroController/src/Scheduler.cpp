@@ -23,6 +23,8 @@ boolean waitSigEndIfImmediate(const UTime & currentSigEnd) {
 	if (wait < 1000) {
 		if (wait > 0)
 			delayMicroseconds(wait);
+			// FIXME: does busy_wait_us works better
+			// busy_wait_us(wait);
 		return true;
 	} else {
 		return false;
