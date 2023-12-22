@@ -13,12 +13,19 @@ FlashStore * FlashStore::instance;
 
 FlashStore::FlashStore(int sectorCount, bool def): 
     JournalStore(sectorCount, FLASH_SECTOR_SIZE, FLASH_PAGE_SIZE),
-    Scheduled(F("FlashStore"))
+    Scheduled(F("FlashStore")),
+    group(F("Flash status")),
+    flashStatusVec(group, F("FLASH_STATUS"), F("Flash status")),
+    flashSize(&flashStatusVec, F("FLASH_SIZE"), F("Flash size"),0 ,0x100000, 1),
+    flashErrorCount(&flashStatusVec, F("FLASH_ERROR_COUNT"), F("Flash error count"),0 ,0xffff, 1)
 {
 
     firstSector = PICO_FLASH_SIZE_BYTES / FLASH_SECTOR_SIZE - sectorCount;
     first = nullptr;
     firstDirty = lastDirty = nullptr;
+
+    flashErrorCount.setValue(0);
+    flashSize.setValue(0);
     // TODO: Verify we run bynary_type=copy_to_ram
     this->priority = 1;
     if (def) {
@@ -39,13 +46,31 @@ void FlashStore::doPendingOperation() {
 //    uint32_t ints = save_and_disable_interrupts();
     if (pendingSectorData) {
         flash_range_program((firstSector + pendingSectorStart) * sectorSize
-                         + pendingPageStart * pageSize, 
-                         pendingSectorData + pendingPageStart * pageSize, 
+                         + pendingPageStart * pageSize,
+                         pendingSectorData + pendingPageStart * pageSize,
                          (pendingPageEnd - pendingPageStart + 1) * pageSize);
-
+        // Compare the memory to report errors
+        uint8_t * flashPtr ((uint8_t *)(XIP_NOCACHE_NOALLOC_BASE + (firstSector + pendingSectorStart) * sectorSize
+                         + pendingPageStart * pageSize));
+        uint8_t * dataPtr = (uint8_t *)pendingSectorData + pendingPageStart * pageSize;
+        for(int i = 0; i < (pendingPageEnd - pendingPageStart + 1) * pageSize; ++i) {
+            if (flashPtr[i] != dataPtr[i]) {
+                DEBUG("Flash write error: ", pendingSectorStart, " at ", i, " = ", flashPtr[i], " != ", dataPtr[i]);
+                flashErrorCount.setValue(flashErrorCount.getValue() + 1);
+            }
+        }
     } else {
         flash_range_erase((firstSector + pendingSectorStart) * sectorSize,
                              (pendingSectorEnd - pendingSectorStart + 1) * sectorSize);
+        // Verify the erase, all must be 0xff
+        uint8_t * flashPtr ((uint8_t *)(XIP_NOCACHE_NOALLOC_BASE + (firstSector + pendingSectorStart) * sectorSize));
+        for(int i = 0; i < (pendingSectorEnd - pendingSectorStart + 1) * sectorSize; ++i) {
+            if (flashPtr[i] != 0xff) {
+                DEBUG("Flash erase error: ", pendingSectorStart, " at ", i, " = ", flashPtr[i]);
+                flashErrorCount.setValue(flashErrorCount.getValue() + 1);
+                break;
+            }
+        }
     }
 //    restore_interrupts (ints);
     pendingOperation = false;
@@ -100,6 +125,7 @@ void FlashStore::initialize() {
     DEBUG("Initialize storage with entries:", entryCount);
     JournalStore::initialize();
     EepromReadyListener::ready();
+    this->flashSize.setValue(usedLength());
     this->nextTick = UTime::now();
     this->tickExpectedDuration = US(1300);
 }
@@ -115,6 +141,7 @@ void FlashStore::tick() {
     } else {
         DEBUG("Flash store stepping");
         JournalStore::step();
+        this->flashSize.setValue(usedLength());
         DEBUG("Flash store done: ", hasPendingOperation());
         if (hasPendingOperation()) {
             // some work was scheduled, do it
