@@ -54,6 +54,12 @@ public:
 		this->func = (FuncType*)func;
 	}
 
+	VectorCallback(void (*func)(void*), void * thiz) {
+		this->thiz = (void*)thiz;
+		this->func = (FuncType*)func;
+	}
+
+
 	bool isSet() const {
 		return func;
 	}

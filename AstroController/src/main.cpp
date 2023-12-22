@@ -45,6 +45,19 @@
 Adafruit_USBD_CDC communicationSerial;
 #endif
 
+#ifdef ARDUINO_ARCH_RP2040
+IndiSwitchVector bootSelVec(Symbol(F("Status")), Symbol(F("BOOTSEL")), F("Boot Select"), VECTOR_READABLE|VECTOR_WRITABLE|VECTOR_SWITCH_MANY);
+IndiSwitchVectorMember bootSelVecMember(&bootSelVec, F("BOOTSEL"), F("Firmware upgrade"));
+
+static void bootselTrigger(void *)
+{
+	// Reboot in bootloader mode
+	DEBUG("Bootsel activated");
+	delay(100);
+	rp2040.rebootToBootloader();
+}
+#endif
+
 // --------------------------------------------------------------
 // Declaration of hardware interfaces
 // --------------------------------------------------------------
@@ -74,6 +87,7 @@ void declareHardware(BaseDriver * baseDriver) {
 	// BME Sensor
 
 #if 1
+	// DEBUG Version
 	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
 	new DewHeater(meteoTemp, 21, 18, 1);
 	new DewHeater(meteoTemp, 13, 19, 2);
@@ -82,10 +96,9 @@ void declareHardware(BaseDriver * baseDriver) {
 
 	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
 	// DewHeater : sensor, resistor
-//  new DewHeater(meteoTemp, 21, 18, 1);
-//	new DewHeater(meteoTemp, 22, 19, 2);
-//	// Limited by single oneWire available. Cannot read temperature concurrently
-//	new DewHeater(meteoTemp, 26, 20, 3);
+	new DewHeater(meteoTemp, 21, 18, 1);
+	new DewHeater(meteoTemp, 22, 19, 2);
+	new DewHeater(meteoTemp, 26, 20, 3);
 #endif
 
 	// Focuser motor - 4 pins for motor control + 1 for hall sensor
@@ -100,6 +113,9 @@ void declareHardware(BaseDriver * baseDriver) {
 
 #endif
 
+#ifdef ARDUINO_ARCH_RP2040
+	bootSelVec.onRequested(VectorCallback(&bootselTrigger, nullptr));
+#endif
 
 	// Report uptime
 	new Status();
@@ -118,7 +134,7 @@ void setup() {
 	pinMode(PIN_LED, OUTPUT); //
 	digitalWrite(PIN_LED, LOW);
 	delay(250);
-	// initialize serial for ASCOM
+	// initialize serial for indi communication
 	Serial.begin(115200);
 	digitalWrite(PIN_LED, HIGH);
 

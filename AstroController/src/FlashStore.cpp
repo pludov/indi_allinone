@@ -14,7 +14,7 @@ FlashStore * FlashStore::instance;
 FlashStore::FlashStore(int sectorCount, bool def): 
     JournalStore(sectorCount, FLASH_SECTOR_SIZE, FLASH_PAGE_SIZE),
     Scheduled(F("FlashStore")),
-    group(F("Flash status")),
+    group(F("Status")),
     flashStatusVec(group, F("FLASH_STATUS"), F("Flash status")),
     flashSize(&flashStatusVec, F("FLASH_SIZE"), F("Flash size"),0 ,0x100000, 1),
     flashErrorCount(&flashStatusVec, F("FLASH_ERROR_COUNT"), F("Flash error count"),0 ,0xffff, 1),
