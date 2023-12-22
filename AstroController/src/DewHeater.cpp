@@ -8,8 +8,7 @@
 #include "IndiVectorMemberStorage.h"
 
 #define STATUS_NEED_SCAN 255
-#define STATUS_IDLE 254
-#define STATUS_MEASURE 1
+#define STATUS_MEASURE 254
 
 #define CONTROL_OFF 0
 #define CONTROL_PWM_LEVEL 1
@@ -180,22 +179,32 @@ typedef bool (DewHeater::*MeasureStep)();
 
 struct MeasureSequence {
 	MeasureStep func;
+	// This will be awaited after the current step
 	uint16_t msWait;
 };
 
-MeasureSequence* DewHeater::measureSequence() {
-	static MeasureSequence seq[] = {
-		{&DewHeater::startMeasure, 780},
-		{&DewHeater::endMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 0},
-		{&DewHeater::readMeasure, 5000}, // Last readmeasure (9 bytes)
+TaskSequence<DewHeater>* DewHeater::measureSequence() {
+	static TaskSequence<DewHeater> seq[] = {
+		{&DewHeater::startMeasure, 10, nullptr, 780},
+		{&DewHeater::endMeasure,  5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, nullptr, 0},
+		{&DewHeater::readMeasure, 5, &DewHeater::onMeasureCompleted, 5000}, // Last readmeasure (9 bytes)
+		{nullptr, 0}
+	};
+
+	return seq;
+};
+
+TaskSequence<DewHeater>* DewHeater::scanSequence() {
+	static TaskSequence<DewHeater> seq[] = {
+		{&DewHeater::asyncScan, 10, &DewHeater::onScanCompleted, 0},
 		{nullptr, 0}
 	};
 
@@ -254,7 +263,9 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
 	configForget(&configOperationVec, F("FORGET"), F("Forget")),
 	configReload(&configOperationVec, F("RELOAD"), F("Reload")),
 
-    oneWire(pin)
+    oneWire(pin),
+	measureScheduler(this, measureSequence(), &DewHeater::onMeasureFailed),
+	scanScheduler(this, scanSequence(), &DewHeater::onScanFailed)
 {
 	this->meteoTemp = meteoTemp;
     this->priority = 2;
@@ -281,7 +292,7 @@ DewHeater::DewHeater(MeteoTemp * meteoTemp, uint8_t pin, uint8_t pwmPin, int suf
     analogWriteFrequency(pwmPin, 50);
 	#else
 		// 100Hz is the minimum for PICO
-		analogWriteFreq(100);
+		analogWriteFreq(1200);
 		analogWriteRange(255);
 	#endif
 #endif
@@ -496,7 +507,7 @@ void DewHeater::failed()
     // FIXME: mark no temp available
     updatePwm();
     this->status = STATUS_NEED_SCAN;
-    this->nextTick = UTime::now() + MS(1000);
+    this->nextTick = UTime::now() + MS(2000);
 }
 
 static void formatAddr(byte * addr, char * buffer)
@@ -511,7 +522,7 @@ static void formatAddr(byte * addr, char * buffer)
     *buffer = 0;
 }
 
-void DewHeater::scan()
+bool DewHeater::asyncScan()
 {
     DEBUG(F("scan"));
     
@@ -522,19 +533,16 @@ void DewHeater::scan()
     if (!oneWire.search(addr)) {
         long t2 = micros();
 		DEBUG(F("OW failed in "), t2 - t1, F("us"));
-        failed();
-        return;
+        return false;
     }
     if (OneWire::crc8(addr, 7) != addr[7]) {
 		DEBUG(F("OW crc"));
-        failed();
-        return;
+        return false;
     }
     if (addr[0] != 0x28) {
         // Mauvais type de capteur
 		DEBUG(F("OW unk"));
-        failed();
-        return;
+        return false;
     }
     
 	DEBUG(F("OW found"));
@@ -543,6 +551,21 @@ void DewHeater::scan()
     long t2 = micros();
     DEBUG(F("scan took"), t2 - t1, F("us"));
 
+	return true;
+}
+
+void DewHeater::onScanFailed()
+{
+	DEBUG(F("Scan failed"));
+	this->scanScheduler.stop();
+	failed();
+}
+
+void DewHeater::onScanCompleted()
+{
+	DEBUG(F("Scan completed"));
+	this->scanScheduler.stop();
+
     char strAddr[32];
     formatAddr(addr, strAddr);
     uid.setValue(strAddr);
@@ -550,7 +573,7 @@ void DewHeater::scan()
     DEBUG(F("scan ok at "), strAddr);
     loadFromEeprom();
 
-    this->status = STATUS_IDLE;
+    this->status = STATUS_MEASURE;
     this->nextTick = UTime::now() + MS(100);
 }
 
@@ -626,37 +649,41 @@ bool DewHeater::readMeasure()
 		return false;
     }
 
-	int16_t rawVal = ((readBuffer[1] << 8) | readBuffer[0]);
-    temperature.setValue(rawVal * 0.0625);
-    tempAvailable = true;
-    if (pidRunning) updatePwm();
 	return true;
+}
+
+void DewHeater::onMeasureFailed()
+{
+	DEBUG(F("Measure failed"));
+	this->measureScheduler.stop();
+	failed();
+}
+
+void DewHeater::onMeasureCompleted()
+{
+	DEBUG(F("Measure completed"));
+
+	// Don't touch the scheduler, the task will loop
+	int16_t rawVal = ((readBuffer[1] << 8) | readBuffer[0]);
+	temperature.setValue(rawVal * 0.0625);
+	tempAvailable = true;
+	if (pidRunning) updatePwm();
 }
 
 void DewHeater::tick()
 {
-    if (this->status == STATUS_NEED_SCAN) {
-        scan();
-    } else {
-        if (this->status == STATUS_IDLE) {
-			this->status = 0;
-		}
-		auto step = measureSequence()[this->status];
-		auto func = step.func;
-		auto msWait = step.msWait;
+	if (measureScheduler.handleTick()) {
+		return;
+	}
+	if (scanScheduler.handleTick()) {
+		return;
+	}
 
-    	long t1 = micros();
-		bool success = ((*this).*func)();
-		long t2 = micros();
-		DEBUG(F("step "), this->status, F(" yield "), success, F(" in "), t2 - t1, F("us"));
-		if (success) {
-			this->nextTick = UTime::now() + MS(msWait);
-			this->status++;
-			if (measureSequence()[this->status].func == nullptr) {
-				this->status = STATUS_IDLE;
-			}
-        } else {
-			failed();
-        }
-    }
+	if (this->status == STATUS_NEED_SCAN) {
+		this->nextTick = UTime::never();
+		scanScheduler.start(MS(1000));
+	} else {
+		this->nextTick = UTime::never();
+		measureScheduler.start(MS(1000));
 }
+

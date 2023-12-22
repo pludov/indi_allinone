@@ -9,12 +9,15 @@
 #include "IndiTextVectorMember.h"
 #include "IndiSwitchVector.h"
 #include "IndiSwitchVectorMember.h"
+#include "TaskSequence.h"
 
 
 struct MeasureSequence;
 
 class MeteoTemp;
 class DewHeater : public Scheduled {
+    friend class TaskSequenceScheduler<DewHeater>;
+
     Symbol group;
     IndiNumberVector statusVec;
     IndiFloatVectorMember temperature;
@@ -65,16 +68,25 @@ class DewHeater : public Scheduled {
     long lastTime;
     double ITerm;
 
-    static MeasureSequence * measureSequence();
+    TaskSequenceScheduler<DewHeater> measureScheduler;
+    static TaskSequence<DewHeater> * measureSequence();
+
+	TaskSequenceScheduler<DewHeater> scanScheduler;
+	static TaskSequence<DewHeater>* scanSequence();
 
     void updatePwm();
     void powerModeChanged();
     void configOperationChanged();
 
-    void scan();
+    bool asyncScan();
+    void onScanCompleted();
+    void onScanFailed();
+
     bool startMeasure();
     bool endMeasure();
     bool readMeasure();
+    void onMeasureCompleted();
+    void onMeasureFailed();
 
     void failed();
 
