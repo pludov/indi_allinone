@@ -1,6 +1,6 @@
 // Probleme en suspens:
 //  - vérifier les cnx jack (2.5 vs 2.1 vs 1x GX16)
-//  - hauteur des plots pour les soudure: 1.8 - 2 min
+//  - hauteur des plots pour les soudure: 1.8 - 2 min => ok
 //  - erreur 3V3 vs 3V3_enable
 // Historique des problemes
 // emplacement ecrous pas assez hauts 0.2/profonds 0.1 => ok, +0.2 et +0.1
@@ -128,7 +128,7 @@ pcb_sze = [ 110, 76 ];
 pcb_size = [ 110, 76];
 pcb_ref = [ 1.16, -0.40 ];
 inch = 25.4;
-pcb_pad_z = 1.8;
+pcb_pad_z = 2.2;
 
 pcb_holes =
  [ [ (3.1 - pcb_ref[0]) * inch, pcb_size[1] - (-0.1 - pcb_ref[1]) * inch],
