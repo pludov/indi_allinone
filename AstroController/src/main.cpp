@@ -39,7 +39,7 @@
 #include "MeteoTempBME.h"
 #include "DewHeater.h"
 #include "WattMeter.h"
-
+#include "Blinker.h"
 
 #ifdef USE_TINYUSB
 Adafruit_USBD_CDC communicationSerial;
@@ -72,12 +72,21 @@ void declareHardware(BaseDriver * baseDriver) {
 
 #else
 	// BME Sensor
-	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire1, 16, 17);
 
-	// DewHeater : sensor, resistor
+#if 1
+	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
 	new DewHeater(meteoTemp, 21, 18, 1);
-	new DewHeater(meteoTemp, 22, 19, 2);
+	new DewHeater(meteoTemp, 13, 19, 2);
 	new DewHeater(meteoTemp, 26, 20, 3);
+#else
+
+	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
+	// DewHeater : sensor, resistor
+//  new DewHeater(meteoTemp, 21, 18, 1);
+//	new DewHeater(meteoTemp, 22, 19, 2);
+//	// Limited by single oneWire available. Cannot read temperature concurrently
+//	new DewHeater(meteoTemp, 26, 20, 3);
+#endif
 
 	// Focuser motor - 4 pins for motor control + 1 for hall sensor
 	static const uint8_t filterWheelPins[5] = { 6, 7, 8, 9, 15};
@@ -87,6 +96,8 @@ void declareHardware(BaseDriver * baseDriver) {
 	static const uint8_t focuserMotorPins[4] = { 2, 3, 4, 5 };
 	new Focuser(baseDriver, EepromStored::Addr(4), focuserMotorPins, 0);
 
+	new Blinker(PIN_LED);
+
 #endif
 
 
@@ -94,18 +105,29 @@ void declareHardware(BaseDriver * baseDriver) {
 	new Status();
 }
 
+
+#ifdef ARDUINO_ARCH_RP2040
+// Take ~ 64Ko for storage
+FlashStore flashStore(16);
+#endif
+
 //------------------------------------------------------------------
 // Setup
 //------------------------------------------------------------------
 void setup() {
+	pinMode(PIN_LED, OUTPUT); //
+	digitalWrite(PIN_LED, LOW);
+	delay(250);
 	// initialize serial for ASCOM
 	Serial.begin(115200);
+	digitalWrite(PIN_LED, HIGH);
+
 #ifdef USE_TINYUSB
 	communicationSerial.begin(115200);
 #else
 	// Larger fifo size.
 	// Debug should never block the main thread
-	Serial1.setFIFOSize(128);
+	Serial1.setFIFOSize(256);
 	Serial1.begin(115200);
 #endif
 
@@ -116,8 +138,12 @@ void setup() {
 	BaseDriver * baseDriver = new BaseDriver();
 	declareHardware(baseDriver);
 
+#ifdef ARDUINO_ARCH_RP2040
+	flashStore.initialize();
+#else
 	// Read eeprom
 	EepromStored::init();
+#endif
 
 	// Let's talk packed indi over a serial link
 #ifdef __AVR_ATmega2560__
