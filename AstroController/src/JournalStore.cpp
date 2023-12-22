@@ -30,6 +30,7 @@ JournalStore::JournalStore(int sectorCount, int sectorSize, int pageSize) {
     this->sectorSize = sectorSize;
     this->pageSize = pageSize;
     this->sectorBuffer = new uint8_t[sectorSize];
+    this->forceCompaction = false;
 }
 
 JournalStore::~JournalStore() {
@@ -41,6 +42,10 @@ void JournalStore::reset() {
     flashStartPtr = 0;
     flashWritePtr = 0;
     previousHeadSector = -1;
+}
+
+void JournalStore::requestCompaction() {
+    forceCompaction = true;
 }
 
 bool JournalStore::writeDirtyToCurrentSector(bool force) {
@@ -258,11 +263,15 @@ void JournalStore::initialize() {
 }
 
 void JournalStore::step() {
-    if (flashWritePtr % this->sectorSize == 0) {
+    if (forceCompaction || flashWritePtr % this->sectorSize == 0) {
+        
+        // Advance to the next sector boundary
+        flashWritePtr += (this->sectorSize - (flashWritePtr % this->sectorSize)) % this->sectorSize;
+
         // We are at the beginning of a sector
         // Check if we need to erase it
         int sectorId = this->flashWritePtr / this->sectorSize;
-        
+
         if (lastSectorErased != sectorId) {
             DEBUG("Reset new sector");
             // We need to erase this sector
@@ -274,13 +283,13 @@ void JournalStore::step() {
         memset(this->sectorBuffer, 0xff, this->sectorSize);
         int firstSectorId = this->flashStartPtr / this->sectorSize;
         int prefixLen;
-        if (sectorId == firstSectorId) {
+        if (sectorId == firstSectorId && !forceCompaction) {
             DEBUG("Start first sector");
             // This is a brand new sector
             // Write the marker
             memcpy(this->sectorBuffer, headMarker, SECTOR_HEAD_MARKER_LENGTH);
             prefixLen = SECTOR_HEAD_MARKER_LENGTH;
-        } else if ((sectorId + 1) % this->sectorCount == firstSectorId) {
+        } else if (forceCompaction || ((sectorId + 1) % this->sectorCount == firstSectorId)) {
             DEBUG("Start compaction sector");
             
             // Need to erase all & compact!
@@ -290,6 +299,7 @@ void JournalStore::step() {
             markAllDirty();
             // Ensure we erase the previous head right after
             previousHeadSector = firstSectorId;
+            forceCompaction = false;
         } else {
             DEBUG("Start continue sector");
             

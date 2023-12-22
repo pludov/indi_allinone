@@ -26,6 +26,10 @@
 #include "Scheduled.h"
 #include "IndiNumberVector.h"
 #include "IndiIntVectorMember.h"
+#include "IndiSwitchVector.h"
+#include "IndiSwitchVectorMember.h"
+
+#include "TaskQueue.h"
 
 class EepromStored;
 
@@ -37,24 +41,18 @@ class FlashStore: protected JournalStore, protected Scheduled {
 	IndiNumberVector flashStatusVec;
 	IndiIntVectorMember flashSize;
 	IndiIntVectorMember flashErrorCount;
-
+	IndiSwitchVector flashCompactVec;
+	IndiSwitchVectorMember flashCompact;
 
 	int firstSector;
 
-
-	bool pendingOperation;
-	int pendingSectorStart;
-	int pendingSectorEnd;
-	int pendingPageStart;
-	int pendingPageEnd;
 	// This decide reset vs write
 	const uint8_t * pendingSectorData;
 
-	bool hasPendingOperation();
-	void doPendingOperation();
-
-
+	void onIndiCompactRequest();
 	void schedule();
+
+	TaskExecutor<bool> flashOperation;
 public:
 	FlashStore(int sectorCount, bool def = true);
 

@@ -60,6 +60,8 @@ IndiSwitchVector::IndiSwitchVector(const Symbol & group, const Symbol & name,con
     :IndiVector(group, name, label, initialFlag, autoregister)
 {
 	activeOne = nullptr;
+	first = nullptr;
+	last = nullptr;
 }
 
 IndiSwitchVector::~IndiSwitchVector() {

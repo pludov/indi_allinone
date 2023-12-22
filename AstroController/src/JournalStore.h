@@ -45,6 +45,8 @@ private:
     void readExistingEntries();
 
     void startCompaction();
+
+    bool forceCompaction;
 protected:
     int sectorCount;
     int previousHeadSector = -1;
@@ -95,6 +97,7 @@ public:
     // While call readSector and initialize state
     void initialize();
 
+    void requestCompaction();
     // This is to be called when the workqueue is complete (writePage, resetSectors)
     // This will iterate for dirty items and write them if required
     // If no work is generated, no need to call step again until dirty items are added
