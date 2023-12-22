@@ -19,7 +19,7 @@ Status::Status():
 {
 	this->nextTick = UTime::now();
 	this->priority = 2;
-	this->tickExpectedDuration = MS(1);
+	this->tickExpectedDuration = US(100);
 }
 
 Status::~Status()
