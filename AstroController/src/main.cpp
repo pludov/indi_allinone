@@ -128,7 +128,7 @@ void setup() {
 	// Larger fifo size.
 	// Debug should never block the main thread
 	Serial1.setFIFOSize(256);
-	Serial1.begin(115200);
+	Serial1.begin(230400);
 #endif
 
 	DEBUG(F("Init!"));

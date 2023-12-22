@@ -95,7 +95,6 @@ protected:
 	{
 		for(int i = 0; i < storedSettingsCount; ++i)
 		{
-			DEBUG(F("Eeprom: "), settings[i].addr[0], settings[i].addr[1], settings[i].addr[2], settings[i].addr[3], settings[i].addr[4]);
 			if (settings[i].matchAddr(addr)) {
 				return i;
 			}
@@ -156,7 +155,6 @@ public:
 
 	const Settings * find(uint8_t * addr)
 	{
-		DEBUG(F("Looking for "), addr[0], addr[1], addr[2], addr[3], addr[4]);
 		int8_t slotId = findPos(addr);
 		if (slotId == -1) {
 			return nullptr;
@@ -563,18 +561,21 @@ void DewHeater::onScanFailed()
 
 void DewHeater::onScanCompleted()
 {
-	DEBUG(F("Scan completed"));
+	auto t1 = micros();
+	// DEBUG(F("Scan completed"));
 	this->scanScheduler.stop();
 
     char strAddr[32];
     formatAddr(addr, strAddr);
     uid.setValue(strAddr);
     
-    DEBUG(F("scan ok at "), strAddr);
+    // DEBUG(F("scan ok at "), strAddr);
     loadFromEeprom();
 
     this->status = STATUS_MEASURE;
     this->nextTick = UTime::now() + MS(100);
+	auto t2 = micros();
+	DEBUG(F("Scan took"), t2 - t1, F("us"));
 }
 
 void DewHeater::loadFromEeprom()
@@ -582,7 +583,6 @@ void DewHeater::loadFromEeprom()
 	// Update variables from scan...
 	const Settings * settings = DewHeatersMemory::getInstance()->find(addr);
 	if (settings != nullptr) {
-		DEBUG(F("Loading pid values"));
 		setPowerModeId(settings->opMode);
 		settingKp.setValue(settings->kp);
 		settingKi.setValue(settings->ki);
@@ -662,12 +662,14 @@ void DewHeater::onMeasureFailed()
 void DewHeater::onMeasureCompleted()
 {
 	DEBUG(F("Measure completed"));
-
+	auto t1= micros();
 	// Don't touch the scheduler, the task will loop
 	int16_t rawVal = ((readBuffer[1] << 8) | readBuffer[0]);
 	temperature.setValue(rawVal * 0.0625);
 	tempAvailable = true;
 	if (pidRunning) updatePwm();
+	auto t2 = micros();
+	DEBUG(F("Measure completion took"), t2 - t1, F("us"));
 }
 
 void DewHeater::tick()
@@ -685,5 +687,6 @@ void DewHeater::tick()
 	} else {
 		this->nextTick = UTime::never();
 		measureScheduler.start(MS(1000));
+	}
 }
 
