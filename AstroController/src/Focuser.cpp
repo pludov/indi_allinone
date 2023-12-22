@@ -66,8 +66,8 @@ Focuser::Focuser(BaseDriver * bd, uint32_t addr, const uint8_t* pins, int suffix
     focusResetPositionVec(group, Symbol(F("FOCUS_RESET_POSITION"), suffix), F("Reset to 50k"), VECTOR_WRITABLE|VECTOR_READABLE|VECTOR_SWITCH_ATMOSTONE),
     focusResetPosition(&focusResetPositionVec, F("RESET"), F("Reset")),
     motorSettingsVec(group, Symbol(F("FOCUS_SETTINGS"), suffix), F("Motor settings"), VECTOR_WRITABLE|VECTOR_READABLE),
-    incMotorPulse(&motorSettingsVec, F("INC_MOTOR_PULSE"), F("inc pulse (ms)"), 100, 100000, FOCUSER_DEFAULT_INC_PULSE),
-    decMotorPulse(&motorSettingsVec, F("DEC_MOTOR_PULSE"), F("dec pulse (ms)"), 100, 100000, FOCUSER_DEFAULT_DEC_PULSE),
+    incMotorPulse(&motorSettingsVec, F("INC_MOTOR_PULSE"), F("inc pulse (us)"), 100, 100000, FOCUSER_DEFAULT_INC_PULSE),
+    decMotorPulse(&motorSettingsVec, F("DEC_MOTOR_PULSE"), F("dec pulse (us)"), 100, 100000, FOCUSER_DEFAULT_DEC_PULSE),
     motorMaxAccelStep(&motorSettingsVec, F("ACCEL_STEPS"), F("max accel steps"), 0, 100000, FOCUSER_DEFAULT_MAX_ACCEL_STEP),
     motorInvert(&motorSettingsVec, F("INVERT"), F("Invert motor"), 0, 1, FOCUSER_DEFAULT_INVERT),
     eepromReadyListener(EepromCallback(&Focuser::loadInitialSettings, this))

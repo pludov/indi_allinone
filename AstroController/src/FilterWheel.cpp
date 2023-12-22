@@ -62,7 +62,7 @@ FilterWheel::FilterWheel(BaseDriver * bd, uint32_t addr, const uint8_t* pins, in
     rawPosVec(group, Symbol(F("FILTER_RAW_POSITION"), suffix), F("Raw Position"), VECTOR_WRITABLE|VECTOR_READABLE),
     rawPos(&rawPosVec, F("FILTER_RAW_POSITION"), F("Ticks"), 0, 100000, 1),
     motorSettingsVec(group, Symbol(F("FILTER_MOTOR_SETTINGS"), suffix), F("Motor settings"), VECTOR_WRITABLE|VECTOR_READABLE),
-    motorPulse(&motorSettingsVec, F("FILTER_MOTOR_PULSE"), F("pulse (ms)"), 100,100000, DEFAULT_MOTOR_PULSE),
+    motorPulse(&motorSettingsVec, F("FILTER_MOTOR_PULSE"), F("pulse (us)"), 100,100000, DEFAULT_MOTOR_PULSE),
     motorBacklash(&motorSettingsVec, F("FILTER_MOTOR_BACKLASH"), F("backlash"), -10000,10000, 0),
     calibrateVec(group, Symbol(F("FILTER_CALIB"), suffix), F("Calibration"), VECTOR_WRITABLE|VECTOR_READABLE|VECTOR_SWITCH_ATMOSTONE),
     calibrate(&calibrateVec, F("CALIB"), F("Calibrate")),

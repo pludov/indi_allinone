@@ -22,7 +22,7 @@ protected:
 	// Invert the rotation on the motor side.
 	bool invert;
 
-	// At full speed, how short a step is ?
+	// At full speed, how short a step is (us) ?
 	int fastestPerHalfStepAsc;
 	int fastestPerHalfStepDesc;
 	// Number of steps to gain full speed
