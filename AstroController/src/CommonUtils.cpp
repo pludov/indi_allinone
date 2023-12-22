@@ -4,6 +4,24 @@
 
 #include "CommonUtils.h"
 
+#ifdef ARDUINO_ARCH_RP2040	// RP2040 specific code
+#include "pico/mutex.h"
+
+auto_init_recursive_mutex(debugMutex);
+
+void debugOutputLock() {
+	recursive_mutex_enter_blocking(&debugMutex);
+}
+
+void debugOutputUnlock() {
+	recursive_mutex_exit(&debugMutex);
+}
+
+#else
+void debugOutputLock() {}
+void debugOutputUnlock() {}
+#endif
+
 #ifdef ARDUINO
 
 #ifndef __AVR_ATmega2560__
