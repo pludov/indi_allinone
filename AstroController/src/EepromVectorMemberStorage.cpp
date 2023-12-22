@@ -32,7 +32,8 @@ public:
 		if (sze < sizeof(double)) {
 			return;
 		}
-		double v = *((double*)buffer);
+		double v;
+		memcpy((void*)&v, buffer, sizeof(double));
 		member->setValue(v);
 	}
 
@@ -40,7 +41,8 @@ public:
 		if (sze < sizeof(double)) {
 			return;
 		}
-		*((double*)buffer) = member->getDoubleValue();
+		double d = member->getDoubleValue();
+		memcpy(buffer, (void*)&d, sizeof(double));
 	}
 
 	virtual int getEepromSize() const {
@@ -68,7 +70,8 @@ public:
 		if (sze < sizeof(int32_t)) {
 			return;
 		}
-		int32_t v = *((int32_t*)buffer);
+		int32_t v;
+		memcpy((void*)&v, buffer, sizeof(int32_t));
 		member->setValue(v);
 	}
 
@@ -76,7 +79,8 @@ public:
 		if (sze < sizeof(int32_t)) {
 			return;
 		}
-		*((int32_t*)buffer) = member->getValue();
+		int32_t v = member->getValue();
+		memcpy(buffer, (void*)&v, sizeof(int32_t));
 	}
 
 	virtual int getEepromSize() const {

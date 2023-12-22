@@ -17,6 +17,8 @@
 
 #define FLAG_WRITTEN  0
 
+#ifndef ARDUINO_ARCH_RP2040
+
 class EepromWriteCounter : public EepromStored {
 	friend class EepromStored;
 	uint16_t count;
@@ -75,9 +77,7 @@ public:
 	uint16_t getCount() const {
 		return count;
 	}
-
 };
-
 
 EepromStored * EepromStored::first = nullptr;
 
@@ -85,43 +85,14 @@ static uint32_t initValue = 0x1F04EAE4;
 static EepromWriteCounter * writeCounter = 0;
 static uint32_t byteWriteCount = 0;
 
-#define check(t, dplay) while(!(t)) {DEBUG(dplay);}
-
-static void checkAddr(uint8_t v)
-{
-	check(v < 64, F("Invalid address"));
-}
-
-uint32_t EepromStored::Addr(uint8_t v1)
-{
-	checkAddr(v1);
-	return v1;
-}
-
-uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2)
-{
-	checkAddr(v2);
-	int used = 1;
-	while(v1 >> (8 * used)) {
-		used ++;
-	}
-	check(used < 4, F("Addr overflow"));
-	return v1 | (((uint32_t)v2) << (8*used));
-}
-
-uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2, uint8_t v3)
-{
-	return Addr(Addr(v1, v2), v3);
-}
-
-uint32_t EepromStored::Addr(uint32_t v1, uint8_t v2, uint8_t v3, uint8_t v4)
-{
-	return Addr(Addr(Addr(v1, v2), v3), v4);
-}
 
 
+#endif
+
+#ifndef ARDUINO_ARCH_RP2040
 
 EepromStored::EepromStored(uint32_t naddr) :addr(naddr), writeCount(0){
+	writeCount = 0;
 	if (getAddrFromHead(naddr) != naddr) {
 		while(1) {
 			DEBUG(F("Invalid address: #"), naddr);
@@ -136,7 +107,6 @@ EepromStored::EepromStored(uint32_t naddr) :addr(naddr), writeCount(0){
 
 EepromStored::~EepromStored() {
 }
-
 
 
 void EepromStored::eRead(uint16_t pos, void * ptr, int count)
@@ -473,9 +443,11 @@ void EepromStored::fullRewrite() {
 	// Done, reset the marker
 	eWrite32(0, initValue);
 }
+#endif
 
 
 EepromReadyListener * EepromReadyListener::first = nullptr;
+bool EepromReadyListener::readyStatus = false;
 
 EepromReadyListener::EepromReadyListener(const EepromCallback & cb)
 	: callback(cb)
@@ -506,6 +478,7 @@ void EepromReadyListener::setCallback(const EepromCallback & cb) {
 };
 
 void EepromReadyListener::ready() {
+	readyStatus = true;
 	EepromReadyListener * t = first;
 	while(t) {
 		if (t->callback.isSet()) {
@@ -513,4 +486,8 @@ void EepromReadyListener::ready() {
 		}
 		t = t->next;
 	}
+}
+
+bool EepromReadyListener::isReady() {
+	return readyStatus;
 }

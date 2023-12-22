@@ -206,7 +206,7 @@ void FilterWheel::calibrateChanged() {
 
 void FilterWheel::saveMemoryPos(uint32_t value, uint8_t positionBaseValue)
 {
-    if (!EepromStored::eepromReady()) {
+    if (!EepromReadyListener::isReady()) {
         return;
     }
     if (memory->settings.pos != value || memory->settings.base != positionBaseValue) {
