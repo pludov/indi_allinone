@@ -269,8 +269,8 @@ void JournalStore::step() {
             return;
         }
         // Now start the sector
+        memset(this->sectorBuffer, 0xff, this->sectorSize);
         int firstSectorId = this->flashStartPtr / this->sectorSize;
-        
         int prefixLen;
         if (sectorId == firstSectorId) {
             DEBUG("Start first sector");
