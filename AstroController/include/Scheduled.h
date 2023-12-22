@@ -20,6 +20,8 @@ class Scheduled
 	friend class Scheduler;
 	Scheduled * nextScheduled;
 	Symbol debugName;
+
+	// Actual duration of the ticks
 	PerfHistogram perf;
 	void debugPerf() const;
 protected:
