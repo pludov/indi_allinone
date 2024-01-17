@@ -15,19 +15,31 @@
 
 #include "IndiNumberVector.h"
 #include "IndiFloatVectorMember.h"
+#include "EepromStored.h"
 #include "MeteoTemp.h"
 
 struct MeasureSequence;
+class BMEMemory;
 
 class MeteoTempBME : public MeteoTemp {
     friend class TaskSequenceScheduler<MeteoTempBME>;
 private:
 	IndiFloatVectorMember pressure;
+	IndiNumberVector sensorSettingsVec;
+	IndiFloatVectorMember compensationValue;
+
 	uint8_t addr;
 	TwoWire * wire;
 	Adafruit_BME280 bme; // I2C
+	BMEMemory * memory;
 
 	float pressureValue;
+
+	float compensationValueForCurrentMeasure;
+
+	void loadInitialSettings();
+	void updateMemory();
+	void copySettings();
 
 	void scheduleReset(bool immediate);
 	void scheduleNextStep(uint8_t stepid, int msWait);
@@ -44,8 +56,10 @@ private:
 	TaskSequenceScheduler<MeteoTempBME> measureScheduler;
 	static TaskSequence<MeteoTempBME>* measureSequence();
 
+    EepromReadyListener eepromReadyListener;
+
 public:
-	MeteoTempBME(TwoWire * wire, uint8_t pinSda, uint8_t pinScl, int addr = -1);
+	MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_t pinScl, int bmeAddr = -1);
 	virtual ~MeteoTempBME();
 
 	virtual void tick();

@@ -86,16 +86,16 @@ void declareHardware(BaseDriver * baseDriver) {
 #else
 	// BME Sensor
 
-#if 1
+#if 0
 	// DEBUG Version
-	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
+	MeteoTemp * meteoTemp = new MeteoTempBME(EepromStored::Addr(5), &Wire, 16, 17);
 	new DewHeater(meteoTemp, 21, 18, 1);
 	new DewHeater(meteoTemp, 13, 19, 2);
 	new DewHeater(meteoTemp, 26, 20, 3);
 #else
 
-	MeteoTemp * meteoTemp = new MeteoTempBME(&Wire, 16, 17);
-	// DewHeater : sensor, resistor
+	MeteoTemp * meteoTemp = new MeteoTempBME(EepromStored::Addr(5), &Wire, 16, 17);
+	// DewHeater : sensor, resistor. They share EepromStored::Addr(2)
 	new DewHeater(meteoTemp, 21, 18, 1);
 	new DewHeater(meteoTemp, 22, 19, 2);
 	new DewHeater(meteoTemp, 26, 20, 3);
