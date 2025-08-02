@@ -57,9 +57,7 @@ fix_m25_head_diam=4.6;
 fix_m25_nut_diam=5.6;
 fix_m25_nut_length=2;
 
-vix_base_nut_length = 9.2;
-vix_base_nut_diam = 6.3; 
-m3_nut_diam = vix_base_nut_diam + 0.1;
+m3_nut_diam = 6.4;
 m3_nut_length = 2.3 + 0.2;
 m3_extrude_diam = 3.25;
 
@@ -165,44 +163,13 @@ heater_connections = [
 //   [3, 51.5]
 // ];
 
-// Vixation vixen
-vix_height_max = 16;
+hub_ext_height = 13;
+vix_center = [ outer_sze[0] / 2, outer_sze[1] / 2 + hub_ext_height / 2];
 
-// keep 4 mm for M3 nut
-vix_height = 12;        
-
-vix_angle = 15;
-
-// Width of the base when connected
-vix_spacing = 43;
-
-vix_length = 30;
-// We need at least this len free to be able to unplug
-vix_spacing_play = sin(15) * 2 * vix_height + 1;
-echo("vix_spacing_play: ", vix_spacing_play );
-
-// The pad is fixed.
-vix_fixed_pad_length = 12;
-vix_mobile_pad_length = 13;
-
-
-vix_leg_length = 20;
-
-// Distance between M3 bolt connected to cover
-vix_connection_spacing = vix_length -16;
-
-
-tige_fixation_length = 4.7;
-tige_fixation_diam = 9.0;
-tige_diam = 3;
-fixed_pad_y = -(vix_spacing - 2 * sin(vix_angle) * vix_height);
-
-vix_base_length = 20;
-
-vix_base_y = vix_mobile_pad_length + vix_spacing_play;
-// Keep the bolt far from the wall (inside). This is distance from inner wall
-vix_base_fixation_y = 6;
-vix_base_nut_wall = 3;
+vix_screw_distance = [ [ 28.5, 0 ], [0, 19 ] ];
+vix_screw_diam = 4.20;
+// La fixation vixen rouge a besoin d'etre légrement surelevée à cause de sa visse
+vix_pad_size = [40, 44 , 3];
 
 
 jacks= [ 
@@ -720,154 +687,33 @@ module rj_window() {
   }
 }
 
-// Hardening the cover under the vixen clamp
-module vix_pad_fixation_plus() {
-  struct_height = 3;
-  struct_width = vix_connection_spacing - 9;
-  translate([vix_length / 2 - struct_width / 2,
-        fixed_pad_y - vix_fixed_pad_length + wall_x1 + 0.1, 
-        -wall_z - struct_height])
-    cube([struct_width,inner_sze[1] - 0.2,struct_height]);
-
-}
-
 module vix_pad_fixation_minus() {
   color("red")
-  for(Xi = [-1, 1]) {
-    X = vix_length / 2 + Xi * (vix_connection_spacing / 2);
-    translate([X, 0, 0]) {
-      // Fixed pad
-      translate([0,fixed_pad_y + (vix_fixed_pad_length - sin(vix_angle) * vix_height) / 2, 0])
-        translate([0, -vix_fixed_pad_length, 0]) {
-          translate([0,0,-outer_z - 1]) {
-            cylinder(d=m3_extrude_diam, h=outer_z + vix_height + 10, $fn=64);
-          }
-          nut_height = 4;
-          nut_diam = 6.2;
-          translate([0,0,-wall_z- nut_height]) {
-            // 6.2 x 4
-            cylinder(d=nut_diam, h = nut_height + 0.01, $fn=32);
-          }
-        }
-      
-      // Base
-      translate([0,vix_base_y + vix_base_fixation_y, 0])
-        translate([0,0,-wall_z - 5]) {
-            cylinder(d=m3_extrude_diam, h=100, $fn=64);
-            translate([0,0,0.001])
-            cylinder(d=6, h=5, $fn=64);
-          
-        }
-        
+  for(screw = vix_screw_distance) 
+    for(I = [-0.5, 0.5]) {
+      translate([I * screw[0], I * screw[1], -1])
+        cylinder(d=vix_screw_diam, h=600, $fn=16);
     }
-    
-    X2 = vix_length / 2  + Xi * (vix_length /2 - 5);
-    // Guides (mobile pad)
-    translate([X2,(vix_mobile_pad_length - sin(vix_angle) * vix_height)/ 2 +sin(vix_angle) * vix_height,-wall_z - 5]) {
-      cylinder(d=m3_extrude_diam, h=100, $fn=64);
-      
-      hull() {
-        translate([0, -2, 0])
-          cylinder(d=m3_extrude_diam, h = wall_z + 5+0.01,$fn=64);
-        translate([0, vix_spacing_play + 2, 0])
-        cylinder(d=m3_extrude_diam, h = wall_z + 5+0.01,$fn=64);
-      }
-    }
-  }
 }
 
 
-module vix_main_screw() {
-  
-  // main screw
-  translate([vix_length /2, 0, vix_height / 2]) {
-    // Fixation, sadle side. Make sure the fixation doesn't overflow
-    translate([0,sin(vix_angle) * (vix_height / 2 + tige_fixation_diam / 2) - 10, 0])
-      rotate([-90,0,0])
-        cylinder(d=tige_fixation_diam,h=tige_fixation_length + 10, $fn=64);
-    
-    // Fixation, external side. Make room for max movement
-    translate([0, vix_mobile_pad_length + vix_spacing_play-0.01, 0])
-      rotate([-90,0,0])
-        cylinder(d=tige_fixation_diam,h=tige_fixation_length, $fn=64);
-    
-    rotate([-90,0,0])
-      cylinder(d=tige_diam,h=120, $fn=64);
-    
-    translate([0, vix_base_y + vix_base_length - vix_base_nut_wall, 0])
-        rotate([90,0,0])
-          hull() {
-            cylinder(d=vix_base_nut_diam, h = vix_base_nut_length, $fn=6);
-            translate([0,-10,0])
-              cylinder(d=vix_base_nut_diam, h = vix_base_nut_length, $fn=6);
-          }
-  }
-
-}
 
 module from_root_to_vix() {
-  translate([vix_length / 2 + outer_sze[0] / 2,vix_base_y + vix_base_length, 0])
-    rotate([0,0,180])
+  translate([vix_center[0], vix_center[1], 0])
       translate([0,0,outer_z])
         children();
 }
 
 
-// Sol d'essai
-/*translate([0,0,40])
-from_root_to_vix() {
-  difference() {
-    translate([0,vix_base_y + vix_base_length,0])
-      rotate([0,0,180])
-        translate([-vix_length, 0, -wall_z])
-          cube([vix_length, outer_sze[1], wall_z]);
-    
-    color("red")
-      vix_main_screw();
-    color("red")
-      vix_pad_fixation_minus();
-  }
-}*/
-
 // Vixen connector parts
 translate([0,0, 40])
 from_root_to_vix()
 difference() {
+  color("yellow")
   union() {
-    
-    // Fixed pad
-    difference() {
-      translate([0,fixed_pad_y, 0])
-
-        intersection()
-        {
-          translate([0,-vix_fixed_pad_length,0])
-            cube([vix_length, vix_fixed_pad_length, vix_height]);
-          
-          translate([-50,-500,vix_height])
-          translate([0,500,0])
-            rotate([-vix_angle,0,0])
-              translate([0,-500,-50])
-                cube([100, 500, 100]);
-        }
-        
-       
-    }  
-    // base
-    translate([0,vix_base_y, 0])
-      cube([vix_length, vix_base_length, vix_height]);
-    
-    // Mobile pad
-    intersection() {
-      cube([vix_length, vix_mobile_pad_length, vix_height]);
-      translate([0,0,vix_height])
-        rotate([vix_angle, 0, 0])
-          translate([-50,00,-50])
-            cube([100, 500, 100]);
-    }
+    translate([ - vix_pad_size[0] / 2, - vix_pad_size[1] / 2, 0])
+      cube_rounded(vix_pad_size, ray = 4);
   }
-  color("red")
-    vix_main_screw();
   color("red")
       vix_pad_fixation_minus();
   
@@ -982,8 +828,6 @@ difference() {
     cover_clips();
     from_root_to_case() 
       cover_screw_cover_plus();
-    from_root_to_vix()
-      vix_pad_fixation_plus();
   }
   from_root_to_vix()
     vix_pad_fixation_minus();
