@@ -191,8 +191,8 @@ fixation_hub_long = 10;
 
 fixation_hub_dst_entraxe = fixation_hub_dst - 2 * fixation_hub_larg / 2;
 fixation_hub = [
-  [2, wall_length(2)/ 2 - fixation_hub_dst_entraxe / 2, 10],
-  [2, wall_length(2)/ 2 + fixation_hub_dst_entraxe / 2, 10],
+  [2, wall_length(2)/ 2 - fixation_hub_dst_entraxe / 2, outer_z/2],
+  [2, wall_length(2)/ 2 + fixation_hub_dst_entraxe / 2, outer_z/2],
 ];
 
 module from_root_to_case() {
@@ -607,7 +607,7 @@ module connections_minus() {
     for(fixation = fixation_hub) {
       wall_id = fixation[0];
       p = fixation[1];
-      z = outer_z - wall_z - fixation[2];
+      z = fixation[2];
       wall(wall_id)
         translate([p, 0, z])
           rotate([-90,0,0]) {
@@ -777,7 +777,7 @@ module cover_screw_minus() {
 // translate([36,61,-1])
 // cube([80,22,10]);
 
-difference() {
+!difference() {
   union() {
     low_part();
     bme_plus();
