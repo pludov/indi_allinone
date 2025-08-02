@@ -116,13 +116,13 @@ module from_case_to_fixation(fixation) {
 
 // Connector for RJxxx adaptation
 // It is separated to keep it printable.
-rj_window_y = 38;
+rj_window_y = 22;
 rj_window_z = 19;
 
 
 hole_heater = 11.7 + 0.2;
 // Diam jack DC
-hole_dc = 7.8 + 0.2;
+hole_dc = 10.9;
 
 pcb_sze = [ 110, 76 ];
 pcb_size = [ 110, 76];
@@ -206,10 +206,10 @@ vix_base_nut_wall = 3;
 
 
 jacks= [ 
-          [ 0, 81, -10],
-          [ 3, wall_length(3) - wall_x1 - 7.5, -8 ], 
-          [ 3, wall_length(3) - wall_x1 - 18.5, -11],
-          [ 3, wall_length(3) - wall_x1 - 29.5, -8 ],  
+          [ 0, 88, -9],
+          [ 3, wall_length(3) - wall_x1 - 8, -7.2 - 0.2 ], 
+          [ 3, wall_length(3) - wall_x1 - 23.5, -7.2- 0.2],
+          [ 3, wall_length(3) - wall_x1 - 39, -7.2- 0.2 ],  
       ];
 
 module from_root_to_case() {
@@ -545,7 +545,7 @@ module cover() {
 // Rotate so x+ gets inside the box
 module from_case_to_rj_window() {
    // Translate to the x1 wall
-  translate([inner_sze[0] + 2 * wall_y, wall_x0 + 3 + rj_window_y, outer_z - wall_z - rj_window_z])
+  translate([inner_sze[0] + 2 * wall_y, wall_x0 + 7 + rj_window_y, outer_z - wall_z - rj_window_z])
     rotate([0,0,180])
     children();
 }
@@ -615,8 +615,9 @@ module connections_minus() {
           rotate([-90,0,0]) {
             translate([0,0,-1])
               cylinder(d=hole_dc, h = wall_depth(wall_id) + 2, $fn=64);
+            // Access ecrou & emprunte cable
             translate([0,0,wall_depth(wall_id)+0.05])
-              cylinder(d=11.2, $fn=64, h=0.1);
+              cylinder(d=15.4, $fn=64, h=15);
           }
     }
   }
@@ -655,24 +656,24 @@ module rj_window() {
           cube([wall_y+0.2, rj_window_y+20, 10]);
       }
       
-      // RJ45 shadow
-      color("blue")  
-      translate([-advance, 3, rj_window_z - rj45_h])
-        difference() {
-          union() {
-            cube([rj45_l, rj45_w, rj45_h]);
-            translate([rj45_l-0.01, 2, 0.7])
-              cube([wire_space, rj45_w - 4, rj45_h - 0.7]);
-            translate([rj45_l-0.01, 0, 6])
-              cube([wire_space, rj45_w, rj45_h - 6]);
-          }
-          // Butee
-          translate([-0.1,-0.1,-0.1])
-          cube([rj45_l_butee+ 0.1, rj45_w + 0.2, rj45_h_butee + 0.1]);
-        }
+      // // RJ45 shadow
+      // color("blue")  
+      // translate([-advance, 3, rj_window_z - rj45_h])
+      //   difference() {
+      //     union() {
+      //       cube([rj45_l, rj45_w, rj45_h]);
+      //       translate([rj45_l-0.01, 2, 0.7])
+      //         cube([wire_space, rj45_w - 4, rj45_h - 0.7]);
+      //       translate([rj45_l-0.01, 0, 6])
+      //         cube([wire_space, rj45_w, rj45_h - 6]);
+      //     }
+      //     // Butee
+      //     translate([-0.1,-0.1,-0.1])
+      //     cube([rj45_l_butee+ 0.1, rj45_w + 0.2, rj45_h_butee + 0.1]);
+      //   }
       // RJ12 shadow
       color("blue")
-      translate([-advance, 22, rj_window_z - rj12_h]) {
+      translate([-advance, 4.5, rj_window_z - rj12_h]) {
         cube([rj12_l, rj12_w, rj12_h]);
         translate([rj12_b_lp, -(rj12_b_w - rj12_w) / 2, 0])
           cube([rj12_b_l, rj12_b_w, rj12_h]);
@@ -902,7 +903,7 @@ module cover_screw_minus() {
 // translate([36,61,-1])
 // cube([80,22,10]);
 
-!difference() {
+difference() {
   union() {
     low_part();
     bme_plus();
@@ -961,5 +962,6 @@ difference() {
   
   from_root_to_case() 
     cover_screw_minus();
+  connections_minus();
 }
 
