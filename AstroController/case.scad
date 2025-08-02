@@ -144,10 +144,10 @@ wall_y = 2;
 // Matches the size of the USB hub (115)
 wall_x0 = 3;
 // Wide enough to allow fixation for hub
-wall_x1 = 8;
+wall_x1 = 3;
 wall_z = 1.5;
 
-inner_sze = [ pcb_sze[0] + 2, pcb_sze[1] + 2, outer_z -  2 * wall_z];
+inner_sze = [ pcb_sze[0] + 2, pcb_sze[1] + 7, outer_z -  2 * wall_z];
 // Outer sizing, including cover
 outer_sze = [ inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, outer_z ];
 heater_connections = [
@@ -156,14 +156,14 @@ heater_connections = [
   [31 + 17.5 * 2,outer_z -12],
 ];
 
-cover_fixations = [
-  // Wall id, position
-  [0, 17],
-  [0, wall_length(0) - 22],
-  [1, wall_length(1) - 52],
-  
-  [3, 51.5]
-];
+// cover_fixations = [
+//   // Wall id, position
+//   [0, 17],
+//   [0, wall_length(0) - 22],
+//   [1, wall_length(1) - 52],
+//   
+//   [3, 51.5]
+// ];
 
 // Vixation vixen
 vix_height_max = 16;
@@ -207,10 +207,26 @@ vix_base_nut_wall = 3;
 
 jacks= [ 
           [ 0, 88, -9],
-          [ 3, wall_length(3) - wall_x1 - 8, -7.2 - 0.2 ], 
-          [ 3, wall_length(3) - wall_x1 - 23.5, -7.2- 0.2],
-          [ 3, wall_length(3) - wall_x1 - 39, -7.2- 0.2 ],  
+          [ 3, wall_length(3) - wall_x1 - 11, -7.2 - 0.2 ], 
+          [ 3, wall_length(3) - wall_x1 - 26.5, -7.2- 0.2],
+          [ 3, wall_length(3) - wall_x1 - 42, -7.2- 0.2 ],  
       ];
+
+
+// Pour fixer le hub, on laisse deux ouvertures dans le capot,
+// Espacée de la longueur du hub + 2mm.
+// La piece de fixation pourra venir s'encastrer dans ces ouvertures
+// et pourra etre collée sur la parois interieure (ou vissée ?)
+fixation_hub_dst = 85.30;
+fixation_hub_larg = 2.2;
+// De quoi avoir eventuellement une visse de serrage de l'autre coté.
+fixation_hub_long = 10;
+
+fixation_hub_dst_entraxe = fixation_hub_dst - 2 * fixation_hub_larg / 2;
+fixation_hub = [
+  [2, wall_length(2)/ 2 - fixation_hub_dst_entraxe / 2, 10],
+  [2, wall_length(2)/ 2 + fixation_hub_dst_entraxe / 2, 10],
+];
 
 module from_root_to_case() {
   children();
@@ -620,6 +636,18 @@ module connections_minus() {
               cylinder(d=15.4, $fn=64, h=15);
           }
     }
+
+    for(fixation = fixation_hub) {
+      wall_id = fixation[0];
+      p = fixation[1];
+      z = outer_z - wall_z - fixation[2];
+      wall(wall_id)
+        translate([p, 0, z])
+          rotate([-90,0,0]) {
+            translate([0,0,-1])
+              cube([fixation_hub_larg, fixation_hub_long, 25], center=true);
+          }
+    }
   }
 }
 
@@ -847,7 +875,7 @@ difference() {
 
 
 // cover screws
-cover_screws_x_spc = 10;
+cover_screws_x_spc = 9.5;
 cover_screw_fix_diam = 8;
 cover_screw_base = cover_screw_fix_diam + 6;
 
