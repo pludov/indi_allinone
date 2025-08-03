@@ -691,7 +691,7 @@ module vix_pad_fixation_minus() {
   color("red")
   for(screw = vix_screw_distance) 
     for(I = [-0.5, 0.5]) {
-      translate([I * screw[0], I * screw[1], -1])
+      translate([I * screw[0], I * screw[1], -10])
         cylinder(d=vix_screw_diam, h=600, $fn=16);
     }
 }
@@ -777,7 +777,7 @@ module cover_screw_minus() {
 // translate([36,61,-1])
 // cube([80,22,10]);
 
-!difference() {
+difference() {
   union() {
     low_part();
     bme_plus();
@@ -818,7 +818,7 @@ translate([25,0,15])
 rj_window();
 
 // Cover
-translate([0,0,25])
+!translate([0,0,25])
 difference() {
   union() {
     cover();
