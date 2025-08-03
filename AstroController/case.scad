@@ -163,7 +163,7 @@ heater_connections = [
 //   [3, 51.5]
 // ];
 
-hub_ext_height = 13;
+hub_ext_height = 24;
 vix_center = [ outer_sze[0] / 2, outer_sze[1] / 2 + hub_ext_height / 2];
 
 vix_screw_distance = [ [ 28.5, 0 ], [0, 19 ] ];
