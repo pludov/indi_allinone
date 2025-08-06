@@ -52,10 +52,17 @@ void FlashStore::writePage(int sectorNumber, int pageStart, int pageEnd, const u
 
     this->flashOperation.schedule(
         [this, sectorNumber, pageStart, pageEnd, sectorData]() {
+            // noInterrupts();
+            // rp2040.idleOtherCore();
+
             flash_range_program((firstSector + sectorNumber) * sectorSize
                          + pageStart * pageSize,
                          sectorData + pageStart * pageSize,
                          (pageEnd - pageStart + 1) * pageSize);
+            
+            // rp2040.resumeOtherCore();
+            // interrupts();
+
             // Compare the memory to report errors
             uint8_t * flashPtr ((uint8_t *)(XIP_NOCACHE_NOALLOC_BASE + (firstSector + sectorNumber) * sectorSize
                          + pageStart * pageSize));
@@ -81,10 +88,16 @@ void FlashStore::writePage(int sectorNumber, int pageStart, int pageEnd, const u
 }
 
 void FlashStore::resetSectors(int sectorStart, int sectorEnd) {
+    DEBUG("Reset sectors requested");
     this->flashOperation.schedule(
         [this, sectorStart, sectorEnd]() {
+            // noInterrupts();
+            // rp2040.idleOtherCore();
             flash_range_erase((firstSector + sectorStart) * sectorSize,
                              (sectorEnd - sectorStart + 1) * sectorSize);
+            // rp2040.resumeOtherCore();
+            // interrupts();
+
             // Verify the erase, all must be 0xff
             uint8_t * flashPtr ((uint8_t *)(XIP_NOCACHE_NOALLOC_BASE + (firstSector + sectorStart) * sectorSize));
             bool ret = true;
@@ -98,6 +111,7 @@ void FlashStore::resetSectors(int sectorStart, int sectorEnd) {
             return ret;
         },
         [this, sectorStart, sectorEnd](bool ret) {
+            DEBUG("Reset sectors done");
             if (!ret) {
                 this->flashErrorCount.setValue(this->flashErrorCount.getValue() + 1);
             }
