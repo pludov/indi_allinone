@@ -1,0 +1,148 @@
+diff --git a/lib/memmap_default.ld b/lib/memmap_default.ld
+index 36635b7..9286b46 100644
+--- a/lib/memmap_default.ld
++++ b/lib/memmap_default.ld
+@@ -55,17 +55,20 @@ SECTIONS
+     ASSERT(__boot2_end__ - __boot2_start__ == 256,
+         "ERROR: Pico second stage bootloader must be 256 bytes in size")
+ 
+-    .ota : {
+-        /* Start image with OTA */
+-        KEEP (*(.OTA))
+-        /* Align to the last 16-bytes of the OTA region */
+-        /* If anyone has a better way of doing this, please submit a PR! */
+-       /* . = __flash_binary_start + 0x2ff0;
+-        LONG(__FS_START__)
+-        LONG(__FS_END__)
+-        LONG(__EEPROM_START__)
+-        LONG(__FLASH_LENGTH__)*/
++    .flashtext : {
++        __logical_binary_start = .;
++        KEEP (*(.vectors))
++        KEEP (*(.binary_info_header))
++        __binary_info_header_end = .;
++        KEEP (*(.reset))
++    }
++/*
++    .rodata : {
++        /* segments not marked as .flashdata are instead pulled into .data (in RAM) to avoid accidental
++        *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
++        . = ALIGN(4);
+     } > FLASH
++*/
+ 
+     .partition : {
+         /* Align to the last 16-bytes of the OTA region */
+@@ -77,24 +80,49 @@ SECTIONS
+         LONG(__FLASH_LENGTH__)
+     } > FLASH
+ 
++
++    .ARM.extab :
++    {
++        *(.ARM.extab* .gnu.linkonce.armextab.*)
++    } > FLASH
++
++    __exidx_start = .;
++    .ARM.exidx :
++    {
++        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
++    } > FLASH
++    __exidx_end = .;
++    __etext = .;
++
++    . = ALIGN(4);
++
++    /* End of .text-like segments */
++
++    . = ALIGN(4);
++
++   .ram_vector_table (COPY): {
++
++        *(.ram_vector_table)
++    } > RAM
++
+     /* The second stage will always enter the image at the start of .text.
+        The debugger will use the ELF entry point, which is the _entry_point
+        symbol if present, otherwise defaults to start of .text.
+        This can be used to transfer control back to the bootrom on debugger
+        launches only, to perform proper flash setup.
+     */
++    
+ 
+     .text : {
++        FILL(0xff)
++        . = ALIGN(4);
++        __data_start__ = .;
+         __logical_binary_start = .;
+         KEEP (*(.vectors))
+         KEEP (*(.binary_info_header))
+         __binary_info_header_end = .;
+-        KEEP (*(.reset))
+-        /* TODO revisit this now memset/memcpy/float in ROM */
+-        /* bit of a hack right now to exclude all floating point and time critical (e.g. memset, memcpy) code from
+-         * FLASH ... we will include any thing excluded here in .data below by default */
+         *(.init)
+-        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)
++        *(.text*)
+         *(.fini)
+         /* Pull all c'tors into .text */
+         *crtbegin.o(.ctors)
+@@ -110,39 +138,20 @@ SECTIONS
+         *(.dtors)
+ 
+         *(.eh_frame*)
+-        . = ALIGN(4);
+-    } > FLASH
++        . = ALIGN(32);
++
++    } > RAM AT> FLASH
+ 
+     .rodata : {
++        FILL(0xff)
+         *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata* .big_const*)
+         . = ALIGN(4);
+         *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
+-        . = ALIGN(4);
+-    } > FLASH
+-
+-    .ARM.extab :
+-    {
+-        *(.ARM.extab* .gnu.linkonce.armextab.*)
+-    } > FLASH
+-
+-    __exidx_start = .;
+-    .ARM.exidx :
+-    {
+-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+-    } > FLASH
+-    __exidx_end = .;
+-
+-    . = ALIGN(4);
++        . = ALIGN(32);
++    } > RAM AT> FLASH
+ 
+-    /* End of .text-like segments */
+-    __etext = .;
+-
+-   .ram_vector_table (COPY): {
+-        *(.ram_vector_table)
+-    } > RAM
+ 
+     .data : {
+-        __data_start__ = .;
+         *(vtable)
+ 
+         *(.time_critical*)
+@@ -196,6 +205,11 @@ SECTIONS
+         *(.uninitialized_data*)
+     } > RAM
+ 
++    .uninitialized_data (COPY): {
++        . = ALIGN(4);
++        *(.uninitialized_data*)
++    } > RAM
++
+     /* Start and end symbols must be word-aligned */
+     .scratch_x : {
+         __scratch_x_start__ = .;
