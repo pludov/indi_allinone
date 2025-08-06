@@ -1,148 +1,149 @@
-diff --git a/lib/memmap_default.ld b/lib/memmap_default.ld
-index 36635b7..9286b46 100644
---- a/lib/memmap_default.ld
-+++ b/lib/memmap_default.ld
-@@ -55,17 +55,20 @@ SECTIONS
-     ASSERT(__boot2_end__ - __boot2_start__ == 256,
-         "ERROR: Pico second stage bootloader must be 256 bytes in size")
- 
--    .ota : {
--        /* Start image with OTA */
--        KEEP (*(.OTA))
--        /* Align to the last 16-bytes of the OTA region */
--        /* If anyone has a better way of doing this, please submit a PR! */
--       /* . = __flash_binary_start + 0x2ff0;
--        LONG(__FS_START__)
--        LONG(__FS_END__)
--        LONG(__EEPROM_START__)
--        LONG(__FLASH_LENGTH__)*/
-+    .flashtext : {
-+        __logical_binary_start = .;
-+        KEEP (*(.vectors))
-+        KEEP (*(.binary_info_header))
-+        __binary_info_header_end = .;
-+        KEEP (*(.reset))
-+    }
-+/*
-+    .rodata : {
-+        /* segments not marked as .flashdata are instead pulled into .data (in RAM) to avoid accidental
-+        *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
-+        . = ALIGN(4);
-     } > FLASH
-+*/
- 
-     .partition : {
-         /* Align to the last 16-bytes of the OTA region */
-@@ -77,24 +80,49 @@ SECTIONS
-         LONG(__FLASH_LENGTH__)
-     } > FLASH
- 
-+
-+    .ARM.extab :
-+    {
-+        *(.ARM.extab* .gnu.linkonce.armextab.*)
-+    } > FLASH
-+
-+    __exidx_start = .;
-+    .ARM.exidx :
-+    {
-+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-+    } > FLASH
-+    __exidx_end = .;
-+    __etext = .;
-+
-+    . = ALIGN(4);
-+
-+    /* End of .text-like segments */
-+
-+    . = ALIGN(4);
-+
-+   .ram_vector_table (COPY): {
-+
-+        *(.ram_vector_table)
-+    } > RAM
-+
-     /* The second stage will always enter the image at the start of .text.
-        The debugger will use the ELF entry point, which is the _entry_point
-        symbol if present, otherwise defaults to start of .text.
-        This can be used to transfer control back to the bootrom on debugger
+diff --git a/lib/rp2040/memmap_default.ld b/lib/rp2040/memmap_default.ld
+index e323b01..aef9382 100644
+--- a/lib/rp2040/memmap_default.ld
++++ b/lib/rp2040/memmap_default.ld
+@@ -77,7 +77,7 @@ SECTIONS
         launches only, to perform proper flash setup.
      */
-+    
  
-     .text : {
-+        FILL(0xff)
-+        . = ALIGN(4);
-+        __data_start__ = .;
+-    .text : {
++    .flashtext : {
          __logical_binary_start = .;
          KEEP (*(.vectors))
          KEEP (*(.binary_info_header))
-         __binary_info_header_end = .;
--        KEEP (*(.reset))
+@@ -85,54 +85,9 @@ SECTIONS
+         KEEP (*(.embedded_block))
+         __embedded_block_end = .;
+         KEEP (*(.reset))
 -        /* TODO revisit this now memset/memcpy/float in ROM */
 -        /* bit of a hack right now to exclude all floating point and time critical (e.g. memset, memcpy) code from
 -         * FLASH ... we will include any thing excluded here in .data below by default */
-         *(.init)
--        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)
-+        *(.text*)
-         *(.fini)
-         /* Pull all c'tors into .text */
-         *crtbegin.o(.ctors)
-@@ -110,39 +138,20 @@ SECTIONS
-         *(.dtors)
- 
-         *(.eh_frame*)
+-        *(.init)
+-        /* Some of these excludes required for PicoDVI library, won't affect most code */
+-        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a: *interp.c.obj *divider.S.obj *PicoDVI.cpp.o *dvi.c.o) .text*)
+-
+-        *(.fini)
+-        /* Pull all c'tors into .text */
+-        *crtbegin.o(.ctors)
+-        *crtbegin?.o(.ctors)
+-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+-        *(SORT(.ctors.*))
+-        *(.ctors)
+-        /* Followed by destructors */
+-        *crtbegin.o(.dtors)
+-        *crtbegin?.o(.dtors)
+-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+-        *(SORT(.dtors.*))
+-        *(.dtors)
+-
 -        . = ALIGN(4);
--    } > FLASH
-+        . = ALIGN(32);
-+
-+    } > RAM AT> FLASH
+-        /* preinit data */
+-        PROVIDE_HIDDEN (__preinit_array_start = .);
+-        KEEP(*(SORT(.preinit_array.*)))
+-        KEEP(*(.preinit_array))
+-        PROVIDE_HIDDEN (__preinit_array_end = .);
+-
+-        . = ALIGN(4);
+-        /* init data */
+-        PROVIDE_HIDDEN (__init_array_start = .);
+-        KEEP(*(SORT(.init_array.*)))
+-        KEEP(*(.init_array))
+-        PROVIDE_HIDDEN (__init_array_end = .);
+-
+-        . = ALIGN(4);
+-        /* finit data */
+-        PROVIDE_HIDDEN (__fini_array_start = .);
+-        *(SORT(.fini_array.*))
+-        *(.fini_array)
+-        PROVIDE_HIDDEN (__fini_array_end = .);
+-
+-        *(.eh_frame*)
+-        . = ALIGN(4);
+     } > FLASH
  
      .rodata : {
-+        FILL(0xff)
-         *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata* .big_const*)
+-        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata* .big_const*)
          . = ALIGN(4);
          *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
--        . = ALIGN(4);
--    } > FLASH
--
--    .ARM.extab :
--    {
--        *(.ARM.extab* .gnu.linkonce.armextab.*)
--    } > FLASH
--
--    __exidx_start = .;
--    .ARM.exidx :
--    {
--        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
--    } > FLASH
--    __exidx_end = .;
--
--    . = ALIGN(4);
-+        . = ALIGN(32);
+         . = ALIGN(4);
+@@ -156,16 +111,40 @@ SECTIONS
+         *(.ram_vector_table)
+     } > RAM
+ 
++    .text : {
++        __ram_text_start__ = .;
++        *(.init)
++        *(.text*)
++        *(.fini)
++        /* Pull all c'tors into .text */
++        *crtbegin.o(.ctors)
++        *crtbegin?.o(.ctors)
++        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
++        *(SORT(.ctors.*))
++        *(.ctors)
++        /* Followed by destructors */
++        *crtbegin.o(.dtors)
++        *crtbegin?.o(.dtors)
++        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
++        *(SORT(.dtors.*))
++        *(.dtors)
++
++        *(.eh_frame*)
++        . = ALIGN(4);
++        __ram_text_end__ = .;
 +    } > RAM AT> FLASH
- 
--    /* End of .text-like segments */
--    __etext = .;
--
--   .ram_vector_table (COPY): {
--        *(.ram_vector_table)
--    } > RAM
- 
++    __ram_text_source__ = LOADADDR(.text);
++    . = ALIGN(4);
++
++
      .data : {
--        __data_start__ = .;
+         __data_start__ = .;
          *(vtable)
  
          *(.time_critical*)
-@@ -196,6 +205,11 @@ SECTIONS
-         *(.uninitialized_data*)
+ 
+-        /* remaining .text and .rodata; i.e. stuff we exclude above because we want it in RAM */
+-        *(.text*)
+         . = ALIGN(4);
+-        *(.rodata*)
++        *(.rodata* .big_const*)
+         . = ALIGN(4);
+ 
+         *(.data*)
+@@ -180,6 +159,27 @@ SECTIONS
+         KEEP(*(.mutex_array))
+         PROVIDE_HIDDEN (__mutex_array_end = .);
+ 
++        . = ALIGN(4);
++        /* preinit data */
++        PROVIDE_HIDDEN (__preinit_array_start = .);
++        KEEP(*(SORT(.preinit_array.*)))
++        KEEP(*(.preinit_array))
++        PROVIDE_HIDDEN (__preinit_array_end = .);
++
++        . = ALIGN(4);
++        /* init data */
++        PROVIDE_HIDDEN (__init_array_start = .);
++        KEEP(*(SORT(.init_array.*)))
++        KEEP(*(.init_array))
++        PROVIDE_HIDDEN (__init_array_end = .);
++
++        . = ALIGN(4);
++        /* finit data */
++        PROVIDE_HIDDEN (__fini_array_start = .);
++        *(SORT(.fini_array.*))
++        *(.fini_array)
++        PROVIDE_HIDDEN (__fini_array_end = .);
++
+         . = ALIGN(4);
+         *(.jcr)
+         . = ALIGN(4);
+@@ -206,7 +206,7 @@ SECTIONS
+         __tls_end = .;
      } > RAM
  
-+    .uninitialized_data (COPY): {
-+        . = ALIGN(4);
-+        *(.uninitialized_data*)
-+    } > RAM
-+
-     /* Start and end symbols must be word-aligned */
-     .scratch_x : {
-         __scratch_x_start__ = .;
+-    .bss (NOLOAD) : {
++    .bss : {
+         . = ALIGN(4);
+         __tbss_end = .;
+ 

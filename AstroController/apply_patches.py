@@ -7,7 +7,7 @@ patchflag_path = join(FRAMEWORK_DIR, ".patching-done")
 
 # patch file only if we didn't do it before
 if not isfile(join(FRAMEWORK_DIR, ".patching-done")):
-    original_file = join(FRAMEWORK_DIR, "lib", "memmap_default.ld")
+    original_file = join(FRAMEWORK_DIR, "lib/rp2040", "memmap_default.ld")
     patched_file = join("patches", "copy_to_ram.patch")
 
     assert isfile(original_file) and isfile(patched_file)
