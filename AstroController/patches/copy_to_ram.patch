@@ -1,17 +1,8 @@
 diff --git a/lib/rp2040/memmap_default.ld b/lib/rp2040/memmap_default.ld
-index e323b01..aef9382 100644
+index e323b01..3f4351f 100644
 --- a/lib/rp2040/memmap_default.ld
 +++ b/lib/rp2040/memmap_default.ld
-@@ -77,7 +77,7 @@ SECTIONS
-        launches only, to perform proper flash setup.
-     */
- 
--    .text : {
-+    .flashtext : {
-         __logical_binary_start = .;
-         KEEP (*(.vectors))
-         KEEP (*(.binary_info_header))
-@@ -85,54 +85,9 @@ SECTIONS
+@@ -85,26 +85,6 @@ SECTIONS
          KEEP (*(.embedded_block))
          __embedded_block_end = .;
          KEEP (*(.reset))
@@ -35,30 +26,10 @@ index e323b01..aef9382 100644
 -        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
 -        *(SORT(.dtors.*))
 -        *(.dtors)
--
--        . = ALIGN(4);
--        /* preinit data */
--        PROVIDE_HIDDEN (__preinit_array_start = .);
--        KEEP(*(SORT(.preinit_array.*)))
--        KEEP(*(.preinit_array))
--        PROVIDE_HIDDEN (__preinit_array_end = .);
--
--        . = ALIGN(4);
--        /* init data */
--        PROVIDE_HIDDEN (__init_array_start = .);
--        KEEP(*(SORT(.init_array.*)))
--        KEEP(*(.init_array))
--        PROVIDE_HIDDEN (__init_array_end = .);
--
--        . = ALIGN(4);
--        /* finit data */
--        PROVIDE_HIDDEN (__fini_array_start = .);
--        *(SORT(.fini_array.*))
--        *(.fini_array)
--        PROVIDE_HIDDEN (__fini_array_end = .);
--
--        *(.eh_frame*)
--        . = ALIGN(4);
+ 
+         . = ALIGN(4);
+         /* preinit data */
+@@ -132,7 +112,6 @@ SECTIONS
      } > FLASH
  
      .rodata : {
@@ -66,14 +37,17 @@ index e323b01..aef9382 100644
          . = ALIGN(4);
          *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
          . = ALIGN(4);
-@@ -156,16 +111,40 @@ SECTIONS
-         *(.ram_vector_table)
-     } > RAM
+@@ -161,6 +140,27 @@ SECTIONS
+         *(vtable)
  
-+    .text : {
-+        __ram_text_start__ = .;
+         *(.time_critical*)
++        /* TODO revisit this now memset/memcpy/float in ROM */
++        /* bit of a hack right now to exclude all floating point and time critical (e.g. memset, memcpy) code from
++         * FLASH ... we will include any thing excluded here in .data below by default */
 +        *(.init)
-+        *(.text*)
++        /* Some of these excludes required for PicoDVI library, won't affect most code */
++        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a: *interp.c.obj *divider.S.obj *PicoDVI.cpp.o *dvi.c.o) .text*)
++
 +        *(.fini)
 +        /* Pull all c'tors into .text */
 +        *crtbegin.o(.ctors)
@@ -87,63 +61,7 @@ index e323b01..aef9382 100644
 +        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
 +        *(SORT(.dtors.*))
 +        *(.dtors)
-+
-+        *(.eh_frame*)
-+        . = ALIGN(4);
-+        __ram_text_end__ = .;
-+    } > RAM AT> FLASH
-+    __ram_text_source__ = LOADADDR(.text);
-+    . = ALIGN(4);
-+
-+
-     .data : {
-         __data_start__ = .;
-         *(vtable)
++        *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata* .big_const*)
  
-         *(.time_critical*)
- 
--        /* remaining .text and .rodata; i.e. stuff we exclude above because we want it in RAM */
--        *(.text*)
-         . = ALIGN(4);
--        *(.rodata*)
-+        *(.rodata* .big_const*)
-         . = ALIGN(4);
- 
-         *(.data*)
-@@ -180,6 +159,27 @@ SECTIONS
-         KEEP(*(.mutex_array))
-         PROVIDE_HIDDEN (__mutex_array_end = .);
- 
-+        . = ALIGN(4);
-+        /* preinit data */
-+        PROVIDE_HIDDEN (__preinit_array_start = .);
-+        KEEP(*(SORT(.preinit_array.*)))
-+        KEEP(*(.preinit_array))
-+        PROVIDE_HIDDEN (__preinit_array_end = .);
-+
-+        . = ALIGN(4);
-+        /* init data */
-+        PROVIDE_HIDDEN (__init_array_start = .);
-+        KEEP(*(SORT(.init_array.*)))
-+        KEEP(*(.init_array))
-+        PROVIDE_HIDDEN (__init_array_end = .);
-+
-+        . = ALIGN(4);
-+        /* finit data */
-+        PROVIDE_HIDDEN (__fini_array_start = .);
-+        *(SORT(.fini_array.*))
-+        *(.fini_array)
-+        PROVIDE_HIDDEN (__fini_array_end = .);
-+
-         . = ALIGN(4);
-         *(.jcr)
-         . = ALIGN(4);
-@@ -206,7 +206,7 @@ SECTIONS
-         __tls_end = .;
-     } > RAM
- 
--    .bss (NOLOAD) : {
-+    .bss : {
-         . = ALIGN(4);
-         __tbss_end = .;
- 
+         /* remaining .text and .rodata; i.e. stuff we exclude above because we want it in RAM */
+         *(.text*)
