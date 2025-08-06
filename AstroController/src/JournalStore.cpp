@@ -97,7 +97,8 @@ bool JournalStore::writeDirtyToCurrentSector(bool force) {
 
     if (sectorWriteOffset != startingOffset) {
         // Write the sector header
-        writePage((this->flashWritePtr - 1) / this->sectorSize, 
+        auto startSector = ((this->flashLength() + this->flashWritePtr - 1) % this->flashLength()) / this->sectorSize;
+        writePage(startSector,
                     startingOffset / this->pageSize, 
                     (sectorWriteOffset - 1) / this->pageSize, 
                     this->sectorBuffer);
@@ -267,6 +268,7 @@ void JournalStore::step() {
         
         // Advance to the next sector boundary
         flashWritePtr += (this->sectorSize - (flashWritePtr % this->sectorSize)) % this->sectorSize;
+        flashWritePtr %= this->flashLength();
 
         // We are at the beginning of a sector
         // Check if we need to erase it
