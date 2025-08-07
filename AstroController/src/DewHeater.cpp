@@ -385,7 +385,7 @@ int DewHeater::updatePid()
 	double target = getPidTarget();
 
 
-	if (target == NAN) {
+	if (isnan(target)) {
 		pidDisabled = true;
 		return 0;
 	}
