@@ -58,7 +58,7 @@ TaskSequence<MeteoTempBME>* MeteoTempBME::measureSequence() {
 	return seq;
 };
 
-MeteoTempBME::MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_t pinScl, int bmeAddr) : MeteoTemp(),
+MeteoTempBME::MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_t pinScl) : MeteoTemp(),
     pressure(&statusVec, F("METEO_PRESSURE"), F("Pressure"), 900, 1100, 0.1),
     sensorSettingsVec(group, F("METEO_SETTINGS"), F("Sensor Settings"), VECTOR_WRITABLE|VECTOR_READABLE),
     compensationValue(&sensorSettingsVec, F("TEMP_COMP"), F("Temp compensation"),-100, 100, 0.1),
@@ -70,7 +70,7 @@ MeteoTempBME::MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_
 	wire->setSCL(pinScl);
     setInvalid();
 
-    this->addr = bmeAddr == -1 ? BME280_ADDRESS : bmeAddr;
+    this->addr = BME280_ADDRESS;
     this->wire = wire;
     compensationValue.setValue(0.0);
     sensorSettingsVec.onRequested(VectorCallback(&MeteoTempBME::updateMemory, this));
@@ -106,6 +106,11 @@ void MeteoTempBME::scheduleReset(bool immediate)
 void MeteoTempBME::onMeasureFailure()
 {
     measureScheduler.stop();
+    if (this->addr == BME280_ADDRESS) {
+        this->addr = BME280_ADDRESS_ALTERNATE;
+    } else {
+        this->addr = BME280_ADDRESS;
+    }
     setInvalid();
     scheduleReset(false);
 }

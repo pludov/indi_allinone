@@ -59,7 +59,7 @@ private:
     EepromReadyListener eepromReadyListener;
 
 public:
-	MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_t pinScl, int bmeAddr = -1);
+	MeteoTempBME(uint32_t addr, TwoWire * wire, uint8_t pinSda, uint8_t pinScl);
 	virtual ~MeteoTempBME();
 
 	virtual void tick();
