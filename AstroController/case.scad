@@ -32,16 +32,9 @@ rj45_l_butee=3.1;
 rj45_h_butee=3.9;
 
 // RJ12
-rj12_w=13.5;
-rj12_l=16.2;
-rj12_h=16;
-rj12_b_w = 15.7;
-rj12_b_l = 1.6;
-// pos in z from start
-rj12_b_lp = 2.6;
-
-rj12_bump_lp = 8.8;
-rj12_bump_h = 16.6;
+rj12_w=12.4;
+rj12_l=13;
+rj12_h=14.7;
 
 
 bme_y = 19.10;
@@ -634,12 +627,12 @@ module rj_window() {
 
   from_case_to_rj_window() {
     wire_space = 3.5;
-    advance = 6;
+    advance = 4.82;
     overflow = 1.2;
     
     difference() {
       translate([-advance+ 0.05, -overflow, - overflow])
-        cube([19-0.05,rj_window_y + 2 * overflow, rj_window_z + overflow - 0.05]);
+        cube([17-0.05,rj_window_y + 2 * overflow, rj_window_z + overflow - 0.05]);
       
       // Clip into wall
       color("red") {
@@ -668,9 +661,25 @@ module rj_window() {
       //   }
       // RJ12 shadow
       color("blue")
-      translate([-advance, 4.5, rj_window_z - rj12_h]) {
+      translate([-advance, 4.8, rj_window_z - rj12_h]) {
+        
         cube([rj12_l, rj12_w, rj12_h]);
-        translate([rj12_b_lp, -(rj12_b_w - rj12_w) / 2, 0])
+
+        translate([0,rj12_w / 2, 0]) {
+          for(Y = [-rj12_w/2, rj12_w/2])
+            translate([5.9,Y,-3.2])
+              cylinder(d=2.3, h=60,$fn=30);
+          
+          cable_w=9;
+          cable_h=8.5;
+          translate([7, -cable_w/2, -cable_h])
+            cube([15, cable_w, cable_h + 10]);
+
+        }
+
+
+
+        /*translate([rj12_b_lp, -(rj12_b_w - rj12_w) / 2, 0])
           cube([rj12_b_l, rj12_b_w, rj12_h]);
         translate([rj12_bump_lp, 0, -(rj12_bump_h - rj12_h)])
           cube([rj12_l - rj12_bump_lp, rj12_w, rj12_bump_h]);
@@ -680,7 +689,7 @@ module rj_window() {
             cube([wire_space,rj12_w - 4, rj12_bump_h - 0.8]);
           translate([0,0,6])
             cube([wire_space,rj12_w, rj12_bump_h - 6]);
-        }
+        }*/
          
       }
     }
@@ -813,12 +822,13 @@ difference() {
 }
 // cover_fixation_plus();
 
-          pcb();
-translate([25,0,15])
+pcb();
+
+!translate([25,0,15])
 rj_window();
 
 // Cover
-!translate([0,0,25])
+translate([0,0,25])
 difference() {
   union() {
     cover();
