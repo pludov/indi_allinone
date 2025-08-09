@@ -387,55 +387,70 @@ module bme_minus() {
 }
 
 module bme_facade() {
+  bme_sensor_size = 3.2;
+  bme_sensor_to_border_x = 1.5;
+  bme_sensor_to_border_y = 0.7;
+
+  hole_diam = 3.35;
+  hole_dst_to_border_x=1.22;
+  hole_dst_to_border_y=0.95;
+
 
   hole_dst = 21;
-  hole_diam = 2.9;
+  //  hole_diam = 2.9;
   hole_y = 3.90 - 2.9 / 2;
+
+  bme_pcb = [ 10.8, 13.2 ];
   
   module opening() {
-    translate([bme_z / 2, 6.8, 0])
-      cube([3.3, 3.3, bme_facade_x *2.2], center = true);
+    translate([4,5,1])
+    translate([bme_z/2,6.8, 0])
+    rotate([0,0,90])
+    translate([-bme_z/2,-6.8, 0])
+    {
+      translate([bme_z / 2, 6.8, 0]) {
+        cube([3.3, 3.3, bme_facade_x *2.2], center = true);
 
-    translate([0,0,bme_facade_x - 1.2 + 0.3])
-      translate([bme_z / 2, 6.8, 0])
-        for(Z=[0:0.1:bme_facade_x - 1.2 + 5]) {
-          translate([0,0, -1 -Z ])
-            cube([2 * Z + 3.3, 2 * Z + 3.3, 2], center=true);
-        }
+        // PCB
+        translate([-bme_sensor_size / 2,-bme_sensor_size / 2,bme_facade_x])
+          translate([-bme_pcb[0]+bme_sensor_to_border_x + bme_sensor_size, -bme_sensor_to_border_y, 0]) {
+            difference() {
+              union() {
+                cube([bme_pcb[0], bme_pcb[1], 4]);
+                translate([0, bme_pcb[1]  - 6, -1.8])
+                  cube([bme_pcb[0], 6, 4]);
+              }
+              translate([hole_dst_to_border_x + hole_diam / 2, hole_dst_to_border_y + hole_diam/2, 0])
+                cylinder(d=hole_diam -0.2, $fn=32);
+            }
+          }
+      }
+
+      translate([0,0,bme_facade_x - 1.2 + 0.3])
+        translate([bme_z / 2, 6.8, 0])
+          for(Z=[0:0.1:bme_facade_x - 1.2 + 5]) {
+            translate([0,0, -1 -Z ])
+              cube([2 * Z + 3.3, 2 * Z + 3.3, 2], center=true);
+          }
+    }
     // Petit rabot pour que ça passe...
-    translate([-1,-1,-1])
-      cube([bme_z + 2, bme_y + 2, 1.2]);
+    translate([-10,-10,-1])
+      cube([bme_z + 20, bme_y + 20, 1.2]);
   }
   
   
   difference() {
     union() {
       cube_rounded([bme_z, bme_y, bme_facade_x], 1, $fn=16);
+      translate([2,2,bme_facade_x - 1.2 ])
+        cube_rounded([bme_z -4, bme_y -4, bme_facade_x+1.5], 1, $fn=16);
     }
-    translate([1,1,bme_facade_x - 1.2 ])
-      cube_rounded([bme_z -2, bme_y -2, bme_facade_x], 1, $fn=16);
-    opening();
-  }
-  difference() {
-    for(I=[-1,1]) {
-      translate([bme_z / 2 + I * hole_dst / 2, hole_y, 0]) {
-        cylinder(d=hole_diam - 0.2, h= bme_x - 0.3, $fn= 64);
-        cylinder(d=hole_diam + 1.5, h= bme_facade_x, $fn= 64);
-      }
-    }
-    opening();
-  }
-
-  difference() {
-    translate([bme_z / 2, 6.8, 0]) {
-      rotate([0,0,45])
-      cylinder(r=3.7,$fn=4, h = bme_facade_x);
-    }
+    
     opening();
   }
 }
 
-translate([-45,0,0]) bme_facade();
+!translate([-45,0,0]) bme_facade();
 
 
 /*
@@ -786,7 +801,7 @@ module cover_screw_minus() {
 // translate([36,61,-1])
 // cube([80,22,10]);
 
-difference() {
+!difference() {
   union() {
     low_part();
     bme_plus();
@@ -824,7 +839,7 @@ difference() {
 
 pcb();
 
-!translate([25,0,15])
+translate([25,0,15])
 rj_window();
 
 // Cover
