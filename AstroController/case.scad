@@ -165,6 +165,8 @@ vix_screw_diam = 4.20;
 vix_pad_size = [40, 44 , 3];
 
 
+
+
 jacks= [ 
           [ 0, 88, -9],
           [ 3, wall_length(3) - wall_x1 - 11, -7.2 - 0.2 ], 
@@ -450,7 +452,21 @@ module bme_facade() {
   }
 }
 
-!translate([-45,0,0]) bme_facade();
+module vixen_pad() {
+  difference() {
+    translate([-vix_pad_size[0] / 2, -vix_pad_size[1] / 2, 0])
+      cube_rounded(vix_pad_size, 2, $fn=16);
+    for(screw = vix_screw_distance)
+      for(X = [-1, 1]) {
+        translate([X * screw[0] / 2, X * screw[1] / 2, -0.1])
+            cylinder(d=vix_screw_diam, h=vix_pad_size[2] + 0.2, $fn=16);
+      }
+    }
+
+}
+
+!vixen_pad();
+translate([-45,0,0]) bme_facade();
 
 
 /*
