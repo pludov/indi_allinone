@@ -162,7 +162,7 @@ vix_center = [ outer_sze[0] / 2, outer_sze[1] / 2 + hub_ext_height / 2];
 vix_screw_distance = [ [ 28.5, 0 ], [0, 19 ] ];
 vix_screw_diam = 4.20;
 // La fixation vixen rouge a besoin d'etre légrement surelevée à cause de sa visse
-vix_pad_size = [40, 44 , 3];
+vix_pad_size = [40, 44 , 3.8];
 
 
 
