@@ -1,0 +1,24 @@
+{
+  "name": "AllInOne INDI Driver",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "root",
+  "containerUser": "root",
+  "updateRemoteUserUID": false,
+  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces/AllInOne,type=bind",
+  "workspaceFolder": "/workspaces/AllInOne/indi_driver",
+  "postCreateCommand": "cmake -S . -B build/devcontainer && cmake --build build/devcontainer -j2",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools"
+      ]
+    }
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+  ]
+}
