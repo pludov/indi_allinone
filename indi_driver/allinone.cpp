@@ -341,7 +341,7 @@ public:
 		IUFillSwitchVector(newVector, switches, count, target->getDeviceName(), vector->name.c_str(), vector->label.c_str(), vector->group.c_str(), perm, 
 				vector->flag & VECTOR_SWITCH_MASK 
 						? (
-							vector->flag & VECTOR_SWITCH_MASK == VECTOR_SWITCH_MANY
+							( vector->flag & VECTOR_SWITCH_MASK ) == VECTOR_SWITCH_MANY
 								? ISRule::ISR_NOFMANY
 								: ISRule::ISR_ATMOST1
 						)
