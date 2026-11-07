@@ -465,7 +465,7 @@ public:
 							if (prop)
 							{
 #if INDI_VERSION_MAJOR >= 2
-								IDSetText(prop->getText(), nullptr);
+								IDSetText(prop.getText(), nullptr);
 #else
 								IDSetText(prop, nullptr);
 #endif
