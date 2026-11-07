@@ -1,0 +1,880 @@
+// Probleme en suspens:
+//  - vérifier les cnx jack (2.5 vs 2.1 vs 1x GX16)
+//  - hauteur des plots pour les soudure: 1.8 - 2 min => ok
+//  - erreur 3V3 vs 3V3_enable
+// Historique des problemes
+// emplacement ecrous pas assez hauts 0.2/profonds 0.1 => ok, +0.2 et +0.1
+// Aggrandir légerement les passage M3: 3.2 => 3.25
+// Passe cable USB: on décalle de 16 le meteo temp, et on met un passe cable fin en face les fw_drv => ok
+// Impossible de dévisser le capot sans dévisser la saddle => trou de 6.2 et supprimer l'écrou => ok
+
+module cube_rounded(sze, ray) {
+  function dir(d) = (d == 0 ? 1 : -1);
+  hull() {
+    for(X = [0, 1])
+      for(Y = [0, 1])
+        translate([X * sze[0] + dir(X) * ray, Y * sze[1] + dir(Y) * ray, 0])
+          cylinder(r = ray, h=sze[2]);
+    }
+}
+
+// RJ45:
+//          w
+//
+//       xxxxxxxx
+//    h  x      x
+//       xxx  xxx
+//
+rj45_w=15.3;
+rj45_l=15.9;
+rj45_h=15;
+rj45_l_butee=3.1;
+rj45_h_butee=3.9;
+
+// RJ12
+rj12_w=12.4;
+rj12_l=13;
+rj12_h=14.7;
+
+
+bme_y = 19.10;
+bme_z = 26.10;
+bme_facade_x = 2;
+bme_x = 1.7 + bme_facade_x;
+
+
+fix_m25_length=9.7;
+fix_m25_head_length=1.8;
+fix_m25_diam=2.5;
+fix_m25_head_diam=4.6;
+fix_m25_nut_diam=5.6;
+fix_m25_nut_length=2;
+
+m3_nut_diam = 6.4;
+m3_nut_length = 2.3 + 0.2;
+m3_extrude_diam = 3.25;
+
+rounding = 1.5;
+function wall_length(id)=(
+    id == 0 || id == 2 ? outer_sze[0] : outer_sze[1]
+);
+
+  
+//Translate to the given wall (outer)
+module wall(id) {
+  // X axes
+  if (id == 0) {
+      children();
+  }
+  // Y axes
+  if (id == 1) {
+      translate([0, outer_sze[1], 0])
+      rotate([0,0,-90])
+        children();
+  }
+  if (id == 2) {
+      translate([outer_sze[0], outer_sze[1], 0])
+      rotate([0,0,180])
+        children();
+  }
+  if (id == 3) {
+      translate([outer_sze[0], 0, 0])
+      rotate([0,0,90])
+        children();
+  }
+}
+
+function wall_depth(id)=(
+    id == 0 ? wall_x0 :
+    id == 1 ? wall_y :
+    id == 2 ? wall_x1 :
+              wall_y
+);
+
+
+// Move/rotate x/y to the given cover fixation point.
+// z is unchanged
+module from_case_to_fixation(fixation) {
+  wall_id=fixation[0];
+  wall(wall_id) {
+    p = fixation[1];
+    translate([wall_id == 0 || wall_id == 3 ? p : wall_length(wall_id) - p, 0, 0])
+      children();
+  }
+}
+
+
+
+// Connector for RJxxx adaptation
+// It is separated to keep it printable.
+rj_window_y = 22;
+rj_window_z = 19;
+
+
+hole_heater = 11.7 + 0.2;
+// Diam jack DC
+hole_dc = 10.9;
+
+pcb_sze = [ 110, 76 ];
+pcb_size = [ 110, 76];
+pcb_ref = [ 1.16, -0.40 ];
+inch = 25.4;
+pcb_pad_z = 2.2;
+
+pcb_holes =
+ [ [ (3.1 - pcb_ref[0]) * inch, pcb_size[1] - (-0.1 - pcb_ref[1]) * inch],
+   [ (5.2 - pcb_ref[0]) * inch, pcb_size[1] - (-0.1 - pcb_ref[1]) * inch],
+   [ (5.3 - pcb_ref[0]) * inch, pcb_size[1] - ( 2.3 - pcb_ref[1]) * inch],
+   [ (1.4 - pcb_ref[0]) * inch, pcb_size[1] - ( 2.3 - pcb_ref[1]) * inch]
+ ];
+
+outer_z = 32;
+
+
+wall_y = 2;
+// Matches the size of the USB hub (115)
+wall_x0 = 3;
+// Wide enough to allow fixation for hub
+wall_x1 = 3;
+wall_z = 1.5;
+
+inner_sze = [ pcb_sze[0] + 2, pcb_sze[1] + 7, outer_z -  2 * wall_z];
+// Outer sizing, including cover
+outer_sze = [ inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, outer_z ];
+heater_connections = [
+  [31 + 17.5 * 0,outer_z -12],
+  [31 + 17.5 * 1,outer_z -12],
+  [31 + 17.5 * 2,outer_z -12],
+];
+
+// cover_fixations = [
+//   // Wall id, position
+//   [0, 17],
+//   [0, wall_length(0) - 22],
+//   [1, wall_length(1) - 52],
+//   
+//   [3, 51.5]
+// ];
+
+hub_ext_height = 24;
+vix_center = [ outer_sze[0] / 2, outer_sze[1] / 2 + hub_ext_height / 2];
+
+vix_screw_distance = [ [ 28.5, 0 ], [0, 19 ] ];
+vix_screw_diam = 4.20;
+// La fixation vixen rouge a besoin d'etre légrement surelevée à cause de sa visse
+vix_pad_size = [40, 44 , 3.8];
+
+
+
+
+jacks= [ 
+          [ 0, 88, -9],
+          [ 3, wall_length(3) - wall_x1 - 11, -7.2 - 0.2 ], 
+          [ 3, wall_length(3) - wall_x1 - 26.5, -7.2- 0.2],
+          [ 3, wall_length(3) - wall_x1 - 42, -7.2- 0.2 ],  
+      ];
+
+
+// Pour fixer le hub, on laisse deux ouvertures dans le capot,
+// Espacée de la longueur du hub + 2mm.
+// La piece de fixation pourra venir s'encastrer dans ces ouvertures
+// et pourra etre collée sur la parois interieure (ou vissée ?)
+fixation_hub_dst = 85.30;
+fixation_hub_larg = 2.2;
+// De quoi avoir eventuellement une visse de serrage de l'autre coté.
+fixation_hub_long = 10;
+
+fixation_hub_dst_entraxe = fixation_hub_dst - 2 * fixation_hub_larg / 2;
+fixation_hub = [
+  [2, wall_length(2)/ 2 - fixation_hub_dst_entraxe / 2, outer_z/2],
+  [2, wall_length(2)/ 2 + fixation_hub_dst_entraxe / 2, outer_z/2],
+];
+
+module from_root_to_case() {
+  children();
+}
+
+module from_case_to_bme() {
+  translate([-4.2,40,0])  
+    children();
+}
+
+module from_bme_to_case_surface() {
+  translate([4.2,0,0])
+    children();
+}
+
+module from_case_to_usb_hole() {
+  translate([0,wall_x0 + 76,0])  
+    children();
+  
+}
+
+
+usb_cable_width = 1.4+0.1;
+usb_cable_height= 5.0+0.1;
+
+module usb_hole_contour(h, plus=0) {
+  debord_minus = 0.4;
+  from_case_to_usb_hole() {
+    translate([debord_minus,0,0]) {
+      ray_x = (wall_y - debord_minus) + plus;
+      ray_y = (wall_y - debord_minus) * 2  + plus;
+      scale([ray_x/ray_y, 1, 1])
+        cylinder(r=ray_y, h=h,$fn=32);
+    }
+  }
+}
+
+module usb_hole_plus() {
+  usb_hole_contour(outer_z - wall_z);
+}
+
+module usb_hole_cover() {
+  translate([0,0,outer_z - wall_z])
+  usb_hole_contour(wall_z, 1.5);
+}
+//!usb_hole_hole();
+module usb_hole_hole() {
+  positions = [
+    [wall_x0,- 2],[-5,2]
+  ];
+  
+  function rot(VEC, agl) =
+    [ VEC[0] * cos(agl) + VEC[1] * sin(agl), VEC[1] * cos(agl) - VEC[0] * sin(agl) ];
+  
+  inc = 0.1;
+  from_case_to_usb_hole() {
+    for(I=[0:inc:1 - inc])
+      hull() {
+        for(J=[I,I+inc]) {
+          D = positions[0] + rot((positions[1] - positions[0]) * J, J*30);
+          
+        //for(D=[[wall_x0,- 2],[-5,2]])
+          translate(D)
+            translate([0,0,outer_z - wall_z - usb_cable_height])
+              cylinder(d=usb_cable_width, h = usb_cable_height + 0.01, $fn=32);
+        }
+    }
+  }
+}
+
+
+module bme_contour(h) {
+  translate([-4,-3,0]) {
+      ray=1.5;
+      cube_rounded([bme_x + 6, bme_y + 6, h], ray, $fn=16);
+      sides = 6;
+      
+      difference() {
+        translate([ray, -sides, 0])
+          cube([bme_x + 6 - ray, 2 * sides + bme_y + 6, h]);
+      
+        translate([0, (bme_y + 6) / 2, 0])
+          for(I = [-1, 1])
+            translate([ray, I * ((bme_y + 6) /2 + sides), -1])
+              scale([(sides + 0.75) / sides,1,1])
+                cylinder(r=sides, h = h + 2, $fn=32);
+      }
+    }
+}
+
+
+module bme_cover() {
+  from_case_to_bme() {
+    translate([0,0,outer_z - wall_z])
+      bme_contour(wall_z);
+  }
+  
+  from_case_to_bme() {
+    translate([0,0,outer_z - wall_z -2]) {
+      translate([-3.1,1,0])
+        translate([0.15,0.15, 0])
+          cube([3.1-0.3, bme_y -2 - 0.3, 2]);
+    }
+    /*translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
+      rotate([0,-90,0])
+        translate([0,0,-0.1])
+          scale([1,(bme_y + 4)/bme_z,1])
+            cylinder(r =bme_z /2 - 1.5, h = 1.2, $fn=32);*/
+  }
+}
+
+module bme_split() {
+  diam = 0.1;
+  points = [ 
+      [wall_y + diam / 2,    0],
+      [wall_y + diam / 2,    (bme_y + 6) / 2 + 0.6],
+      [wall_y + diam / 2-0.5,    (bme_y + 6) / 2 + 0.6],
+      [wall_y + diam / 2 - 2.5,(bme_y + 6) / 2 - 0.5],
+      [wall_y + diam / 2 - 2.5 - 5,(bme_y + 6) / 2 - 0.5 + 5],
+      [wall_y + diam / 2 - 2.5 - 15,(bme_y + 6) / 2 - 0.5 + 5],
+  ];
+  split_h = outer_z - wall_z;
+  color("red")
+  from_case_to_bme() from_bme_to_case_surface()
+    translate([0,-3 + (bme_y + 6) / 2, wall_z + 0.02]) {
+      for(sens = [-1, 1])
+        scale([1,sens, 1])
+          for(i = [0:len(points) - 2]) {
+            src = points[i];
+            dst = points[i + 1];
+            hull() {
+              translate(src)
+                cylinder(d=diam, h=split_h, $fn=64);
+              translate(dst)
+                cylinder(d=diam, h=split_h, $fn=64);
+            }
+      for(i = [0:len(points) - 2]) {
+        src = points[i];
+        dst = points[i + 1];
+        hull() {
+          for(sens = [-1, 1])
+            scale([1,sens, 1]) {
+              translate(src)
+                cylinder(d=diam, h=diam, $fn=64);
+              translate(dst)
+                cylinder(d=diam, h=diam, $fn=64);
+            }
+        }
+      }
+    }
+  }
+}
+
+
+module bme_plus() {
+  from_case_to_bme() {
+    bme_contour(outer_z - wall_z);
+    
+    translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
+    scale([0.6,(bme_y + 4)/bme_z,1])
+      difference() {
+        
+          sphere(r = bme_z / 2);
+        
+          sphere(r = bme_z / 2 - 1);
+        
+        for(J = [ -2, 0, 2])
+          rotate([0,J * 15 ,0]) {
+            for(I = [ -60,-30, 0, 30, 60 ]) {
+              rotate([0,0, I])
+                rotate([0,-90,0]) cylinder(d=3.6, $fn=4, h=15);
+              rotate([0,I, 0])
+                rotate([0,-90,0]) cylinder(d=3.6, $fn=4, h=15);
+            }
+          }
+        for(J = [-3,-1, 1, 3])
+          rotate([0,J * 15 ,0])
+          for(I = [ -45, -15,15, 45 ])
+            rotate([0,0, I])
+              rotate([0,-90,0]) cylinder(d=3.6, $fn=4, h=15);
+      }
+  }
+}
+
+module bme_minus() {
+  from_case_to_bme() {
+    translate([0,0,outer_z - wall_z - bme_z]) {
+      cube([bme_x, bme_y, bme_z + 0.1]);
+      translate([-3.1,1,0])
+        cube([10, bme_y -2, bme_z + 0.1]);
+    }
+    translate([-3.1,bme_y / 2, outer_z - wall_z -bme_z / 2])
+      rotate([0,-90,0])
+        translate([0,0,-0.1])
+          scale([1,(bme_y + 4)/bme_z,1])
+            cylinder(r =bme_z /2 - 1.5, h = 1.2, $fn=32);
+  }
+}
+
+module bme_facade() {
+  bme_sensor_size = 3.2;
+  bme_sensor_to_border_x = 1.5;
+  bme_sensor_to_border_y = 0.7;
+
+  hole_diam = 3.35;
+  hole_dst_to_border_x=1.22;
+  hole_dst_to_border_y=0.95;
+
+
+  hole_dst = 21;
+  //  hole_diam = 2.9;
+  hole_y = 3.90 - 2.9 / 2;
+
+  bme_pcb = [ 10.8, 13.2 ];
+  
+  module opening() {
+    translate([4,5,1])
+    translate([bme_z/2,6.8, 0])
+    rotate([0,0,90])
+    translate([-bme_z/2,-6.8, 0])
+    {
+      translate([bme_z / 2, 6.8, 0]) {
+        cube([3.3, 3.3, bme_facade_x *2.2], center = true);
+
+        // PCB
+        translate([-bme_sensor_size / 2,-bme_sensor_size / 2,bme_facade_x])
+          translate([-bme_pcb[0]+bme_sensor_to_border_x + bme_sensor_size, -bme_sensor_to_border_y, 0]) {
+            difference() {
+              union() {
+                cube([bme_pcb[0], bme_pcb[1], 4]);
+                translate([0, bme_pcb[1]  - 6, -1.8])
+                  cube([bme_pcb[0], 6, 4]);
+              }
+              translate([hole_dst_to_border_x + hole_diam / 2, hole_dst_to_border_y + hole_diam/2, 0])
+                cylinder(d=hole_diam -0.2, $fn=32);
+            }
+          }
+      }
+
+      translate([0,0,bme_facade_x - 1.2 + 0.3])
+        translate([bme_z / 2, 6.8, 0])
+          for(Z=[0:0.1:bme_facade_x - 1.2 + 5]) {
+            translate([0,0, -1 -Z ])
+              cube([2 * Z + 3.3, 2 * Z + 3.3, 2], center=true);
+          }
+    }
+    // Petit rabot pour que ça passe...
+    translate([-10,-10,-1])
+      cube([bme_z + 20, bme_y + 20, 1.2]);
+  }
+  
+  
+  difference() {
+    union() {
+      cube_rounded([bme_z, bme_y, bme_facade_x], 1, $fn=16);
+      translate([2,2,bme_facade_x - 1.2 ])
+        cube_rounded([bme_z -4, bme_y -4, bme_facade_x+1.5], 1, $fn=16);
+    }
+    
+    opening();
+  }
+}
+
+module vixen_pad() {
+  difference() {
+    translate([-vix_pad_size[0] / 2, -vix_pad_size[1] / 2, 0])
+      cube_rounded(vix_pad_size, 2, $fn=16);
+    for(screw = vix_screw_distance)
+      for(X = [-1, 1]) {
+        translate([X * screw[0] / 2, X * screw[1] / 2, -0.1])
+            cylinder(d=vix_screw_diam, h=vix_pad_size[2] + 0.2, $fn=16);
+      }
+    }
+
+}
+
+!vixen_pad();
+translate([-45,0,0]) bme_facade();
+
+
+/*
+fixation_cover_length = 2.5;
+fixation_z = outer_z - wall_z - 6;
+module fixation_minus() {
+  color("yellow")
+  for(fixation = cover_fixations)
+  {
+    wall_id=fixation[0];
+    from_case_to_fixation(fixation)
+      translate([0,0,fixation_z])
+          rotate([-90,0,0]) {
+            // 
+            translate([0,0,-1])
+              cylinder(d=fix_m25_diam, h = wall_depth(wall_id) + fixation_cover_length + fix_m25_nut_length + 4, $fn=32);
+            // head
+            translate([0,0,(wall_id == 2 ? 0 : -fix_m25_head_length) - 4])
+              cylinder(d=fix_m25_head_diam, h= fix_m25_head_length + 4, $fn=32);
+            // nut
+            translate([0,0,wall_depth(wall_id) + fixation_cover_length])
+              hull() {
+                cylinder(d=fix_m25_nut_diam, h = fix_m25_nut_length, $fn=6);
+                translate([0,8,0])
+                  cylinder(d=fix_m25_nut_diam, h = fix_m25_nut_length, $fn=6);
+              }
+          }
+ 
+  }
+}
+module cover_fixation_plus() {
+  sx = 10;
+  sy = fixation_cover_length + fix_m25_nut_length + 1;
+  for(fixation = cover_fixations)
+  {
+    wall_id=fixation[0];
+    from_case_to_fixation(fixation)
+    hull() {
+      translate([0,0,fixation_z])
+          rotate([-90,0,0]) {
+            translate([0,0,wall_depth(wall_id) + 0.2])
+              cylinder(d=sx, h = sy, $fn=16);
+          }
+      translate([0,0,outer_z - wall_z]) {
+        bsx = sx + 2;
+        translate([-bsx / 2, wall_depth(wall_id) + 0.2, 0])
+          cube([bsx,sy,wall_z]);
+      }
+    }
+  }
+}
+
+*/
+
+module cover_clips() {
+    clip_z = 2;
+    clip_w = 3;
+    delta=0.15;
+    difference() {
+      from_case_to_inner() 
+        difference() {
+          translate([delta,delta,outer_z - 2 * wall_z - clip_z])
+              cube_rounded(sze = [inner_sze[0] - 2 * delta, inner_sze[1] - 2 *delta, clip_z], ray = rounding, $fn=32);
+          translate([clip_w, clip_w, outer_z - 2 * wall_z - clip_z - 0.1])
+              cube_rounded(sze = [inner_sze[0] - 2 * clip_w, inner_sze[1] - 2 *clip_w, clip_z+0.2], ray = rounding, $fn=32);
+          
+        }
+      from_case_to_rj_window() {
+        translate([0,-4,0])
+        cube([16,8 + rj_window_y,45]);
+      }
+    }
+}
+
+module cover() {
+  translate([0,0,outer_z - wall_z])
+    cube_rounded(sze = [inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, wall_z], ray=rounding, $fn=32);
+
+}
+
+
+
+// Rotate so x+ gets inside the box
+module from_case_to_rj_window() {
+   // Translate to the x1 wall
+  translate([inner_sze[0] + 2 * wall_y, wall_x0 + 7 + rj_window_y, outer_z - wall_z - rj_window_z])
+    rotate([0,0,180])
+    children();
+}
+
+module from_inner_to_pcb() {
+  translate([1,1,0])
+    children();
+}
+
+module from_case_to_inner() {
+  translate([wall_y, wall_x0, wall_z])
+    children();
+}
+
+// Floor
+module low_part() {
+
+  from_root_to_case() {
+    difference () {
+
+      cube_rounded(sze = [inner_sze[0] + 2 * wall_y, inner_sze[1] + wall_x0 + wall_x1, outer_z - wall_z], ray=rounding, $fn=32);
+      from_case_to_inner() {
+        cube_rounded(sze = inner_sze + [0,0,10], ray = rounding, $fn=32);
+      }
+    }
+  }
+}
+
+
+
+
+module pcb() {
+  color("green") 
+    from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          translate([0,0,pcb_pad_z + 0.2])
+            cube([pcb_sze[0], pcb_sze[1], 2.5]);
+} 
+
+connections_minus();
+module connections_minus() {
+  color("red")
+  from_root_to_case() {
+    for(heater = heater_connections) {
+      translate([heater[0], -1, heater[1]])
+        rotate([-90,0,0]) {
+          cylinder(d=hole_heater, $fn=64, h = 6);
+          translate([0,0, 1 + wall_depth(0)+0.2])
+            cylinder(d=15, $fn=64, h = 0.1);
+        }
+      
+    }
+    
+    from_case_to_rj_window() {
+      translate([-0.1,0,0])
+        cube([5,rj_window_y, rj_window_z + 0.05]);
+    }
+    
+    // DC jacks
+    for(jack = jacks) {
+      wall_id = jack[0];
+      p = jack[1];
+      z = outer_z - wall_z + jack[2];
+      wall(wall_id)
+        translate([p,0,z])
+          rotate([-90,0,0]) {
+            translate([0,0,-1])
+              cylinder(d=hole_dc, h = wall_depth(wall_id) + 2, $fn=64);
+            // Access ecrou & emprunte cable
+            translate([0,0,wall_depth(wall_id)+0.05])
+              cylinder(d=15.4, $fn=64, h=15);
+          }
+    }
+
+    for(fixation = fixation_hub) {
+      wall_id = fixation[0];
+      p = fixation[1];
+      z = fixation[2];
+      wall(wall_id)
+        translate([p, 0, z])
+          rotate([-90,0,0]) {
+            translate([0,0,-1])
+              cube([fixation_hub_larg, fixation_hub_long, 25], center=true);
+          }
+    }
+  }
+}
+
+module cover_rj() {
+  wire_space = 3.5;
+  advance = 6;
+  overflow = 1.2;
+  from_case_to_rj_window() {
+    difference() {
+      translate([-advance+ 0.05, -overflow, rj_window_z])
+        cube([19-0.05,rj_window_y + 2 * overflow, wall_z]);
+    }  
+  }
+}
+
+module rj_window() {
+
+  from_case_to_rj_window() {
+    wire_space = 3.5;
+    advance = 4.82;
+    overflow = 1.2;
+    
+    difference() {
+      translate([-advance+ 0.05, -overflow, - overflow])
+        cube([17-0.05,rj_window_y + 2 * overflow, rj_window_z + overflow - 0.05]);
+      
+      // Clip into wall
+      color("red") {
+        translate([0,-10, -5])
+          cube([wall_y+0.2, 10, rj_window_z+5]);
+        translate([0, rj_window_y, -5])
+          cube([wall_y+0.2, 10, rj_window_z+5]);
+        translate([0, -10, -10])
+          cube([wall_y+0.2, rj_window_y+20, 10]);
+      }
+      
+      // // RJ45 shadow
+      // color("blue")  
+      // translate([-advance, 3, rj_window_z - rj45_h])
+      //   difference() {
+      //     union() {
+      //       cube([rj45_l, rj45_w, rj45_h]);
+      //       translate([rj45_l-0.01, 2, 0.7])
+      //         cube([wire_space, rj45_w - 4, rj45_h - 0.7]);
+      //       translate([rj45_l-0.01, 0, 6])
+      //         cube([wire_space, rj45_w, rj45_h - 6]);
+      //     }
+      //     // Butee
+      //     translate([-0.1,-0.1,-0.1])
+      //     cube([rj45_l_butee+ 0.1, rj45_w + 0.2, rj45_h_butee + 0.1]);
+      //   }
+      // RJ12 shadow
+      color("blue")
+      translate([-advance, 4.8, rj_window_z - rj12_h]) {
+        
+        cube([rj12_l, rj12_w, rj12_h]);
+
+        translate([0,rj12_w / 2, 0]) {
+          for(Y = [-rj12_w/2, rj12_w/2])
+            translate([5.9,Y,-3.2])
+              cylinder(d=2.3, h=60,$fn=30);
+          
+          cable_w=9;
+          cable_h=8.5;
+          translate([7, -cable_w/2, -cable_h])
+            cube([15, cable_w, cable_h + 10]);
+
+        }
+
+
+
+        /*translate([rj12_b_lp, -(rj12_b_w - rj12_w) / 2, 0])
+          cube([rj12_b_l, rj12_b_w, rj12_h]);
+        translate([rj12_bump_lp, 0, -(rj12_bump_h - rj12_h)])
+          cube([rj12_l - rj12_bump_lp, rj12_w, rj12_bump_h]);
+        
+        translate([rj12_l-0.01, 0, -(rj12_bump_h - rj12_h)]) {
+          translate([0,2,0.8])
+            cube([wire_space,rj12_w - 4, rj12_bump_h - 0.8]);
+          translate([0,0,6])
+            cube([wire_space,rj12_w, rj12_bump_h - 6]);
+        }*/
+         
+      }
+    }
+  }
+}
+
+module vix_pad_fixation_minus() {
+  color("red")
+  for(screw = vix_screw_distance) 
+    for(I = [-0.5, 0.5]) {
+      translate([I * screw[0], I * screw[1], -10])
+        cylinder(d=vix_screw_diam, h=600, $fn=16);
+    }
+}
+
+
+
+module from_root_to_vix() {
+  translate([vix_center[0], vix_center[1], 0])
+      translate([0,0,outer_z])
+        children();
+}
+
+
+// Vixen connector parts
+translate([0,0, 40])
+from_root_to_vix()
+difference() {
+  color("yellow")
+  union() {
+    translate([ - vix_pad_size[0] / 2, - vix_pad_size[1] / 2, 0])
+      cube_rounded(vix_pad_size, ray = 4);
+  }
+  color("red")
+      vix_pad_fixation_minus();
+  
+}
+
+
+// cover screws
+cover_screws_x_spc = 9.5;
+cover_screw_fix_diam = 8;
+cover_screw_base = cover_screw_fix_diam + 6;
+
+
+module from_case_to_screws() {
+  for(W = [0,2])
+    wall(W)
+      for(Xi = [0, 1]) {
+            X = Xi == 0 ? 0 + cover_screws_x_spc : wall_length(W) - cover_screws_x_spc;
+            translate([X, wall_depth(W) - cover_screw_fix_diam / 2, 0]) 
+              children();
+        }
+}
+
+module cover_screw_low_plus() {
+  from_case_to_screws() {
+    hull() {
+      cylinder(d=cover_screw_fix_diam, h = outer_z - wall_z, $fn=64);
+      translate([-cover_screw_base/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_base,0.1,outer_z-wall_z]); 
+    }
+  }
+}
+
+module cover_screw_cover_plus() {
+  from_case_to_screws() {
+      translate([0,0,outer_z - wall_z]) {
+        hull() {
+          cylinder(d=cover_screw_fix_diam, h = wall_z, $fn=64);
+          translate([-cover_screw_base/2,cover_screw_fix_diam/2 - 0.15,0])
+            cube([cover_screw_base,0.1,wall_z]); 
+        }
+      }
+  }
+}
+
+module cover_screw_minus() {
+  from_case_to_screws() {
+    translate([0,0,-1])
+      cylinder(d=m3_extrude_diam, h= outer_z + 2, $fn=64);
+    
+    translate([0,0, 10]) {
+      hull() {
+        cylinder(d=m3_nut_diam, h = m3_nut_length, $fn=6);
+        translate([0,10,0]) cylinder(d=m3_nut_diam, h = m3_nut_length, $fn=6);
+      }
+    }
+  }
+}
+
+// !intersection() {
+// color("yellow")
+// translate([36,61,-1])
+// cube([80,22,10]);
+
+!difference() {
+  union() {
+    low_part();
+    bme_plus();
+    usb_hole_plus();
+    from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          for(hole = pcb_holes)
+            translate(hole) 
+              cylinder(d=5.8,h=pcb_pad_z,$fn=16);
+    from_root_to_case() 
+      cover_screw_low_plus();
+  }
+
+
+  bme_split();
+
+  bme_minus();
+  usb_hole_hole();
+  connections_minus();
+  from_root_to_case() 
+    cover_screw_minus();
+  from_root_to_vix()
+    vix_pad_fixation_minus();
+  
+  from_root_to_case()
+      from_case_to_inner()
+        from_inner_to_pcb()
+          for(hole = pcb_holes)
+            translate(hole)
+              translate([0,0, -wall_z + 0.4])
+                cylinder(d=1.8, h= wall_z - 0.4 + pcb_pad_z + 0.1, $fn=32);
+}
+// cover_fixation_plus();
+
+pcb();
+
+translate([25,0,15])
+rj_window();
+
+// Cover
+translate([0,0,25])
+difference() {
+  union() {
+    cover();
+    cover_rj();
+    bme_cover();
+    usb_hole_cover();
+    cover_clips();
+    from_root_to_case() 
+      cover_screw_cover_plus();
+  }
+  from_root_to_vix()
+    vix_pad_fixation_minus();
+  
+  from_root_to_case() 
+    cover_screw_minus();
+  connections_minus();
+}
+

@@ -14,31 +14,31 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR})
 include_directories( ${CMAKE_SOURCE_DIR})
-include_directories( ${CMAKE_SOURCE_DIR}/../ucontroler)
+include_directories( ${CMAKE_SOURCE_DIR}/../AstroController/include)
 
 include_directories( ${INDI_INCLUDE_DIR})
 
 set(indiallinone_SRCS
    ${CMAKE_SOURCE_DIR}/allinone.cpp
    ${CMAKE_SOURCE_DIR}/Lock.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/ReadBuffer.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/WriteBuffer.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialReadBuffer.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/BinSerialWriteBuffer.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiDevice.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiProtocol.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVector.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiVectorMemberStorage.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVector.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiTextVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiSwitchVector.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiSwitchVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVector.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiNumberVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiIntVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/IndiFloatVectorMember.cpp
-   ${CMAKE_SOURCE_DIR}/../ucontroler/CommonUtils.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/ReadBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/WriteBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/BinSerialReadBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/BinSerialWriteBuffer.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiDevice.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiProtocol.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiVector.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiVectorMemberStorage.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiTextVector.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiTextVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiSwitchVector.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiSwitchVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiNumberVector.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiNumberVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiIntVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/IndiFloatVectorMember.cpp
+   ${CMAKE_SOURCE_DIR}/../AstroController/src/CommonUtils.cpp
    )
 
 add_executable(indi_allinone ${indiallinone_SRCS})
