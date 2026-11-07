@@ -36,6 +36,8 @@ Focuser.cpp also has a simple example of how to control something from INDI prop
 
 The indi driver is just a relay to the micro-controler, meaning you probably won't have to modify it.
 
+Building the driver requires CMake 3.8 or newer, a C++17 compiler, and the INDI development libraries.
+
 To build, issue the commands:
 ```shell
 cd indi_driver
@@ -58,5 +60,4 @@ The resulting board has roughtly the size of a raspberry pi, meaning you can pro
 
 The filterwheel can be made from a manual filterwheel, adding a BYJ48 stepper and a hall sensor + magnet for calibration.
 More details here (french) : http://pludov.blogspot.com/2016/08/roue-filtre-motorisee-la-mecanique.html
-
 
