@@ -464,7 +464,11 @@ public:
 							auto prop = target->getText("DRIVER_INFO");
 							if (prop)
 							{
+#if INDI_VERSION_MAJOR >= 2
+								IDSetText(prop->getText(), nullptr);
+#else
 								IDSetText(prop, nullptr);
+#endif
 							}
 						}
 						catch (const std::invalid_argument &e)
