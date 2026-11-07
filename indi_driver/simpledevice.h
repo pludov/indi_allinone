@@ -25,10 +25,9 @@
 
 #include <pthread.h>
 
-
 namespace Connection
 {
-class Serial;
+  class Serial;
 }
 
 class CustomIndiProtocol;
@@ -37,47 +36,48 @@ class Lock;
 
 class SimpleDevice : public INDI::DefaultDevice
 {
-	void killBackgroundProcessor(Lock & held);
+  void killBackgroundProcessor(Lock &held);
 
-  public:
-    SimpleDevice();
-    virtual bool initProperties();
+public:
+  SimpleDevice();
+  virtual bool initProperties();
 
-    // Protection mutex
-    pthread_mutex_t sharingMutex;
+  // Protection mutex
+  pthread_mutex_t sharingMutex;
 
-    pthread_cond_t doneCond;
+  pthread_cond_t doneCond;
 
-    // Thread for data readings
-    pthread_t backgroundProcessorThread;
+  // Thread for data readings
+  pthread_t backgroundProcessorThread;
 
-    bool backgroundProcessorStarted;
-    // protect under mutex
-    CustomIndiProtocol * currentIndiProtocol;
-    IndiDevice * currentIndiDevice;
+  bool backgroundProcessorStarted;
+  // protect under mutex
+  CustomIndiProtocol *currentIndiProtocol;
+  IndiDevice *currentIndiDevice;
 
-    // Use to wakeup the select thread
-    int protocolPipe[2];
+  // Use to wakeup the select thread
+  int protocolPipe[2];
 
-    // Set to true when backgroundProcessor is supposed to stop
-    bool terminateBackgroundProcessorThread;
-    bool backgroundProcessorThreadDone;
+  // Set to true when backgroundProcessor is supposed to stop
+  bool terminateBackgroundProcessorThread;
+  bool backgroundProcessorThreadDone;
 
-    void beforeDisconnect();
-  protected:
+  void beforeDisconnect();
 
-    bool Handshake();
-    const char *getDefaultName();
+protected:
+  bool Handshake();
+  const char *getDefaultName();
 
-    bool checkBackgroundProcessorThreadEnd();
-    void backgroundProcessor(int fd);
+  bool checkBackgroundProcessorThreadEnd();
+  void backgroundProcessor(int fd);
 
-    static void * backgroundProcessorStarter(void * rawContext);
+  static void *backgroundProcessorStarter(void *rawContext);
 
-    Connection::Serial *serialConnection { nullptr };
-  public:
-    virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
-    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
-    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n);
-    virtual void ISGetProperties(const char * dev);
+  Connection::Serial *serialConnection{nullptr};
+
+public:
+  virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
+  virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
+  virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n);
+  virtual void ISGetProperties(const char *dev);
 };

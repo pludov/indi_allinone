@@ -7,14 +7,17 @@
 
 #include <Lock.h>
 
-Lock::Lock(pthread_mutex_t * m) {
+Lock::Lock(pthread_mutex_t *m)
+{
 	this->mutex = m;
 	this->acquireCount = 0;
 }
 
-Lock::~Lock() {
+Lock::~Lock()
+{
 	// TODO Auto-generated destructor stub
-	if (this->acquireCount) {
+	if (this->acquireCount)
+	{
 		pthread_mutex_unlock(mutex);
 	}
 }
@@ -22,15 +25,17 @@ Lock::~Lock() {
 void Lock::lock()
 {
 	acquireCount++;
-	if (acquireCount == 1) {
+	if (acquireCount == 1)
+	{
 		pthread_mutex_lock(mutex);
 	}
 }
 
 void Lock::release()
 {
-	acquireCount --;
-	if (acquireCount == 0) {
+	acquireCount--;
+	if (acquireCount == 0)
+	{
 		pthread_mutex_unlock(mutex);
 	}
 }

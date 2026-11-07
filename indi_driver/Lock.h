@@ -14,11 +14,13 @@
  * Handle auto release of pthread_mutex in case of exceptions
  * Must not be shared accors threads.
  */
-class Lock {
-	pthread_mutex_t * mutex;
+class Lock
+{
+	pthread_mutex_t *mutex;
 	int acquireCount;
+
 public:
-	Lock(pthread_mutex_t * m);
+	Lock(pthread_mutex_t *m);
 	~Lock();
 
 	void lock();
